@@ -1,0 +1,1 @@
+const inti = 42;
