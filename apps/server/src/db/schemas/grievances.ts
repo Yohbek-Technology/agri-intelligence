@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, timestamp, jsonb, check, index } from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar, timestamp, jsonb, check, index, foreignKey } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm/_relations";
 import { sql } from "drizzle-orm";
 import { cityOffices, geography, kebeles } from "./tenancy.js";
@@ -34,7 +34,7 @@ export const grievances = pgTable(
     status: grievanceStatus("status").notNull().default("submitted"),
     priority: grievancePriority("priority").notNull().default("normal"),
     assigneeUserId: uuid("assignee_user_id"),
-    mergedIntoId: uuid("merged_into_id").references(() => grievances.id),
+    mergedIntoId: uuid("merged_into_id"),
     photoMediaIds: uuid("photo_media_ids").array().notNull().default(sql`'{}'::uuid[]`),
     statusHistory: jsonb("status_history").notNull().default([]),
     submittedAt: timestamp("submitted_at", { withTimezone: true }).notNull().defaultNow(),
@@ -64,6 +64,11 @@ export const grievances = pgTable(
       "grievances_history_check",
       sql`jsonb_typeof(status_history) = 'array'`
     ),
+    mergedIntoFk: foreignKey({
+      name: "grievances_merged_into_fk",
+      columns: [table.mergedIntoId],
+      foreignColumns: [table.id],
+    }),
     idxTriage: index("idx_grievances_triage").on(
       table.cityOfficeId,
       table.status,

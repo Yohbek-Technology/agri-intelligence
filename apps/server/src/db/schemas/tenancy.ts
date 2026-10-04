@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import { pgTable, uuid, varchar, timestamp, boolean, jsonb, numeric, integer, check } from "drizzle-orm/pg-core";
 import { customType } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm/_relations";
@@ -24,7 +25,7 @@ export const cityOffices = pgTable(
   (table) => ({
     parametersCheck: check(
       "city_offices_parameters_check",
-      "jsonb_typeof(parameters) = 'object'"
+      sql`jsonb_typeof(parameters) = 'object'`
     ),
   })
 );
@@ -48,7 +49,7 @@ export const kebeles = pgTable(
   (table) => ({
     territoryCheck: check(
       "kebeles_territory_check",
-      "boundary is not null or (centroid_lat is not null and centroid_lng is not null and radius_m > 0)"
+      sql`boundary is not null or (centroid_lat is not null and centroid_lng is not null and radius_m > 0)`
     ),
   })
 );

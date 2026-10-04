@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, timestamp, date, boolean, check, index, unique } from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar, timestamp, date, boolean, check, index, unique, jsonb } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm/_relations";
 import { sql } from "drizzle-orm";
 import { cityOffices, kebeles } from "./tenancy.js";

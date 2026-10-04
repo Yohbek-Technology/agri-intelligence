@@ -26,7 +26,7 @@ export const marketCentres = pgTable(
   })
 );
 
-export const marketSurveys = pgTable(
+export const marketSurveys: ReturnType<typeof pgTable> = pgTable(
   "market_surveys",
   {
     id: uuid("id").primaryKey().defaultRandom(),
