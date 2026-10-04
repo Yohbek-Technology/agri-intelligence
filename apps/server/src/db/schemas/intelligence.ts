@@ -100,15 +100,10 @@ export const weatherAlerts = pgTable(
   })
 );
 
-// ============================================================
-// DIAGNOSIS CASES (DIAG-1 to DIAG-12)
-// ============================================================
-
 export const diagnosisCases = pgTable(
   "diagnosis_cases",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    
     cityOfficeId: uuid("city_office_id")
       .notNull()
       .references(() => cityOffices.id),
@@ -119,33 +114,22 @@ export const diagnosisCases = pgTable(
       .notNull()
       .references(() => plots.id, { onDelete: "cascade" }),
     cycleId: uuid("cycle_id").references(() => cropCycles.id),
-    
-    requestedByUserId: uuid("requested_by_user_id"), // references users.id
-    
-    // Replaces diagnosis_case_photos: 1 to 4 photos
+    requestedByUserId: uuid("requested_by_user_id"),
     photoMediaIds: uuid("photo_media_ids").array().notNull().default(sql`'{}'::uuid[]`),
-    
     jobStatus: jobStatus("job_status").notNull().default("queued"),
-    
     contextSnapshot: jsonb("context_snapshot"),
     rawResult: jsonb("raw_result"),
-    
-    pestId: uuid("pest_id"), // references pest_catalog.id - set in index.ts
+    pestId: uuid("pest_id"),
     diagnosisLabel: varchar("diagnosis_label", { length: 150 }),
-    confidence: varchar("confidence"), // numeric(3,2)
+    confidence: varchar("confidence"),
     severity: diagnosisSeverity("severity"),
-    
-    // Output after registered-chemical safety filter
     filteredRecommendations: jsonb("filtered_recommendations"),
     removedChemicals: jsonb("removed_chemicals").notNull().default([]),
-    
     reviewStatus: diagnosisReviewStatus("review_status").notNull().default("none"),
-    reviewedBy: uuid("reviewed_by"), // references users.id
+    reviewedBy: uuid("reviewed_by"),
     reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
-    
-    resultAudioId: uuid("result_audio_id"), // references media_files.id - set in index.ts
+    resultAudioId: uuid("result_audio_id"),
     failureReason: varchar("failure_reason", { length: 255 }),
-    
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -168,35 +152,23 @@ export const diagnosisCases = pgTable(
   })
 );
 
-// ============================================================
-// OUTBREAK CLUSTERS (AGENT-5, TRG-5)
-// ============================================================
-
 export const outbreakClusters = pgTable(
   "outbreak_clusters",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    
     cityOfficeId: uuid("city_office_id")
       .notNull()
       .references(() => cityOffices.id),
-    pestId: uuid("pest_id").notNull(), // references pest_catalog.id - set in index.ts
-    kebeleId: uuid("kebele_id"), // references kebeles.id - set in index.ts
-    
+    pestId: uuid("pest_id").notNull(),
+    kebeleId: uuid("kebele_id"),
     centroid: geography("centroid(Point, 4326)").notNull(),
-    radiusM: varchar("radius_m").notNull(), // integer
-    caseCount: varchar("case_count").notNull(), // integer
-    
-    // Replaces outbreak_cluster_cases junction table
-    // Holds diagnosis_cases.id and grievances.id values
+    radiusM: varchar("radius_m").notNull(),
+    caseCount: varchar("case_count").notNull(),
     contributingCaseIds: uuid("contributing_case_ids").array().notNull().default(sql`'{}'::uuid[]`),
-    
     windowStart: date("window_start").notNull(),
     windowEnd: date("window_end").notNull(),
-    
     status: varchar("status", { length: 10 }).notNull().default("open"),
     alertSentAt: timestamp("alert_sent_at", { withTimezone: true }),
-    
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -208,10 +180,6 @@ export const outbreakClusters = pgTable(
     idxCaseIds: index("idx_outbreak_case_ids").using("gin", table.contributingCaseIds),
   })
 );
-
-// ============================================================
-// RELATIONS
-// ============================================================
 
 export const yieldGapAnalysesRelations = relations(yieldGapAnalyses, ({ one }) => ({
   cityOffice: one(cityOffices, {

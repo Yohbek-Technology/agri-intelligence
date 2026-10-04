@@ -4,24 +4,16 @@ import { cityOffices } from "./tenancy.js";
 import { farmers } from "./farmers.js";
 import { quantityUnit, surveyStatus, moderationStatus } from "./enums.js";
 
-// ============================================================
-// MARKET CENTRES
-// ============================================================
-
 export const marketCentres = pgTable(
   "market_centres",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    
     cityOfficeId: uuid("city_office_id")
       .notNull()
       .references(() => cityOffices.id, { onDelete: "cascade" }),
-    
     name: varchar("name", { length: 80 }).notNull(),
     isHome: boolean("is_home").notNull().default(false),
-    
     isActive: boolean("is_active").notNull().default(true),
-    
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -33,39 +25,28 @@ export const marketCentres = pgTable(
   })
 );
 
-// ============================================================
-// MARKET SURVEYS (SURV-1 to SURV-7)
-// ============================================================
-
 export const marketSurveys = pgTable(
   "market_surveys",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    
     cityOfficeId: uuid("city_office_id")
       .notNull()
       .references(() => cityOffices.id),
     marketCentreId: uuid("market_centre_id")
       .notNull()
       .references(() => marketCentres.id),
-    cropId: uuid("crop_id").notNull(), // references crops.id - set in index.ts
-    
+    cropId: uuid("crop_id").notNull(),
     surveyDate: date("survey_date").notNull(),
     enteredUnit: quantityUnit("entered_unit").notNull(),
-    
-    minPriceEtbPerKg: varchar("min_price_etb_per_kg").notNull(), // numeric(10,2)
-    avgPriceEtbPerKg: varchar("avg_price_etb_per_kg").notNull(), // numeric(10,2)
-    maxPriceEtbPerKg: varchar("max_price_etb_per_kg").notNull(), // numeric(10,2)
-    
-    enumeratorUserId: uuid("enumerator_user_id").notNull(), // references users.id
-    
+    minPriceEtbPerKg: varchar("min_price_etb_per_kg").notNull(),
+    avgPriceEtbPerKg: varchar("avg_price_etb_per_kg").notNull(),
+    maxPriceEtbPerKg: varchar("max_price_etb_per_kg").notNull(),
+    enumeratorUserId: uuid("enumerator_user_id").notNull(),
     status: surveyStatus("status").notNull().default("draft"),
-    version: varchar("version").notNull().default("1"), // integer
+    version: varchar("version").notNull().default("1"),
     supersedesId: uuid("supersedes_id").references(() => marketSurveys.id),
-    
-    verifiedBy: uuid("verified_by"), // references users.id
+    verifiedBy: uuid("verified_by"),
     verifiedAt: timestamp("verified_at", { withTimezone: true }),
-    
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -91,40 +72,31 @@ export const marketSurveys = pgTable(
   })
 );
 
-// ============================================================
-// CROWD-SOURCED SALES (MKT-2, MKT-3, SURV-4)
-// ============================================================
-
 export const crowdTransactions = pgTable(
   "crowd_transactions",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    
     cityOfficeId: uuid("city_office_id")
       .notNull()
       .references(() => cityOffices.id),
     farmerId: uuid("farmer_id")
       .notNull()
       .references(() => farmers.id),
-    createdByUserId: uuid("created_by_user_id"), // references users.id
-    
-    cropId: uuid("crop_id").notNull(), // references crops.id - set in index.ts
+    createdByUserId: uuid("created_by_user_id"),
+    cropId: uuid("crop_id").notNull(),
     marketCentreId: uuid("market_centre_id")
       .notNull()
       .references(() => marketCentres.id),
-    
-    enteredPrice: varchar("entered_price").notNull(), // numeric(10,2)
+    enteredPrice: varchar("entered_price").notNull(),
     enteredUnit: quantityUnit("entered_unit").notNull(),
-    priceEtbPerKg: varchar("price_etb_per_kg").notNull(), // numeric(10,2)
-    volumeKg: varchar("volume_kg").notNull(), // numeric(12,3)
+    priceEtbPerKg: varchar("price_etb_per_kg").notNull(),
+    volumeKg: varchar("volume_kg").notNull(),
     saleDate: date("sale_date").notNull(),
-    
     moderationStatus: moderationStatus("moderation_status").notNull().default("pending"),
     outlierFlag: boolean("outlier_flag").notNull().default(false),
     rejectionReason: varchar("rejection_reason", { length: 255 }),
-    moderatedBy: uuid("moderated_by"), // references users.id
+    moderatedBy: uuid("moderated_by"),
     moderatedAt: timestamp("moderated_at", { withTimezone: true }),
-    
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
@@ -150,10 +122,6 @@ export const crowdTransactions = pgTable(
       .where(sql`moderation_status = 'verified'`),
   })
 );
-
-// ============================================================
-// RELATIONS
-// ============================================================
 
 export const marketCentresRelations = relations(marketCentres, ({ one, many }) => ({
   cityOffice: one(cityOffices, {

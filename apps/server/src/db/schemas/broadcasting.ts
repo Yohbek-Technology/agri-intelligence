@@ -10,10 +10,6 @@ import {
   deliveryStatus,
 } from "./enums.js";
 
-// ============================================================
-// ANNOUNCEMENTS (COMM-1 to COMM-9)
-// ============================================================
-
 export const announcements = pgTable(
   "announcements",
   {
@@ -22,32 +18,23 @@ export const announcements = pgTable(
     cityOfficeId: uuid("city_office_id")
       .notNull()
       .references(() => cityOffices.id, { onDelete: "cascade" }),
-    createdByUserId: uuid("created_by_user_id").notNull(), // references users.id
+    createdByUserId: uuid("created_by_user_id").notNull(),
     
     announcementType: announcementType("announcement_type").notNull(),
     status: announcementStatus("status").notNull().default("draft"),
-    
-    // Targeting (COMM-2)
     targetAll: boolean("target_all").notNull().default(true),
     targetKebeleIds: uuid("target_kebele_ids").array().notNull().default(sql`'{}'::uuid[]`),
     targetCropIds: uuid("target_crop_ids").array().notNull().default(sql`'{}'::uuid[]`),
     targetZones: agroZone("target_zones").array().notNull().default(sql`'{}'::text[]`),
-    
-    pestId: uuid("pest_id"), // references pest_catalog.id - set in index.ts
+    pestId: uuid("pest_id"),
     templateCode: varchar("template_code", { length: 60 }),
     templateVariables: jsonb("template_variables"),
-    
-    // Replaces announcement_translations
-    // Keys: am, om, ti, en; each value: {title, body, audio_media_id}
     translations: jsonb("translations").notNull().default({}),
-    
     requiresAcknowledgement: boolean("requires_acknowledgement").notNull().default(false),
-    smsFallbackAfterMinutes: varchar("sms_fallback_after_minutes"), // smallint
-    
+    smsFallbackAfterMinutes: varchar("sms_fallback_after_minutes"), 
     expiresAt: timestamp("expires_at", { withTimezone: true }),
     publishedAt: timestamp("published_at", { withTimezone: true }),
     recalledAt: timestamp("recalled_at", { withTimezone: true }),
-    
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -83,11 +70,6 @@ export const announcements = pgTable(
   })
 );
 
-// ============================================================
-// ANNOUNCEMENT DELIVERIES
-// Per-recipient, per-channel state
-// ============================================================
-
 export const announcementDeliveries = pgTable(
   "announcement_deliveries",
   {
@@ -102,15 +84,12 @@ export const announcementDeliveries = pgTable(
     farmerId: uuid("farmer_id")
       .notNull()
       .references(() => farmers.id),
-    
     channel: deliveryChannel("channel").notNull(),
     status: deliveryStatus("status").notNull().default("queued"),
-    
     providerMessageId: varchar("provider_message_id", { length: 120 }),
-    segments: varchar("segments"), // smallint
-    costEtb: varchar("cost_etb"), // numeric(8,4)
+    segments: varchar("segments"),
+    costEtb: varchar("cost_etb"), 
     failureReason: varchar("failure_reason", { length: 255 }),
-    
     queuedAt: timestamp("queued_at", { withTimezone: true }).notNull().defaultNow(),
     sentAt: timestamp("sent_at", { withTimezone: true }),
     deliveredAt: timestamp("delivered_at", { withTimezone: true }),
@@ -134,10 +113,6 @@ export const announcementDeliveries = pgTable(
       .where(sql`channel = 'app' and read_at is null`),
   })
 );
-
-// ============================================================
-// RELATIONS
-// ============================================================
 
 export const announcementsRelations = relations(announcements, ({ one, many }) => ({
   cityOffice: one(cityOffices, {

@@ -3,23 +3,16 @@ import { relations, sql } from "drizzle-orm";
 import { cityOffices, kebeles } from "./tenancy.js";
 import { stockItemType, stockMovementType } from "./enums.js";
 
-// ============================================================
-// DEPOTS (REG-6, REG-7)
-// ============================================================
-
 export const depots = pgTable(
   "depots",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    
     cityOfficeId: uuid("city_office_id")
       .notNull()
       .references(() => cityOffices.id, { onDelete: "cascade" }),
     kebeleId: uuid("kebele_id").references(() => kebeles.id),
-    
     name: varchar("name", { length: 120 }).notNull(),
     isActive: boolean("is_active").notNull().default(true),
-    
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -28,26 +21,17 @@ export const depots = pgTable(
   })
 );
 
-// ============================================================
-// DEPOT STOCK ITEMS
-// Running balance (never below zero)
-// ============================================================
-
 export const depotStockItems = pgTable(
   "depot_stock_items",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    
     depotId: uuid("depot_id")
       .notNull()
       .references(() => depots.id, { onDelete: "cascade" }),
-    
     itemType: stockItemType("item_type").notNull(),
-    cropId: uuid("crop_id"), // references crops.id - set in index.ts
-    varietyId: uuid("variety_id"), // references crop_varieties.id - set in index.ts
-    
-    quantity: varchar("quantity").notNull().default("0"), // numeric(14,3)
-    
+    cropId: uuid("crop_id"),
+    varietyId: uuid("variety_id"),
+    quantity: varchar("quantity").notNull().default("0"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -64,30 +48,20 @@ export const depotStockItems = pgTable(
   })
 );
 
-// ============================================================
-// DEPOT STOCK MOVEMENTS
-// Ledger; also holds incoming shipments
-// ============================================================
-
 export const depotStockMovements = pgTable(
   "depot_stock_movements",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    
     depotStockItemId: uuid("depot_stock_item_id")
       .notNull()
       .references(() => depotStockItems.id),
-    
     movementType: stockMovementType("movement_type").notNull(),
-    quantityDelta: varchar("quantity_delta").notNull(), // numeric(14,3)
+    quantityDelta: varchar("quantity_delta").notNull(),
     movementDate: date("movement_date").notNull().defaultNow(),
     referenceNote: varchar("reference_note", { length: 255 }),
-    
-    // 'received' = applied now; 'expected'/'confirmed' = incoming shipment
     status: varchar("status", { length: 20 }).notNull().default("received"),
     expectedOn: date("expected_on"),
-    
-    recordedBy: uuid("recorded_by").notNull(), // references users.id
+    recordedBy: uuid("recorded_by").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -115,26 +89,18 @@ export const depotStockMovements = pgTable(
   })
 );
 
-// ============================================================
-// DEMAND SNAPSHOTS (REG-4, REG-5)
-// ============================================================
-
 export const demandSnapshots = pgTable(
   "demand_snapshots",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    
     cityOfficeId: uuid("city_office_id")
       .notNull()
       .references(() => cityOffices.id, { onDelete: "cascade" }),
-    seasonYear: varchar("season_year").notNull(), // smallint
-    
-    safetyMarginPct: varchar("safety_margin_pct").notNull().default("0"), // numeric(5,2)
-    ratesVersionIds: jsonb("rates_version_ids").notNull(), // {crop_id: rates_version}
-    // result includes rows, totals, and overrides (replaces kebele_crop_overrides)
+    seasonYear: varchar("season_year").notNull(),
+    safetyMarginPct: varchar("safety_margin_pct").notNull().default("0"),
+    ratesVersionIds: jsonb("rates_version_ids").notNull(),
     result: jsonb("result").notNull(),
-    
-    createdBy: uuid("created_by"), // references users.id
+    createdBy: uuid("created_by"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => ({
@@ -144,10 +110,6 @@ export const demandSnapshots = pgTable(
     ),
   })
 );
-
-// ============================================================
-// RELATIONS
-// ============================================================
 
 export const depotsRelations = relations(depots, ({ one, many }) => ({
   cityOffice: one(cityOffices, {

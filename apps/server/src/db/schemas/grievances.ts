@@ -11,50 +11,34 @@ import {
   taskStatus,
 } from "./enums.js";
 
-// ============================================================
-// GRIEVANCES — Voice Box (GRIEV-1 to GRIEV-8)
-// ============================================================
-
 export const grievances = pgTable(
   "grievances",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    
     cityOfficeId: uuid("city_office_id")
       .notNull()
       .references(() => cityOffices.id),
     farmerId: uuid("farmer_id")
       .notNull()
       .references(() => farmers.id),
-    submittedByUserId: uuid("submitted_by_user_id"), // references users.id
-    
+    submittedByUserId: uuid("submitted_by_user_id"),
     category: grievanceCategory("category").notNull(),
     plotId: uuid("plot_id").references(() => plots.id),
     kebeleId: uuid("kebele_id").references(() => kebeles.id),
-    
-    locationLat: varchar("location_lat"), // numeric(9,6)
-    locationLng: varchar("location_lng"), // numeric(9,6)
-    
-    audioMediaId: uuid("audio_media_id"), // references media_files.id - set in index.ts
+    locationLat: varchar("location_lat"),
+    locationLng: varchar("location_lng"),
+    audioMediaId: uuid("audio_media_id"),
     textNote: varchar("text_note", { length: 1000 }),
-    pestId: uuid("pest_id"), // references pest_catalog.id - set in index.ts
-    
+    pestId: uuid("pest_id"),
     status: grievanceStatus("status").notNull().default("submitted"),
     priority: grievancePriority("priority").notNull().default("normal"),
-    assigneeUserId: uuid("assignee_user_id"), // references users.id
-    
+    assigneeUserId: uuid("assignee_user_id"),
     mergedIntoId: uuid("merged_into_id").references(() => grievances.id),
-    
-    // Replaces grievance_photos: up to 3 photos
     photoMediaIds: uuid("photo_media_ids").array().notNull().default(sql`'{}'::uuid[]`),
-    
-    // Replaces grievance_status_events - maintained by trigger
     statusHistory: jsonb("status_history").notNull().default([]),
-    
     submittedAt: timestamp("submitted_at", { withTimezone: true }).notNull().defaultNow(),
     receivedAt: timestamp("received_at", { withTimezone: true }),
     resolvedAt: timestamp("resolved_at", { withTimezone: true }),
-    
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -90,32 +74,22 @@ export const grievances = pgTable(
   })
 );
 
-// ============================================================
-// GRIEVANCE MESSAGES (GRIEV-5, TRG-4)
-// Two-way threaded conversation
-// Append-only except read_at and tts_media_id
-// ============================================================
-
 export const grievanceMessages = pgTable(
   "grievance_messages",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    
     cityOfficeId: uuid("city_office_id")
       .notNull()
       .references(() => cityOffices.id),
     grievanceId: uuid("grievance_id")
       .notNull()
       .references(() => grievances.id, { onDelete: "cascade" }),
-    senderUserId: uuid("sender_user_id").notNull(), // references users.id
-    
+    senderUserId: uuid("sender_user_id").notNull(),
     messageType: messageKind("message_type").notNull(),
     textBody: varchar("text_body", { length: 2000 }),
-    audioMediaId: uuid("audio_media_id"), // references media_files.id - set in index.ts
-    ttsMediaId: uuid("tts_media_id"), // references media_files.id - set in index.ts
-    
+    audioMediaId: uuid("audio_media_id"),
+    ttsMediaId: uuid("tts_media_id"),
     readAt: timestamp("read_at", { withTimezone: true }),
-    
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => ({
@@ -133,34 +107,25 @@ export const grievanceMessages = pgTable(
   })
 );
 
-// ============================================================
-// DA TASKS (ANLY-7, DIAG-6, TRG-3)
-// ============================================================
-
 export const daTasks = pgTable(
   "da_tasks",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    
     cityOfficeId: uuid("city_office_id")
       .notNull()
       .references(() => cityOffices.id),
-    assigneeUserId: uuid("assignee_user_id").notNull(), // references users.id
-    createdByUserId: uuid("created_by_user_id"), // references users.id
-    
+    assigneeUserId: uuid("assignee_user_id").notNull(),
+    createdByUserId: uuid("created_by_user_id"),
     taskType: taskType("task_type").notNull(),
     status: taskStatus("status").notNull().default("open"),
     title: varchar("title", { length: 200 }).notNull(),
     checklist: jsonb("checklist"),
-    
     farmerId: uuid("farmer_id").references(() => farmers.id),
     plotId: uuid("plot_id").references(() => plots.id),
     grievanceId: uuid("grievance_id").references(() => grievances.id),
-    diagnosisCaseId: uuid("diagnosis_case_id"), // references diagnosis_cases.id - set in index.ts
-    
-    dueOn: varchar("due_on"), // date
+    diagnosisCaseId: uuid("diagnosis_case_id"),
+    dueOn: varchar("due_on"),
     completedAt: timestamp("completed_at", { withTimezone: true }),
-    
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -168,10 +133,6 @@ export const daTasks = pgTable(
     idxAssignee: index("idx_da_tasks_assignee").on(table.assigneeUserId, table.status),
   })
 );
-
-// ============================================================
-// RELATIONS
-// ============================================================
 
 export const grievancesRelations = relations(grievances, ({ one, many }) => ({
   cityOffice: one(cityOffices, {
