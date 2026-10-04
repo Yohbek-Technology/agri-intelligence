@@ -1,5 +1,6 @@
 import { pgTable, uuid, varchar, timestamp, bigint, check, unique, index } from "drizzle-orm/pg-core";
-import { relations, sql } from "drizzle-orm";
+import { relations } from "drizzle-orm/_relations";
+import { sql } from "drizzle-orm";
 import { cityOffices } from "./tenancy.js";
 import { mediaKind, mediaStatus } from "./enums.js";
 

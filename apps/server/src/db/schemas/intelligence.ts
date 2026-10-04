@@ -1,5 +1,6 @@
 import { pgTable, uuid, varchar, timestamp, date, jsonb, check, index, unique } from "drizzle-orm/pg-core";
-import { relations, sql } from "drizzle-orm";
+import { relations } from "drizzle-orm/_relations";
+import { sql } from "drizzle-orm";
 import { cityOffices, geography } from "./tenancy.js";
 import { farmers, plots } from "./farmers.js";
 import { cropCycles } from "./crop-cycles.js";

@@ -1,5 +1,6 @@
 import { pgTable, uuid, varchar, timestamp, boolean, jsonb, check, index, unique } from "drizzle-orm/pg-core";
-import { relations, sql } from "drizzle-orm";
+import { relations } from "drizzle-orm/_relations";
+import { sql } from "drizzle-orm";
 import { cityOffices } from "./tenancy.js";
 import { farmers } from "./farmers.js";
 import {
@@ -14,12 +15,10 @@ export const announcements = pgTable(
   "announcements",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    
     cityOfficeId: uuid("city_office_id")
       .notNull()
       .references(() => cityOffices.id, { onDelete: "cascade" }),
     createdByUserId: uuid("created_by_user_id").notNull(),
-    
     announcementType: announcementType("announcement_type").notNull(),
     status: announcementStatus("status").notNull().default("draft"),
     targetAll: boolean("target_all").notNull().default(true),

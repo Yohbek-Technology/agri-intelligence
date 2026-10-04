@@ -1,6 +1,6 @@
 import { pgTable, uuid, varchar, timestamp, boolean, jsonb, numeric, integer, check } from "drizzle-orm/pg-core";
 import { customType } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { relations } from "drizzle-orm/_relations";
 import { appLanguage } from "./enums.js";
 
 export const geography = customType<{ data: string; driverData: string }>({

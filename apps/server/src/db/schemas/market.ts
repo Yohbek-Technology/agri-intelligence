@@ -1,5 +1,6 @@
 import { pgTable, uuid, varchar, timestamp, date, boolean, check, index, unique, uniqueIndex } from "drizzle-orm/pg-core";
-import { relations, sql } from "drizzle-orm";
+import { relations } from "drizzle-orm/_relations";
+import { sql } from "drizzle-orm";
 import { cityOffices } from "./tenancy.js";
 import { farmers } from "./farmers.js";
 import { quantityUnit, surveyStatus, moderationStatus } from "./enums.js";
