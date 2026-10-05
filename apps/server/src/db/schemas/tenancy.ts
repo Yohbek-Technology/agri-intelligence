@@ -4,9 +4,15 @@ import { customType } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm/_relations";
 import { appLanguage } from "./enums.js";
 
-export const geography = customType<{ data: string; driverData: string }>({
+export const geographyMultiPolygon = customType<{ data: string; driverData: string }>({
   dataType() {
-    return "geography";
+    return "geography(MultiPolygon, 4326)";
+  },
+});
+
+export const geographyPoint = customType<{ data: string; driverData: string }>({
+  dataType() {
+    return "geography(Point, 4326)";
   },
 });
 
@@ -15,7 +21,7 @@ export const cityOffices = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     name: varchar("name", { length: 120 }).notNull().unique(),
-    jurisdiction: geography("jurisdiction(MultiPolygon, 4326)"),
+    jurisdiction: geographyMultiPolygon("jurisdiction"),
     defaultLanguage: appLanguage("default_language").notNull().default("am"),
     parameters: jsonb("parameters").notNull().default({}),
     isActive: boolean("is_active").notNull().default(true),
@@ -38,7 +44,7 @@ export const kebeles = pgTable(
       .notNull()
       .references(() => cityOffices.id, { onDelete: "cascade" }),
     name: varchar("name", { length: 120 }).notNull(),
-    boundary: geography("boundary(MultiPolygon, 4326)"),
+    boundary: geographyMultiPolygon("boundary"),
     centroidLat: numeric("centroid_lat", { precision: 9, scale: 6 }),
     centroidLng: numeric("centroid_lng", { precision: 9, scale: 6 }),
     radiusM: integer("radius_m"),

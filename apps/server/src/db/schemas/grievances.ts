@@ -1,7 +1,7 @@
 import { pgTable, uuid, varchar, timestamp, jsonb, check, index, foreignKey } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm/_relations";
 import { sql } from "drizzle-orm";
-import { cityOffices, geography, kebeles } from "./tenancy.js";
+import { cityOffices, kebeles } from "./tenancy.js";
 import { farmers, plots } from "./farmers.js";
 import {
   grievanceCategory,

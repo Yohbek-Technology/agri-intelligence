@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "dd32b31e-484a-42a5-890a-737219d9efb3",
+  "id": "157a7516-0733-4f1c-8fec-22bd7cf73437",
   "prevIds": [
     "00000000-0000-0000-0000-000000000000"
   ],
@@ -737,14 +737,14 @@
       "table": "city_offices"
     },
     {
-      "type": "geography",
+      "type": "geography(MultiPolygon,4326)",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "jurisdiction(MultiPolygon, 4326)",
+      "name": "jurisdiction",
       "entityType": "columns",
       "schema": "public",
       "table": "city_offices"
@@ -854,14 +854,14 @@
       "table": "kebeles"
     },
     {
-      "type": "geography",
+      "type": "geography(MultiPolygon,4326)",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "boundary(MultiPolygon, 4326)",
+      "name": "boundary",
       "entityType": "columns",
       "schema": "public",
       "table": "kebeles"
@@ -4585,14 +4585,14 @@
       "table": "outbreak_clusters"
     },
     {
-      "type": "geography",
+      "type": "geography(Point,4326)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "centroid(Point, 4326)",
+      "name": "centroid",
       "entityType": "columns",
       "schema": "public",
       "table": "outbreak_clusters"

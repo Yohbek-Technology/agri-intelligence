@@ -1,7 +1,7 @@
 import { pgTable, uuid, varchar, timestamp, date, jsonb, check, index, unique } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm/_relations";
 import { sql } from "drizzle-orm";
-import { cityOffices, geography } from "./tenancy.js";
+import { cityOffices, geographyPoint } from "./tenancy.js";
 import { farmers, plots } from "./farmers.js";
 import { cropCycles } from "./crop-cycles.js";
 import {
@@ -162,7 +162,7 @@ export const outbreakClusters = pgTable(
       .references(() => cityOffices.id),
     pestId: uuid("pest_id").notNull(),
     kebeleId: uuid("kebele_id"),
-    centroid: geography("centroid(Point, 4326)").notNull(),
+    centroid: geographyPoint("centroid").notNull(),
     radiusM: varchar("radius_m").notNull(),
     caseCount: varchar("case_count").notNull(),
     contributingCaseIds: uuid("contributing_case_ids").array().notNull().default(sql`'{}'::uuid[]`),
