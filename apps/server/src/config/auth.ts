@@ -3,7 +3,7 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { phoneNumber, openAPI } from 'better-auth/plugins'
 import { db } from '@/config/db.js'
 import * as schema from '@/db/index.js'
-import { sendSms } from '@/services/sms.js'
+import { sendSms, onPhoneVerified } from '@/services/sms.js'
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -17,26 +17,22 @@ export const auth = betterAuth({
 
   plugins: [
     openAPI(),
-
+    
     phoneNumber({
       otpLength: 6,
       expiresIn: 600,
       allowedAttempts: 3,
-
       phoneNumberValidator: (phone) =>
         /^\+251[79][0-9]{8}$/.test(phone),
-
       sendOTP: ({ phoneNumber: phone, code }) => {
         void sendSms(phone, `Your AgriIntelligence verification code: ${code}. Valid for 10 minutes.`)
       },
-
       signUpOnVerification: {
         getTempEmail: (phone) => `${phone.replace('+', '')}@phone.agri.invalid`,
         getTempName: (phone) => phone,
       },
-
       callbackOnVerification: async ({ user }) => {
-        console.log(`[auth] phone verified for user: ${user.id}`)
+        await onPhoneVerified(user.id)
       },
     }),
   ],
