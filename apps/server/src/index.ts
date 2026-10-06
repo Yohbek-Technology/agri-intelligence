@@ -1,7 +1,7 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import { auth } from './auth.js'
+import { auth } from '@/config/auth.js'
 
 const app = new Hono()
 
