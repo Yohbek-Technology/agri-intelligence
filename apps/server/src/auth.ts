@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { db } from "./db/db-config.js";
+import { db } from "@/configurations/db-config.js";
 import { openAPI } from "better-auth/plugins"
 
 export const auth = betterAuth({
