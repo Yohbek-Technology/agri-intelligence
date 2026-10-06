@@ -52,6 +52,7 @@ export function initSocket(httpServer: HttpServer | HttpsServer): Server {
     socket.on('leave-announcement', (announcementId: string) => socket.leave(`announcement:${announcementId}`))
   })
 
+  console.log('[socket] Socket.IO initialised successfully')
   return io
 }
 
