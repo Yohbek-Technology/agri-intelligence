@@ -49,6 +49,9 @@ export async function transcribe(
   for (const model of models) {
     for (let attempt = 0; attempt <= 2; attempt++) {
       try {
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), 30000)
+
         const response = await ai.models.generateContent({
           model,
           contents: [
@@ -65,8 +68,11 @@ export async function transcribe(
           config: {
             temperature: 0.0,
             maxOutputTokens: 2048,
+            abortSignal: controller.signal,
           },
         } as never)
+
+        clearTimeout(timeout)
 
         const transcript = response.text?.trim()
         if (!transcript) throw new Error(`[stt] No transcript returned from ${model}`)

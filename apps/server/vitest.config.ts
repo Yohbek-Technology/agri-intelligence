@@ -8,6 +8,7 @@ export default defineConfig({
     environment: 'node',
     setupFiles: ['dotenv/config'],
     testTimeout: 120000,
+    hookTimeout: 60000,
     projects: [
       {
         resolve: { alias },
