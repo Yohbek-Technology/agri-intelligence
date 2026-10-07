@@ -1,5 +1,5 @@
 import type { AppLanguage } from '@repo/shared'
-import { getAI } from '@/config/ai.js'
+import { getAI } from '@/config/ai-provider.js'
 
 const TTS_MODEL = process.env.AI_TTS_MODEL ?? 'gemini-3.8-flash-tts'
 const TTS_FALLBACK_MODEL = process.env.AI_TTS_FALLBACK_MODEL ?? 'gemini-3.8-flash-tts'

@@ -1,5 +1,5 @@
 import type { AppLanguage } from '@repo/shared'
-import { getAI } from '@/config/ai.js'
+import { getAI } from '@/config/ai-provider.js'
 
 const STT_MODEL = process.env.AI_STT_MODEL ?? 'gemini-3.5-transcribe'
 const STT_FALLBACK_MODEL = process.env.AI_STT_FALLBACK_MODEL ?? 'gemini-3.8-flash'

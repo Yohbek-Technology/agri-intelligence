@@ -29,32 +29,27 @@ describe('synthesize — input validation', () => {
 describe('synthesize — real Gemini TTS', () => {
   it('generates audio buffer from English text', async () => {
     const result = await synthesize('Hello, this is a test.', 'en')
-
     expect(result.audio).toBeInstanceOf(Buffer)
     expect(result.audio.length).toBeGreaterThan(0)
     expect(result.mimeType).toContain('audio')
-  }, 30000)
+  }, 120000)
 
   it('generates audio buffer from Amharic text', async () => {
     const result = await synthesize('ሰላም እንዴት ናችሁ', 'am')
-
     expect(result.audio).toBeInstanceOf(Buffer)
     expect(result.audio.length).toBeGreaterThan(0)
     expect(result.mimeType).toContain('audio')
-  }, 30000)
+  }, 120000)
 
   it('returns consistent mime type across calls', async () => {
     const resultA = await synthesize('First sentence.', 'en')
     const resultB = await synthesize('Second sentence.', 'en')
-
     expect(resultA.mimeType).toBe(resultB.mimeType)
-  }, 30000)
+  }, 120000)
 
   it('produces different audio for different text', async () => {
     const short = await synthesize('Hi.', 'en')
     const long = await synthesize('This is a much longer sentence with many words for testing.', 'en')
-
-    // Longer text should produce more audio data (not guaranteed but highly likely)
     expect(long.audio.length).toBeGreaterThan(short.audio.length)
-  }, 30000)
+  }, 120000)
 })

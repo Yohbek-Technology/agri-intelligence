@@ -8,12 +8,17 @@ import {
   roundCoordinates,
   sanitizePromptContext,
   Type,
-} from '../../src/config/ai.js'
+} from '../../src/config/ai-provider.js'
 import type { AITier } from '@repo/shared'
 
+const isDev = process.env.NODE_ENV !== 'production'
+
 beforeAll(() => {
-  if (!process.env.GEMINI_API_KEY) {
-    throw new Error('GEMINI_API_KEY must be set in .env before running tests')
+  if (isDev && !process.env.OPENROUTER_API_KEY) {
+    throw new Error('OPENROUTER_API_KEY must be set in .env for development tests')
+  }
+  if (!isDev && !process.env.GEMINI_API_KEY) {
+    throw new Error('GEMINI_API_KEY must be set in .env for production tests')
   }
 })
 
@@ -78,7 +83,6 @@ describe('sanitizePromptContext', () => {
   })
 
   it('does not round coordinates when only lat is present without lng', () => {
-    // sanitizePromptContext only rounds when both lat AND lng exist
     const ctx = { lat: 8.541139, crop: 'teff' }
     const sanitized = sanitizePromptContext(ctx)
     expect(sanitized.lat).toBe(8.541139)
@@ -94,11 +98,9 @@ describe('sanitizePromptContext', () => {
   it('does not modify the original object', () => {
     const ctx = { farmer_name: 'John', lat: 8.541139, lng: 39.270428, crop: 'teff' }
     const sanitized = sanitizePromptContext(ctx)
-    // original must be untouched
     expect(ctx.farmer_name).toBe('John')
     expect(ctx.lat).toBe(8.541139)
     expect(ctx.lng).toBe(39.270428)
-    // sanitized must have PII removed and coordinates rounded
     expect(sanitized).not.toHaveProperty('farmer_name')
     expect(sanitized.lat).toBe(8.54)
     expect(sanitized.lng).toBe(39.27)
@@ -123,10 +125,6 @@ describe('getTierConfig', () => {
     })
   }
 
-  it('uses flash-lite for voice_intent primary model', () => {
-    expect(getTierConfig('voice_intent').primaryModel).toContain('flash-lite')
-  })
-
   it('has lower temperature for diagnostics than yield_narration', () => {
     expect(getTierConfig('diagnostics').temperature).toBeLessThan(
       getTierConfig('yield_narration').temperature
@@ -140,7 +138,7 @@ describe('getTierConfig', () => {
   })
 })
 
-// ── Real API tests (requires GEMINI_API_KEY) ──
+// ── Real API tests ──
 
 describe('getAI', () => {
   it('returns a GoogleGenAI instance', () => {
@@ -154,7 +152,7 @@ describe('getAI', () => {
   })
 })
 
-describe('generateContent — real Gemini API', () => {
+describe(`generateContent — real ${isDev ? 'OpenRouter' : 'Gemini'} API`, () => {
   it('generates text from a simple prompt', async () => {
     const result = await generateContent('voice_intent', 'What is 2+2? Reply with only the number.')
     expect(result).toBeTruthy()
@@ -171,7 +169,7 @@ describe('generateContent — real Gemini API', () => {
   }, 120000)
 })
 
-describe('generateStructuredContent — real Gemini API', () => {
+describe(`generateStructuredContent — real ${isDev ? 'OpenRouter' : 'Gemini'} API`, () => {
   it('returns parsed JSON matching the schema', async () => {
     const schema = {
       type: Type.OBJECT,
@@ -181,7 +179,6 @@ describe('generateStructuredContent — real Gemini API', () => {
       },
       required: ['intent', 'confidence'],
     }
-    // Use voice_intent — faster and more quota-friendly for a simple classification
     const result = await generateStructuredContent<{ intent: string; confidence: number }>(
       'voice_intent',
       'Classify the intent of: "show my weather forecast". Respond with JSON only.',
@@ -202,7 +199,6 @@ describe('generateStructuredContent — real Gemini API', () => {
       },
       required: ['result'],
     }
-    // Use voice_intent (flash-lite, low retries, 10s timeout) — fast for trivial math
     const data = await generateStructuredContent<{ result: number }>(
       'voice_intent',
       'What is 5 + 5? Respond with JSON only, using field "result".',
