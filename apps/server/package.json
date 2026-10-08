@@ -11,6 +11,7 @@
     "test:all": "vitest run",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:seed": "tsx src/db/seed.ts",
     "open-auth-docs": "open-cli http://localhost:5000/api/auth/reference"
   },
   "dependencies": {

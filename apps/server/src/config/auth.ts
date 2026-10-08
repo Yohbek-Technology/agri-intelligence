@@ -1,9 +1,12 @@
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
-import { phoneNumber, openAPI } from 'better-auth/plugins'
+import { phoneNumber, openAPI, twoFactor } from 'better-auth/plugins'
 import { db } from '@/config/db.js'
 import * as schema from '@/db/index.js'
-import { sendSms, onPhoneVerified } from '@/services/sms.js'
+import { sendSms, onPhoneVerified, normalizeEthiopianPhone } from '@/services/sms.js'
+
+const MOBILE_SESSION_SECONDS = 30 * 24 * 60 * 60
+const WEB_SESSION_SECONDS = 30 * 60
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -11,28 +14,70 @@ export const auth = betterAuth({
     schema,
   }),
 
+  secret: process.env.BETTER_AUTH_SECRET!,
+  baseURL: process.env.BETTER_AUTH_URL ?? 'http://localhost:5000',
+
+  session: {
+    expiresIn: MOBILE_SESSION_SECONDS,
+    updateAge: 24 * 60 * 60,
+    cookieCache: {
+      enabled: false,
+    },
+  },
+
   emailAndPassword: {
     enabled: true,
+    requireEmailVerification: false,
+    minPasswordLength: 10,
+    maxPasswordLength: 128,
   },
 
   plugins: [
     openAPI(),
-    
+
     phoneNumber({
       otpLength: 6,
       expiresIn: 600,
-      allowedAttempts: 3,
-      phoneNumberValidator: (phone) =>
-        /^\+251[79][0-9]{8}$/.test(phone),
-      sendOTP: ({ phoneNumber: phone, code }) => {
-        void sendSms(phone, `Your AgriIntelligence verification code: ${code}. Valid for 10 minutes.`)
+      allowedAttempts: 5,
+      sendOTP: async ({ phoneNumber: phone, code }) => {
+        const normalized = normalizeEthiopianPhone(phone)
+        await sendSms(
+          normalized,
+          `[AgriIntelligence] Your verification code is: ${code}. Valid for 10 minutes. Do not share this code.`
+        )
+      },
+      phoneNumberValidator: (phone) => {
+        const normalized = normalizeEthiopianPhone(phone)
+        return /^\+251[79][0-9]{8}$/.test(normalized)
       },
       signUpOnVerification: {
-        getTempEmail: (phone) => `${phone.replace('+', '')}@phone.agri.invalid`,
-        getTempName: (phone) => phone,
+        getTempEmail: (phone) => {
+          const normalized = normalizeEthiopianPhone(phone)
+          return `${normalized.replace('+', '')}@phone.agri.invalid`
+        },
+        getTempName: (phone) => normalizeEthiopianPhone(phone),
       },
       callbackOnVerification: async ({ user }) => {
         await onPhoneVerified(user.id)
+      },
+    }),
+
+    twoFactor({
+      otpOptions: {
+        digits: 6,
+        period: 600,
+      },
+      issuer: 'AgriIntelligence',
+      skipVerificationOnEnable: true,
+      sendOTP: async ({ user, otp }: { user: { phoneNumber?: string | null }; otp: string }) => {
+        if (!user.phoneNumber) {
+          throw new Error('[2fa] Administrator account has no registered phone number for 2FA delivery.')
+        }
+        const normalized = normalizeEthiopianPhone(user.phoneNumber)
+        await sendSms(
+          normalized,
+          `[AgriIntelligence] Your administrative 2FA code is: ${otp}. Valid for 10 minutes. Do not share this code.`
+        )
       },
     }),
   ],
@@ -97,4 +142,22 @@ export const auth = betterAuth({
       },
     },
   },
+
+  advanced: {
+    cookiePrefix: 'agri',
+    generateId: () => crypto.randomUUID(),
+    defaultCookieAttributes: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+    },
+  },
+
+  rateLimit: {
+    enabled: true,
+    window: 3600,
+    max: 100,
+  },
 })
+
+export type Auth = typeof auth
