@@ -8,14 +8,14 @@ export const PhoneOtpRequestSchema = z.object({
   phoneNumber: z
     .string()
     .min(1, 'Phone number is required')
-    .regex(ETHIOPIAN_SHORT_REGEX, 'Enter a valid Ethiopian phone number (+251, 251, or 0 prefix)'),
+    .regex(ETHIOPIAN_SHORT_REGEX, 'Enter a valid Ethiopian phone number'),
 })
 
 export const PhoneOtpVerifySchema = z.object({
   phoneNumber: z
     .string()
     .min(1, 'Phone number is required')
-    .regex(ETHIOPIAN_SHORT_REGEX, 'Enter a valid Ethiopian phone number (+251, 251, or 0 prefix)'),
+    .regex(ETHIOPIAN_SHORT_REGEX, 'Enter a valid Ethiopian phone number'),
   code: z
     .string()
     .regex(OTP_REGEX, 'Verification code must be exactly 6 digits'),
@@ -29,16 +29,11 @@ export const AdminLoginSchema = z.object({
   password: z
     .string()
     .min(10, 'Password must be at least 10 characters')
-    .regex(
-      PASSWORD_COMPLEXITY_REGEX,
-      'Password must contain at least one uppercase letter, one lowercase letter, and one number'
-    ),
+    .regex(PASSWORD_COMPLEXITY_REGEX, 'Password must contain uppercase, lowercase, and a number'),
 })
 
 export const AdminTwoFactorVerifySchema = z.object({
-  code: z
-    .string()
-    .regex(OTP_REGEX, 'Verification code must be exactly 6 digits'),
+  code: z.string().regex(OTP_REGEX, 'Verification code must be exactly 6 digits'),
 })
 
 export const UserProfileUpdateSchema = z.object({
@@ -49,15 +44,3 @@ export const UserProfileUpdateSchema = z.object({
 export const LanguageSelectSchema = z.object({
   language: z.enum(['am', 'om', 'ti', 'en']),
 })
-
-export const PhoneNormalizationUtil = {
-  normalize: (phone: string): string => {
-    const trimmed = phone.replace(/\s+/g, '')
-    if (trimmed.startsWith('+251')) return trimmed
-    if (trimmed.startsWith('251')) return `+${trimmed}`
-    if (trimmed.startsWith('0')) return `+251${trimmed.slice(1)}`
-    return trimmed
-  },
-  isEthiopianE164: (phone: string): boolean =>
-    /^\+251[79][0-9]{8}$/.test(phone),
-}

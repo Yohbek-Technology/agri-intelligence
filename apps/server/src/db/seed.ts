@@ -1,13 +1,13 @@
 import 'dotenv/config'
+import { eq } from 'drizzle-orm'
 import { db, pool } from '@/config/db.js'
 import { auth } from '@/config/auth.js'
 import { cityOffices } from '@/db/schemas/tenancy.js'
-import { user, account } from '@/db/schemas/auth-schema.js'
-import { eq } from 'drizzle-orm'
+import { user } from '@/db/schemas/auth-schema.js'
 
 const ADAMA_OFFICE_NAME = 'Adama City Agriculture Office'
 
-const ADAMA_PARAMETERS = {
+const ADAMA_PARAMETERS: Record<string, unknown> = {
   'land_unit.timad_to_ha': 0.25,
   'land_unit.hectare_to_ha': 1,
   'agro_zone.kolla_max_m': 1500,
@@ -51,7 +51,7 @@ async function seedCityOffice(): Promise<string> {
     .limit(1)
 
   if (existing.length) {
-    console.log(`[seed] City office already exists: ${ADAMA_OFFICE_NAME} (${existing[0]!.id})`)
+    console.log(`[seed] City office already exists — ${ADAMA_OFFICE_NAME} (${existing[0]!.id})`)
     return existing[0]!.id
   }
 
@@ -67,7 +67,7 @@ async function seedCityOffice(): Promise<string> {
 
   if (!inserted) throw new Error('[seed] Failed to insert city office.')
 
-  console.log(`[seed] Created city office: ${ADAMA_OFFICE_NAME} (${inserted.id})`)
+  console.log(`[seed] City office created — ${ADAMA_OFFICE_NAME} (${inserted.id})`)
   return inserted.id
 }
 
@@ -79,11 +79,12 @@ async function seedSystemAdmin(cityOfficeId: string): Promise<void> {
     .limit(1)
 
   if (existing.length) {
-    console.log(`[seed] System admin already exists: ${SEED_ADMIN.email}`)
+    console.log(`[seed] System admin already exists — ${SEED_ADMIN.email}`)
     return
   }
 
-  const result = await auth.api.signUpEmail({
+  const { headers: signUpHeaders, response: signUpResponse } = await auth.api.signUpEmail({
+    returnHeaders: true,
     body: {
       name: SEED_ADMIN.name,
       email: SEED_ADMIN.email,
@@ -91,11 +92,11 @@ async function seedSystemAdmin(cityOfficeId: string): Promise<void> {
     },
   })
 
-  if (!result?.user?.id) {
-    throw new Error('[seed] Better Auth signUpEmail did not return a user id.')
+  if (!signUpResponse?.user?.id) {
+    throw new Error('[seed] signUpEmail did not return a user id.')
   }
 
-  const adminId = result.user.id
+  const adminId = signUpResponse.user.id
 
   await db
     .update(user)
@@ -107,31 +108,32 @@ async function seedSystemAdmin(cityOfficeId: string): Promise<void> {
     })
     .where(eq(user.id, adminId))
 
-  await auth.api.enableTwoFactor({
-    body: { password: SEED_ADMIN.password },
-    headers: new Headers({
-      Authorization: `Bearer ${result.token}`,
-    }),
-  }).catch(() => {
-    console.warn('[seed] Could not auto-enable 2FA — admin must enable it on first login.')
-  })
+  const sessionCookies = signUpHeaders.getSetCookie().join('; ')
 
-  console.log(`[seed] Created system admin: ${SEED_ADMIN.email} (id: ${adminId})`)
+  if (sessionCookies) {
+    await auth.api
+      .enableTwoFactor({
+        body: { password: SEED_ADMIN.password },
+        headers: new Headers({ Cookie: sessionCookies }),
+      })
+      .then(() => console.log(`[seed] 2FA enabled on admin account.`))
+      .catch(() => console.warn('[seed] 2FA auto-enable failed — admin must enable it on first login.'))
+  }
+
+  console.log(`[seed] System admin created — ${SEED_ADMIN.email} (id: ${adminId})`)
   console.log(`[seed] Role: system_admin | Phone: ${SEED_ADMIN.phoneNumber}`)
-  console.log(`[seed] ⚠  Change the default password immediately after first login.`)
+  console.warn('[seed] Change the default password immediately after first login.')
 }
 
 async function main(): Promise<void> {
   console.log('[seed] Starting database seed...')
-
   const cityOfficeId = await seedCityOffice()
   await seedSystemAdmin(cityOfficeId)
-
   console.log('[seed] Seed completed successfully.')
 }
 
 main()
-  .catch((err) => {
+  .catch((err: unknown) => {
     console.error('[seed] Fatal error:', err)
     process.exit(1)
   })

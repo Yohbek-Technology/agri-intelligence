@@ -1,1 +1,1 @@
-export type { AppLanguage } from './auth.js'
+export type { AppLanguage, UserRole } from './auth.js'

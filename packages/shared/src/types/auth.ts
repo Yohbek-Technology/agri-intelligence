@@ -8,14 +8,14 @@ import type {
   LanguageSelectSchema,
 } from '../validators/auth.js'
 
-export type PhoneOtpRequest = z.infer<typeof PhoneOtpRequestSchema>
-export type PhoneOtpVerify = z.infer<typeof PhoneOtpVerifySchema>
-export type AdminLogin = z.infer<typeof AdminLoginSchema>
+export type PhoneOtpRequest      = z.infer<typeof PhoneOtpRequestSchema>
+export type PhoneOtpVerify       = z.infer<typeof PhoneOtpVerifySchema>
+export type AdminLogin           = z.infer<typeof AdminLoginSchema>
 export type AdminTwoFactorVerify = z.infer<typeof AdminTwoFactorVerifySchema>
-export type UserProfileUpdate = z.infer<typeof UserProfileUpdateSchema>
-export type LanguageSelect = z.infer<typeof LanguageSelectSchema>
+export type UserProfileUpdate    = z.infer<typeof UserProfileUpdateSchema>
+export type LanguageSelect       = z.infer<typeof LanguageSelectSchema>
 
-export type UserRole = 'farmer' | 'da' | 'officer' | 'system_admin'
+export type UserRole    = 'farmer' | 'da' | 'officer' | 'system_admin'
 export type AppLanguage = 'am' | 'om' | 'ti' | 'en'
 
 export interface AuthUser {
@@ -57,22 +57,6 @@ export interface SessionContext {
 export interface TwoFactorChallenge {
   twoFactorRedirect: true
   twoFactorMethods: Array<'totp' | 'otp'>
-}
-
-export interface PhoneOtpSignInResult {
-  userId: string
-  role: UserRole
-  isNewUser: boolean
-}
-
-export interface AdminLoginResult {
-  requiresTwoFactor: true
-  email: string
-}
-
-export interface AdminSessionResult {
-  userId: string
-  role: UserRole
 }
 
 export interface OfficeConfig {

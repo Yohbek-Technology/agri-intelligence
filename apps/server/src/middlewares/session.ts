@@ -1,16 +1,19 @@
 import { createMiddleware } from 'hono/factory'
-import type { AuthUser, AuthSession } from '@repo/shared'
+import type { Auth } from '@/config/auth.js'
 import { auth } from '@/config/auth.js'
 
+export type SessionUser    = Auth['$Infer']['Session']['user']
+export type SessionSession = Auth['$Infer']['Session']['session']
+
 export interface AuthVariables {
-  user: AuthUser
-  session: AuthSession
+  user: SessionUser
+  session: SessionSession
 }
 
 declare module 'hono' {
   interface ContextVariableMap {
-    user: AuthUser
-    session: AuthSession
+    user: SessionUser
+    session: SessionSession
   }
 }
 
@@ -30,20 +33,7 @@ export const sessionGuard = createMiddleware<{ Variables: AuthVariables }>(async
     )
   }
 
-  const rawUser = result.user as typeof result.user & {
-    role?: string
-    banned?: boolean
-    ban_reason?: string | null
-    ban_expires?: Date | null
-    city_office_id?: string | null
-    preferred_language?: string
-    assigned_kebele_ids?: string
-    deleted_at?: Date | null
-    phone_number?: string | null
-    phone_number_verified?: boolean
-  }
-
-  if (rawUser.banned) {
+  if (result.user.banned) {
     return c.json(
       {
         error: {
@@ -56,7 +46,7 @@ export const sessionGuard = createMiddleware<{ Variables: AuthVariables }>(async
     )
   }
 
-  if (rawUser.deleted_at) {
+  if (result.user.deletedAt) {
     return c.json(
       {
         error: {
@@ -69,39 +59,8 @@ export const sessionGuard = createMiddleware<{ Variables: AuthVariables }>(async
     )
   }
 
-  const user: AuthUser = {
-    id: rawUser.id,
-    name: rawUser.name,
-    email: rawUser.email,
-    emailVerified: rawUser.emailVerified,
-    image: rawUser.image ?? null,
-    phoneNumber: rawUser.phone_number ?? null,
-    phoneNumberVerified: rawUser.phone_number_verified ?? false,
-    role: (rawUser.role ?? 'farmer') as AuthUser['role'],
-    banned: rawUser.banned ?? false,
-    banReason: rawUser.ban_reason ?? null,
-    banExpires: rawUser.ban_expires ?? null,
-    cityOfficeId: rawUser.city_office_id ?? null,
-    preferredLanguage: (rawUser.preferred_language ?? 'am') as AuthUser['preferredLanguage'],
-    assignedKebeleIds: rawUser.assigned_kebele_ids ?? '{}',
-    deletedAt: rawUser.deleted_at ?? null,
-    createdAt: result.user.createdAt,
-    updatedAt: result.user.updatedAt,
-  }
-
-  const session: AuthSession = {
-    id: result.session.id,
-    userId: result.session.userId,
-    token: result.session.token,
-    expiresAt: result.session.expiresAt,
-    ipAddress: result.session.ipAddress ?? null,
-    userAgent: result.session.userAgent ?? null,
-    createdAt: result.session.createdAt,
-    updatedAt: result.session.updatedAt,
-  }
-
-  c.set('user', user)
-  c.set('session', session)
+  c.set('user', result.user)
+  c.set('session', result.session)
 
   await next()
 })
