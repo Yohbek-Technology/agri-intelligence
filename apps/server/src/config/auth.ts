@@ -72,7 +72,25 @@ export const auth = betterAuth({
           `${normalizeEthiopianPhone(phone).replace('+', '')}@phone.agri.invalid`,
         getTempName: (phone) => normalizeEthiopianPhone(phone),
       },
-      callbackOnVerification: async ({ user }) => {
+      callbackOnVerification: async ({ user }, ctx?: any) => {
+        if (ctx?.body?.password) {
+          const hashedPassword = await ctx.context.password.hash(ctx.body.password)
+          const existingAcc = await ctx.context.internalAdapter.findCredentialAccount(user.id)
+          if (!existingAcc) {
+            await ctx.context.internalAdapter.createAccount({
+              userId: user.id,
+              providerId: 'credential',
+              accountId: user.id,
+              password: hashedPassword,
+            })
+          }
+        }
+        if (ctx?.body?.name) {
+          await ctx.context.internalAdapter.updateUser(user.id, { name: ctx.body.name })
+        }
+        if (ctx?.body?.preferredLanguage) {
+          await ctx.context.internalAdapter.updateUser(user.id, { preferredLanguage: ctx.body.preferredLanguage })
+        }
         await onPhoneVerified(user.id)
       },
     }),

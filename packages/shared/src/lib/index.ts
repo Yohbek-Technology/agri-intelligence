@@ -1,1 +1,1 @@
-export { PhoneUtils } from './phone.js'
+export * from './phone.js'

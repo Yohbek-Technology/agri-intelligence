@@ -8,20 +8,20 @@ export const PhoneSignUpSchema = z.object({
   phoneNumber: z
     .string()
     .min(1, 'Phone number is required')
-    .regex(ETHIOPIAN_SHORT_REGEX, 'Enter a valid Ethiopian phone number'),
+    .regex(ETHIOPIAN_SHORT_REGEX, 'Enter a valid Ethiopian phone number (+2519... or 09...)'),
   password: z
     .string()
     .min(10, 'Password must be at least 10 characters')
     .regex(PASSWORD_COMPLEXITY_REGEX, 'Password must contain uppercase, lowercase, and a number'),
-  name: z.string().min(2).max(120).optional(),
-  preferredLanguage: z.enum(['am', 'om', 'ti', 'en']).optional(),
+  name: z.string().min(2, 'Full name must be at least 2 characters').max(120),
+  preferredLanguage: z.enum(['am', 'om', 'ti', 'en']).default('am'),
 })
 
 export const PhoneSignInSchema = z.object({
   phoneNumber: z
     .string()
     .min(1, 'Phone number is required')
-    .regex(ETHIOPIAN_SHORT_REGEX, 'Enter a valid Ethiopian phone number'),
+    .regex(ETHIOPIAN_SHORT_REGEX, 'Enter a valid Ethiopian phone number (+2519... or 09...)'),
   password: z.string().min(1, 'Password is required'),
 })
 
@@ -29,7 +29,7 @@ export const PhoneOtpRequestSchema = z.object({
   phoneNumber: z
     .string()
     .min(1, 'Phone number is required')
-    .regex(ETHIOPIAN_SHORT_REGEX, 'Enter a valid Ethiopian phone number'),
+    .regex(ETHIOPIAN_SHORT_REGEX, 'Enter a valid Ethiopian phone number (+2519... or 09...)'),
 })
 
 export const PhoneOtpVerifySchema = z.object({
@@ -40,7 +40,37 @@ export const PhoneOtpVerifySchema = z.object({
   code: z
     .string()
     .regex(OTP_REGEX, 'Verification code must be exactly 6 digits'),
+  password: z.string().optional(),
+  name: z.string().optional(),
+  preferredLanguage: z.enum(['am', 'om', 'ti', 'en']).optional(),
 })
+
+export const PasswordResetRequestSchema = z.object({
+  phoneNumber: z
+    .string()
+    .min(1, 'Phone number is required')
+    .regex(ETHIOPIAN_SHORT_REGEX, 'Enter a valid Ethiopian phone number (+2519... or 09...)'),
+})
+
+export const PasswordResetConfirmSchema = z
+  .object({
+    phoneNumber: z
+      .string()
+      .min(1, 'Phone number is required')
+      .regex(ETHIOPIAN_SHORT_REGEX, 'Enter a valid Ethiopian phone number'),
+    code: z
+      .string()
+      .regex(OTP_REGEX, 'Verification code must be exactly 6 digits'),
+    newPassword: z
+      .string()
+      .min(10, 'Password must be at least 10 characters')
+      .regex(PASSWORD_COMPLEXITY_REGEX, 'Password must contain uppercase, lowercase, and a number'),
+    confirmPassword: z.string().min(1, 'Confirm your new password'),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  })
 
 export const AdminLoginSchema = z.object({
   email: z

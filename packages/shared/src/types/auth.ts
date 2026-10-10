@@ -4,6 +4,8 @@ import type {
   PhoneSignInSchema,
   PhoneOtpRequestSchema,
   PhoneOtpVerifySchema,
+  PasswordResetRequestSchema,
+  PasswordResetConfirmSchema,
   AdminLoginSchema,
   AdminTwoFactorVerifySchema,
   UserProfileUpdateSchema,
@@ -14,6 +16,8 @@ export type PhoneSignUp          = z.infer<typeof PhoneSignUpSchema>
 export type PhoneSignIn          = z.infer<typeof PhoneSignInSchema>
 export type PhoneOtpRequest      = z.infer<typeof PhoneOtpRequestSchema>
 export type PhoneOtpVerify       = z.infer<typeof PhoneOtpVerifySchema>
+export type PasswordResetRequest = z.infer<typeof PasswordResetRequestSchema>
+export type PasswordResetConfirm = z.infer<typeof PasswordResetConfirmSchema>
 export type AdminLogin           = z.infer<typeof AdminLoginSchema>
 export type AdminTwoFactorVerify = z.infer<typeof AdminTwoFactorVerifySchema>
 export type UserProfileUpdate    = z.infer<typeof UserProfileUpdateSchema>
