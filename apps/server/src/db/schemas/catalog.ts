@@ -1,7 +1,8 @@
-import { pgTable, uuid, varchar, timestamp, jsonb, boolean, date, check, index, unique } from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar, timestamp, jsonb, boolean, date, check, index, unique, numeric, integer, smallint } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm/_relations";
 import { sql } from "drizzle-orm";
 import { cityOffices } from "./tenancy.js";
+import { users } from "./auth-schema.js";
 import { catalogStatus, chemicalCategory, pestKind, agroZone } from "./enums.js";
 
 export const crops = pgTable(
@@ -16,7 +17,7 @@ export const crops = pgTable(
     nameAm: varchar("name_am", { length: 100 }),
     nameOm: varchar("name_om", { length: 100 }),
     nameTi: varchar("name_ti", { length: 100 }),
-    maxPlausibleYieldQtHa: varchar("max_plausible_yield_qt_ha").notNull().default("80"),
+    maxPlausibleYieldQtPerHa: numeric("max_plausible_yield_qt_per_ha", { precision: 6, scale: 2 }).notNull().default("80"),
     weedingWindows: jsonb("weeding_windows").notNull().default([]),
     recommendedSuccessors: uuid("recommended_successors").array().notNull().default(sql`'{}'::uuid[]`),
     status: catalogStatus("status").notNull().default("active"),
@@ -73,12 +74,12 @@ export const fertilizerRates = pgTable(
       .notNull()
       .references(() => crops.id, { onDelete: "cascade" }),
     agroZone: agroZone("agro_zone").notNull(),
-    ureaKgHa: varchar("urea_kg_ha").notNull(),
-    npsKgHa: varchar("nps_kg_ha").notNull(),
-    seedKgHa: varchar("seed_kg_ha").notNull(),
-    ratesVersion: varchar("rates_version").notNull(),
+    ureaKgPerHa: numeric("urea_kg_per_ha", { precision: 8, scale: 2 }).notNull(),
+    npsKgPerHa: numeric("nps_kg_per_ha", { precision: 8, scale: 2 }).notNull(),
+    seedKgPerHa: numeric("seed_kg_per_ha", { precision: 8, scale: 2 }).notNull(),
+    ratesVersion: integer("rates_version").notNull(),
     effectiveFrom: date("effective_from").notNull(),
-    createdBy: uuid("created_by"),
+    createdByUserId: uuid("created_by_user_id").references(() => users.id),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => ({
@@ -90,7 +91,7 @@ export const fertilizerRates = pgTable(
     ),
     ratesCheck: check(
       "fertilizer_rates_check",
-      sql`urea_kg_ha::numeric >= 0 and nps_kg_ha::numeric >= 0 and seed_kg_ha::numeric >= 0`
+      sql`urea_kg_per_ha >= 0 and nps_kg_per_ha >= 0 and seed_kg_per_ha >= 0`
     ),
   })
 );
@@ -107,7 +108,7 @@ export const pestCatalog = pgTable(
     name: jsonb("name").notNull(),
     preventionAdvice: jsonb("prevention_advice"),
     referenceMediaId: uuid("reference_media_id"),
-    isQuarantine: boolean("is_quarantine").notNull().default(false),
+    isQuarantinePest: boolean("is_quarantine_pest").notNull().default(false),
     status: catalogStatus("status").notNull().default("active"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
@@ -129,8 +130,8 @@ export const registeredChemicals = pgTable(
     registrationNumber: varchar("registration_number", { length: 80 }).notNull(),
     category: chemicalCategory("category").notNull(),
     dosageText: jsonb("dosage_text").notNull(),
-    ppeText: jsonb("ppe_text"),
-    safetyIntervalDays: varchar("safety_interval_days").notNull(),
+    protectiveEquipmentText: jsonb("protective_equipment_text"),
+    safetyIntervalDays: smallint("safety_interval_days").notNull(),
     labelMediaId: uuid("label_media_id"),
     permittedZones: agroZone("permitted_zones").array(),
     targetCropIds: uuid("target_crop_ids").array().notNull().default(sql`'{}'::uuid[]`),
@@ -148,7 +149,7 @@ export const registeredChemicals = pgTable(
     ),
     safetyIntervalCheck: check(
       "registered_chemicals_safety_check",
-      sql`safety_interval_days::integer >= 0`
+      sql`safety_interval_days >= 0`
     ),
     idxTargetCrops: index("idx_chemicals_target_crops")
       .using("gin", table.targetCropIds)
@@ -187,6 +188,10 @@ export const fertilizerRatesRelations = relations(fertilizerRates, ({ one }) => 
   crop: one(crops, {
     fields: [fertilizerRates.cropId],
     references: [crops.id],
+  }),
+  createdByUser: one(users, {
+    fields: [fertilizerRates.createdByUserId],
+    references: [users.id],
   }),
 }));
 

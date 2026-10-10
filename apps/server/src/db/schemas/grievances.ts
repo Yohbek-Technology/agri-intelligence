@@ -1,8 +1,12 @@
-import { pgTable, uuid, varchar, timestamp, jsonb, check, index, foreignKey } from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar, timestamp, jsonb, check, index, foreignKey, numeric, date } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm/_relations";
 import { sql } from "drizzle-orm";
 import { cityOffices, kebeles } from "./tenancy.js";
 import { farmers, plots } from "./farmers.js";
+import { users } from "./auth-schema.js";
+import { mediaFiles } from "./media.js";
+import { pestCatalog } from "./catalog.js";
+import { diagnosisCases } from "./intelligence.js";
 import {
   grievanceCategory,
   grievanceStatus,
@@ -22,18 +26,18 @@ export const grievances = pgTable(
     farmerId: uuid("farmer_id")
       .notNull()
       .references(() => farmers.id),
-    submittedByUserId: uuid("submitted_by_user_id"),
+    submittedByUserId: uuid("submitted_by_user_id").references(() => users.id),
     category: grievanceCategory("category").notNull(),
     plotId: uuid("plot_id").references(() => plots.id),
     kebeleId: uuid("kebele_id").references(() => kebeles.id),
-    locationLat: varchar("location_lat"),
-    locationLng: varchar("location_lng"),
-    audioMediaId: uuid("audio_media_id"),
+    locationLatitude: numeric("location_latitude", { precision: 9, scale: 6 }),
+    locationLongitude: numeric("location_longitude", { precision: 9, scale: 6 }),
+    audioMediaId: uuid("audio_media_id").references(() => mediaFiles.id),
     textNote: varchar("text_note", { length: 1000 }),
-    pestId: uuid("pest_id"),
+    pestId: uuid("pest_id").references(() => pestCatalog.id),
     status: grievanceStatus("status").notNull().default("submitted"),
     priority: grievancePriority("priority").notNull().default("normal"),
-    assigneeUserId: uuid("assignee_user_id"),
+    assigneeUserId: uuid("assignee_user_id").references(() => users.id),
     mergedIntoId: uuid("merged_into_id"),
     photoMediaIds: uuid("photo_media_ids").array().notNull().default(sql`'{}'::uuid[]`),
     statusHistory: jsonb("status_history").notNull().default([]),
@@ -90,11 +94,10 @@ export const grievanceMessages = pgTable(
     grievanceId: uuid("grievance_id")
       .notNull()
       .references(() => grievances.id, { onDelete: "cascade" }),
-    senderUserId: uuid("sender_user_id").notNull(),
+    senderUserId: uuid("sender_user_id").notNull().references(() => users.id),
     messageType: messageKind("message_type").notNull(),
     textBody: varchar("text_body", { length: 2000 }),
-    audioMediaId: uuid("audio_media_id"),
-    ttsMediaId: uuid("tts_media_id"),
+    audioMediaId: uuid("audio_media_id").references(() => mediaFiles.id),
     readAt: timestamp("read_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -120,8 +123,8 @@ export const daTasks = pgTable(
     cityOfficeId: uuid("city_office_id")
       .notNull()
       .references(() => cityOffices.id),
-    assigneeUserId: uuid("assignee_user_id").notNull(),
-    createdByUserId: uuid("created_by_user_id"),
+    assigneeUserId: uuid("assignee_user_id").notNull().references(() => users.id),
+    createdByUserId: uuid("created_by_user_id").references(() => users.id),
     taskType: taskType("task_type").notNull(),
     status: taskStatus("status").notNull().default("open"),
     title: varchar("title", { length: 200 }).notNull(),
@@ -129,8 +132,8 @@ export const daTasks = pgTable(
     farmerId: uuid("farmer_id").references(() => farmers.id),
     plotId: uuid("plot_id").references(() => plots.id),
     grievanceId: uuid("grievance_id").references(() => grievances.id),
-    diagnosisCaseId: uuid("diagnosis_case_id"),
-    dueOn: varchar("due_on"),
+    diagnosisCaseId: uuid("diagnosis_case_id").references(() => diagnosisCases.id),
+    dueOn: date("due_on"),
     completedAt: timestamp("completed_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
@@ -157,6 +160,14 @@ export const grievancesRelations = relations(grievances, ({ one, many }) => ({
     fields: [grievances.kebeleId],
     references: [kebeles.id],
   }),
+  submittedByUser: one(users, {
+    fields: [grievances.submittedByUserId],
+    references: [users.id],
+  }),
+  assigneeUser: one(users, {
+    fields: [grievances.assigneeUserId],
+    references: [users.id],
+  }),
   mergedInto: one(grievances, {
     fields: [grievances.mergedIntoId],
     references: [grievances.id],
@@ -173,6 +184,10 @@ export const grievanceMessagesRelations = relations(grievanceMessages, ({ one })
   grievance: one(grievances, {
     fields: [grievanceMessages.grievanceId],
     references: [grievances.id],
+  }),
+  senderUser: one(users, {
+    fields: [grievanceMessages.senderUserId],
+    references: [users.id],
   }),
 }));
 
@@ -192,5 +207,17 @@ export const daTasksRelations = relations(daTasks, ({ one }) => ({
   grievance: one(grievances, {
     fields: [daTasks.grievanceId],
     references: [grievances.id],
+  }),
+  diagnosisCase: one(diagnosisCases, {
+    fields: [daTasks.diagnosisCaseId],
+    references: [diagnosisCases.id],
+  }),
+  assigneeUser: one(users, {
+    fields: [daTasks.assigneeUserId],
+    references: [users.id],
+  }),
+  createdByUser: one(users, {
+    fields: [daTasks.createdByUserId],
+    references: [users.id],
   }),
 }));

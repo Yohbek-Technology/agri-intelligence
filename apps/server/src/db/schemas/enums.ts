@@ -212,7 +212,7 @@ export const deliveryStatus = pgEnum("delivery_status", [
   "failed",
 ]);
 
-export const syncOp = pgEnum("sync_op", ["insert", "update", "delete"]);
+export const syncOperation = pgEnum("sync_operation", ["insert", "update", "delete"]);
 
 export const syncMutationStatus = pgEnum("sync_mutation_status", [
   "applied",

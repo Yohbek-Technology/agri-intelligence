@@ -1,8 +1,10 @@
-import { pgTable, uuid, varchar, timestamp, date, boolean, check, index, unique, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar, timestamp, date, boolean, check, index, unique, uniqueIndex, numeric, integer } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm/_relations";
 import { sql } from "drizzle-orm";
 import { cityOffices } from "./tenancy.js";
 import { farmers } from "./farmers.js";
+import { crops } from "./catalog.js";
+import { users } from "./auth-schema.js";
 import { quantityUnit, surveyStatus, moderationStatus } from "./enums.js";
 
 export const marketCentres = pgTable(
@@ -36,28 +38,31 @@ export const marketSurveys: ReturnType<typeof pgTable> = pgTable(
     marketCentreId: uuid("market_centre_id")
       .notNull()
       .references(() => marketCentres.id),
-    cropId: uuid("crop_id").notNull(),
+    cropId: uuid("crop_id")
+      .notNull()
+      .references(() => crops.id),
     surveyDate: date("survey_date").notNull(),
     enteredUnit: quantityUnit("entered_unit").notNull(),
-    minPriceEtbPerKg: varchar("min_price_etb_per_kg").notNull(),
-    avgPriceEtbPerKg: varchar("avg_price_etb_per_kg").notNull(),
-    maxPriceEtbPerKg: varchar("max_price_etb_per_kg").notNull(),
-    enumeratorUserId: uuid("enumerator_user_id").notNull(),
+    minPriceEtbPerKg: numeric("min_price_etb_per_kg", { precision: 10, scale: 2 }).notNull(),
+    avgPriceEtbPerKg: numeric("avg_price_etb_per_kg", { precision: 10, scale: 2 }).notNull(),
+    maxPriceEtbPerKg: numeric("max_price_etb_per_kg", { precision: 10, scale: 2 }).notNull(),
+    enumeratorUserId: uuid("enumerator_user_id").notNull().references(() => users.id),
     status: surveyStatus("status").notNull().default("draft"),
-    version: varchar("version").notNull().default("1"),
+    version: integer("version").notNull().default(1),
     supersedesId: uuid("supersedes_id").references(() => marketSurveys.id),
-    verifiedBy: uuid("verified_by"),
+    verifiedByUserId: uuid("verified_by_user_id").references(() => users.id),
     verifiedAt: timestamp("verified_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => ({
+    surveyDateCheck: check("market_surveys_date_check", sql`survey_date <= current_date`),
     pricesCheck: check(
       "market_surveys_prices_check",
       sql`
-        min_price_etb_per_kg::numeric > 0
-        and min_price_etb_per_kg::numeric <= avg_price_etb_per_kg::numeric
-        and avg_price_etb_per_kg::numeric <= max_price_etb_per_kg::numeric
+        min_price_etb_per_kg > 0
+        and min_price_etb_per_kg <= avg_price_etb_per_kg
+        and avg_price_etb_per_kg <= max_price_etb_per_kg
       `
     ),
     verifiedCheck: check(
@@ -83,20 +88,22 @@ export const crowdTransactions = pgTable(
     farmerId: uuid("farmer_id")
       .notNull()
       .references(() => farmers.id),
-    createdByUserId: uuid("created_by_user_id"),
-    cropId: uuid("crop_id").notNull(),
+    createdByUserId: uuid("created_by_user_id").references(() => users.id),
+    cropId: uuid("crop_id")
+      .notNull()
+      .references(() => crops.id),
     marketCentreId: uuid("market_centre_id")
       .notNull()
       .references(() => marketCentres.id),
-    enteredPrice: varchar("entered_price").notNull(),
+    enteredPrice: numeric("entered_price", { precision: 10, scale: 2 }).notNull(),
     enteredUnit: quantityUnit("entered_unit").notNull(),
-    priceEtbPerKg: varchar("price_etb_per_kg").notNull(),
-    volumeKg: varchar("volume_kg").notNull(),
+    priceEtbPerKg: numeric("price_etb_per_kg", { precision: 10, scale: 2 }).notNull(),
+    volumeKg: numeric("volume_kg", { precision: 12, scale: 3 }).notNull(),
     saleDate: date("sale_date").notNull(),
     moderationStatus: moderationStatus("moderation_status").notNull().default("pending"),
     outlierFlag: boolean("outlier_flag").notNull().default(false),
     rejectionReason: varchar("rejection_reason", { length: 255 }),
-    moderatedBy: uuid("moderated_by"),
+    moderatedByUserId: uuid("moderated_by_user_id").references(() => users.id),
     moderatedAt: timestamp("moderated_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
@@ -106,10 +113,14 @@ export const crowdTransactions = pgTable(
     pricesCheck: check(
       "crowd_transactions_prices_check",
       sql`
-        entered_price::numeric > 0 
-        and price_etb_per_kg::numeric > 0 
-        and volume_kg::numeric > 0
+        entered_price > 0 
+        and price_etb_per_kg > 0 
+        and volume_kg > 0
       `
+    ),
+    saleDateCheck: check(
+      "crowd_transactions_date_check",
+      sql`sale_date <= current_date and sale_date >= current_date - 30`
     ),
     rejectionCheck: check(
       "crowd_transactions_rejection_check",
@@ -142,9 +153,21 @@ export const marketSurveysRelations = relations(marketSurveys, ({ one }) => ({
     fields: [marketSurveys.marketCentreId],
     references: [marketCentres.id],
   }),
+  crop: one(crops, {
+    fields: [marketSurveys.cropId],
+    references: [crops.id],
+  }),
+  enumeratorUser: one(users, {
+    fields: [marketSurveys.enumeratorUserId],
+    references: [users.id],
+  }),
   supersedes: one(marketSurveys, {
     fields: [marketSurveys.supersedesId],
     references: [marketSurveys.id],
+  }),
+  verifiedByUser: one(users, {
+    fields: [marketSurveys.verifiedByUserId],
+    references: [users.id],
   }),
 }));
 
@@ -157,8 +180,20 @@ export const crowdTransactionsRelations = relations(crowdTransactions, ({ one })
     fields: [crowdTransactions.farmerId],
     references: [farmers.id],
   }),
+  crop: one(crops, {
+    fields: [crowdTransactions.cropId],
+    references: [crops.id],
+  }),
   marketCentre: one(marketCentres, {
     fields: [crowdTransactions.marketCentreId],
     references: [marketCentres.id],
+  }),
+  createdByUser: one(users, {
+    fields: [crowdTransactions.createdByUserId],
+    references: [users.id],
+  }),
+  moderatedByUser: one(users, {
+    fields: [crowdTransactions.moderatedByUserId],
+    references: [users.id],
   }),
 }));

@@ -1,105 +1,118 @@
 import { relations } from 'drizzle-orm/_relations'
-import { pgTable, text, timestamp, boolean, index, integer } from 'drizzle-orm/pg-core'
+import { pgTable, uuid, text, timestamp, boolean, index, check, varchar } from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm'
+import { userRole, appLanguage } from './enums.js'
+import { cityOffices } from './tenancy.js'
 
-export const user = pgTable('user', {
-  id:                   text('id').primaryKey(),
-  name:                 text('name').notNull(),
-  email:                text('email').notNull().unique(),
-  emailVerified:        boolean('email_verified').default(false).notNull(),
-  image:                text('image'),
-  createdAt:            timestamp('created_at').defaultNow().notNull(),
-  updatedAt:            timestamp('updated_at').defaultNow().notNull().$onUpdate(() => new Date()),
-  phone_number:         text('phone_number').unique(),
-  phone_number_verified: boolean('phone_number_verified').default(false).notNull(),
-  role:                 text('role').default('farmer').notNull(),
-  banned:               boolean('banned').default(false).notNull(),
-  ban_reason:           text('ban_reason'),
-  ban_expires:          timestamp('ban_expires'),
-  city_office_id:       text('city_office_id'),
-  preferred_language:   text('preferred_language').default('am').notNull(),
-  assigned_kebele_ids:  text('assigned_kebele_ids').default('{}').notNull(),
-  deleted_at:           timestamp('deleted_at'),
-  twoFactorEnabled:     boolean('twoFactorEnabled').default(false).notNull(),
-})
-
-export const session = pgTable(
-  'session',
+export const users = pgTable(
+  'users',
   {
-    id:         text('id').primaryKey(),
-    expiresAt:  timestamp('expires_at').notNull(),
-    token:      text('token').notNull().unique(),
-    createdAt:  timestamp('created_at').defaultNow().notNull(),
-    updatedAt:  timestamp('updated_at').defaultNow().notNull().$onUpdate(() => new Date()),
-    ipAddress:  text('ip_address'),
-    userAgent:  text('user_agent'),
-    userId:     text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+    id: uuid('id').primaryKey().defaultRandom(),
+    name: varchar('name', { length: 255 }).notNull(),
+    email: varchar('email', { length: 255 }).notNull().unique(),
+    emailVerified: boolean('email_verified').default(false).notNull(),
+    image_url: varchar('image_url', { length: 500 }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull().$onUpdate(() => new Date()),
+    phone_number: varchar('phone_number', { length: 20 }).unique(),
+    phone_number_verified: boolean('phone_number_verified').default(false).notNull(),
+    role: userRole('role').default('farmer').notNull(),
+    banned: boolean('banned').default(false).notNull(),
+    ban_reason: text('ban_reason'),
+    ban_expires_at: timestamp('ban_expires_at', { withTimezone: true }),
+    city_office_id: uuid('city_office_id').references(() => cityOffices.id),
+    preferred_language: appLanguage('preferred_language').default('am').notNull(),
+    assigned_kebele_ids: uuid('assigned_kebele_ids').array().default(sql`'{}'::uuid[]`).notNull(),
+    deleted_at: timestamp('deleted_at', { withTimezone: true }),
   },
-  (table) => [index('session_userId_idx').on(table.userId)]
+  (table) => ({
+    phoneFormatCheck: check(
+      'users_phone_format_check',
+      sql`phone_number is null or phone_number ~ '^\\+251[79][0-9]{8}$'`
+    ),
+    phoneOrDeletedCheck: check(
+      'users_phone_or_deleted_check',
+      sql`phone_number is not null or deleted_at is not null`
+    ),
+    verifiedNeedsPhoneCheck: check(
+      'users_verified_needs_phone_check',
+      sql`not phone_number_verified or phone_number is not null`
+    ),
+    roleOfficeCheck: check(
+      'users_role_office_check',
+      sql`role in ('system_admin', 'farmer') or city_office_id is not null`
+    ),
+  })
 )
 
-export const account = pgTable(
-  'account',
+export const accounts = pgTable(
+  'accounts',
   {
-    id:                     text('id').primaryKey(),
-    accountId:              text('account_id').notNull(),
-    providerId:             text('provider_id').notNull(),
-    userId:                 text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
-    accessToken:            text('access_token'),
-    refreshToken:           text('refresh_token'),
-    idToken:                text('id_token'),
-    accessTokenExpiresAt:   timestamp('access_token_expires_at'),
-    refreshTokenExpiresAt:  timestamp('refresh_token_expires_at'),
-    scope:                  text('scope'),
-    password:               text('password'),
-    createdAt:              timestamp('created_at').defaultNow().notNull(),
-    updatedAt:              timestamp('updated_at').defaultNow().notNull().$onUpdate(() => new Date()),
+    id: uuid('id').primaryKey().defaultRandom(),
+    provider_account_id: varchar('provider_account_id', { length: 255 }).notNull(),
+    providerId: varchar('provider_id', { length: 100 }).notNull(),
+    userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    accessToken: text('access_token'),
+    refreshToken: text('refresh_token'),
+    idToken: text('id_token'),
+    accessTokenExpiresAt: timestamp('access_token_expires_at', { withTimezone: true }),
+    refreshTokenExpiresAt: timestamp('refresh_token_expires_at', { withTimezone: true }),
+    scope: text('scope'),
+    password: text('password'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull().$onUpdate(() => new Date()),
   },
-  (table) => [index('account_userId_idx').on(table.userId)]
+  (table) => ({
+    userIdIdx: index('account_userId_idx').on(table.userId),
+    credentialPasswordCheck: check(
+      'accounts_credential_password_check',
+      sql`provider_id <> 'credential' or password is not null`
+    ),
+  })
 )
 
-export const verification = pgTable(
-  'verification',
+export const sessions = pgTable(
+  'sessions',
   {
-    id:         text('id').primaryKey(),
-    identifier: text('identifier').notNull(),
-    value:      text('value').notNull(),
-    expiresAt:  timestamp('expires_at').notNull(),
-    createdAt:  timestamp('created_at').defaultNow().notNull(),
-    updatedAt:  timestamp('updated_at').defaultNow().notNull().$onUpdate(() => new Date()),
+    id: uuid('id').primaryKey().defaultRandom(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    token: varchar('token', { length: 500 }).notNull().unique(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull().$onUpdate(() => new Date()),
+    ipAddress: varchar('ip_address', { length: 100 }),
+    userAgent: text('user_agent'),
+    userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   },
-  (table) => [index('verification_identifier_idx').on(table.identifier)]
+  (table) => ({
+    userIdIdx: index('session_userId_idx').on(table.userId),
+  })
 )
 
-export const twoFactor = pgTable(
-  'twoFactor',
+export const verifications = pgTable(
+  'verifications',
   {
-    id:                     text('id').primaryKey(),
-    secret:                 text('secret').notNull(),
-    backupCodes:            text('backupCodes').notNull(),
-    userId:                 text('userId').notNull().references(() => user.id, { onDelete: 'cascade' }),
-    verified:               boolean('verified').default(true).notNull(),
-    failedVerificationCount: integer('failedVerificationCount').default(0).notNull(),
-    lockedUntil:            timestamp('lockedUntil'),
-    createdAt:              timestamp('createdAt').defaultNow().notNull(),
-    updatedAt:              timestamp('updatedAt').defaultNow().notNull().$onUpdate(() => new Date()),
+    id: uuid('id').primaryKey().defaultRandom(),
+    identifier: varchar('identifier', { length: 255 }).notNull(),
+    value: text('value').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull().$onUpdate(() => new Date()),
   },
-  (table) => [index('twoFactor_userId_idx').on(table.userId)]
+  (table) => ({
+    identifierIdx: index('verification_identifier_idx').on(table.identifier),
+    expiryIdx: index('idx_verifications_expiry').on(table.expiresAt),
+  })
 )
 
-export const userRelations = relations(user, ({ many }) => ({
-  sessions:   many(session),
-  accounts:   many(account),
-  twoFactors: many(twoFactor),
+export const usersRelations = relations(users, ({ many }) => ({
+  sessions: many(sessions),
+  accounts: many(accounts),
 }))
 
-export const sessionRelations = relations(session, ({ one }) => ({
-  user: one(user, { fields: [session.userId], references: [user.id] }),
+export const accountsRelations = relations(accounts, ({ one }) => ({
+  user: one(users, { fields: [accounts.userId], references: [users.id] }),
 }))
 
-export const accountRelations = relations(account, ({ one }) => ({
-  user: one(user, { fields: [account.userId], references: [user.id] }),
-}))
-
-export const twoFactorRelations = relations(twoFactor, ({ one }) => ({
-  user: one(user, { fields: [twoFactor.userId], references: [user.id] }),
+export const sessionsRelations = relations(sessions, ({ one }) => ({
+  user: one(users, { fields: [sessions.userId], references: [users.id] }),
 }))

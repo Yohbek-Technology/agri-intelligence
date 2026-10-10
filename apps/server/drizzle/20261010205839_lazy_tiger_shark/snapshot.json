@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "157a7516-0733-4f1c-8fec-22bd7cf73437",
+  "id": "8d5863b2-6b99-4533-bd0b-fea6e7388147",
   "prevIds": [
     "00000000-0000-0000-0000-000000000000"
   ],
@@ -400,7 +400,7 @@
         "update",
         "delete"
       ],
-      "name": "sync_op",
+      "name": "sync_operation",
       "entityType": "enums",
       "schema": "public"
     },
@@ -472,25 +472,25 @@
     },
     {
       "isRlsEnabled": false,
-      "name": "account",
+      "name": "accounts",
       "entityType": "tables",
       "schema": "public"
     },
     {
       "isRlsEnabled": false,
-      "name": "session",
+      "name": "sessions",
       "entityType": "tables",
       "schema": "public"
     },
     {
       "isRlsEnabled": false,
-      "name": "user",
+      "name": "users",
       "entityType": "tables",
       "schema": "public"
     },
     {
       "isRlsEnabled": false,
-      "name": "verification",
+      "name": "verifications",
       "entityType": "tables",
       "schema": "public"
     },
@@ -874,7 +874,7 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "centroid_lat",
+      "name": "centroid_latitude",
       "entityType": "columns",
       "schema": "public",
       "table": "kebeles"
@@ -887,7 +887,7 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "centroid_lng",
+      "name": "centroid_longitude",
       "entityType": "columns",
       "schema": "public",
       "table": "kebeles"
@@ -900,7 +900,7 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "radius_m",
+      "name": "radius_meters",
       "entityType": "columns",
       "schema": "public",
       "table": "kebeles"
@@ -945,33 +945,33 @@
       "table": "kebeles"
     },
     {
-      "type": "text",
+      "type": "uuid",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
-      "default": null,
+      "default": "gen_random_uuid()",
       "generated": null,
       "identity": null,
       "name": "id",
       "entityType": "columns",
       "schema": "public",
-      "table": "account"
+      "table": "accounts"
     },
     {
-      "type": "text",
+      "type": "varchar(255)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "account_id",
+      "name": "provider_account_id",
       "entityType": "columns",
       "schema": "public",
-      "table": "account"
+      "table": "accounts"
     },
     {
-      "type": "text",
+      "type": "varchar(100)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -981,10 +981,10 @@
       "name": "provider_id",
       "entityType": "columns",
       "schema": "public",
-      "table": "account"
+      "table": "accounts"
     },
     {
-      "type": "text",
+      "type": "uuid",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -994,7 +994,7 @@
       "name": "user_id",
       "entityType": "columns",
       "schema": "public",
-      "table": "account"
+      "table": "accounts"
     },
     {
       "type": "text",
@@ -1007,7 +1007,7 @@
       "name": "access_token",
       "entityType": "columns",
       "schema": "public",
-      "table": "account"
+      "table": "accounts"
     },
     {
       "type": "text",
@@ -1020,7 +1020,7 @@
       "name": "refresh_token",
       "entityType": "columns",
       "schema": "public",
-      "table": "account"
+      "table": "accounts"
     },
     {
       "type": "text",
@@ -1033,10 +1033,10 @@
       "name": "id_token",
       "entityType": "columns",
       "schema": "public",
-      "table": "account"
+      "table": "accounts"
     },
     {
-      "type": "timestamp",
+      "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
@@ -1046,10 +1046,10 @@
       "name": "access_token_expires_at",
       "entityType": "columns",
       "schema": "public",
-      "table": "account"
+      "table": "accounts"
     },
     {
-      "type": "timestamp",
+      "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
@@ -1059,7 +1059,7 @@
       "name": "refresh_token_expires_at",
       "entityType": "columns",
       "schema": "public",
-      "table": "account"
+      "table": "accounts"
     },
     {
       "type": "text",
@@ -1072,7 +1072,7 @@
       "name": "scope",
       "entityType": "columns",
       "schema": "public",
-      "table": "account"
+      "table": "accounts"
     },
     {
       "type": "text",
@@ -1085,10 +1085,10 @@
       "name": "password",
       "entityType": "columns",
       "schema": "public",
-      "table": "account"
+      "table": "accounts"
     },
     {
-      "type": "timestamp",
+      "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -1098,36 +1098,36 @@
       "name": "created_at",
       "entityType": "columns",
       "schema": "public",
-      "table": "account"
+      "table": "accounts"
     },
     {
-      "type": "timestamp",
+      "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
-      "default": null,
+      "default": "now()",
       "generated": null,
       "identity": null,
       "name": "updated_at",
       "entityType": "columns",
       "schema": "public",
-      "table": "account"
+      "table": "accounts"
     },
     {
-      "type": "text",
+      "type": "uuid",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
-      "default": null,
+      "default": "gen_random_uuid()",
       "generated": null,
       "identity": null,
       "name": "id",
       "entityType": "columns",
       "schema": "public",
-      "table": "session"
+      "table": "sessions"
     },
     {
-      "type": "timestamp",
+      "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -1137,10 +1137,10 @@
       "name": "expires_at",
       "entityType": "columns",
       "schema": "public",
-      "table": "session"
+      "table": "sessions"
     },
     {
-      "type": "text",
+      "type": "varchar(500)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -1150,10 +1150,10 @@
       "name": "token",
       "entityType": "columns",
       "schema": "public",
-      "table": "session"
+      "table": "sessions"
     },
     {
-      "type": "timestamp",
+      "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -1163,23 +1163,23 @@
       "name": "created_at",
       "entityType": "columns",
       "schema": "public",
-      "table": "session"
+      "table": "sessions"
     },
     {
-      "type": "timestamp",
+      "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
-      "default": null,
+      "default": "now()",
       "generated": null,
       "identity": null,
       "name": "updated_at",
       "entityType": "columns",
       "schema": "public",
-      "table": "session"
+      "table": "sessions"
     },
     {
-      "type": "text",
+      "type": "varchar(100)",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
@@ -1189,7 +1189,7 @@
       "name": "ip_address",
       "entityType": "columns",
       "schema": "public",
-      "table": "session"
+      "table": "sessions"
     },
     {
       "type": "text",
@@ -1202,10 +1202,10 @@
       "name": "user_agent",
       "entityType": "columns",
       "schema": "public",
-      "table": "session"
+      "table": "sessions"
     },
     {
-      "type": "text",
+      "type": "uuid",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -1215,23 +1215,23 @@
       "name": "user_id",
       "entityType": "columns",
       "schema": "public",
-      "table": "session"
+      "table": "sessions"
     },
     {
-      "type": "text",
+      "type": "uuid",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
-      "default": null,
+      "default": "gen_random_uuid()",
       "generated": null,
       "identity": null,
       "name": "id",
       "entityType": "columns",
       "schema": "public",
-      "table": "user"
+      "table": "users"
     },
     {
-      "type": "text",
+      "type": "varchar(255)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -1241,10 +1241,10 @@
       "name": "name",
       "entityType": "columns",
       "schema": "public",
-      "table": "user"
+      "table": "users"
     },
     {
-      "type": "text",
+      "type": "varchar(255)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -1254,7 +1254,7 @@
       "name": "email",
       "entityType": "columns",
       "schema": "public",
-      "table": "user"
+      "table": "users"
     },
     {
       "type": "boolean",
@@ -1267,23 +1267,23 @@
       "name": "email_verified",
       "entityType": "columns",
       "schema": "public",
-      "table": "user"
+      "table": "users"
     },
     {
-      "type": "text",
+      "type": "varchar(500)",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "image",
+      "name": "image_url",
       "entityType": "columns",
       "schema": "public",
-      "table": "user"
+      "table": "users"
     },
     {
-      "type": "timestamp",
+      "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -1293,10 +1293,10 @@
       "name": "created_at",
       "entityType": "columns",
       "schema": "public",
-      "table": "user"
+      "table": "users"
     },
     {
-      "type": "timestamp",
+      "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -1306,23 +1306,153 @@
       "name": "updated_at",
       "entityType": "columns",
       "schema": "public",
-      "table": "user"
+      "table": "users"
+    },
+    {
+      "type": "varchar(20)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "phone_number",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "users"
+    },
+    {
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "false",
+      "generated": null,
+      "identity": null,
+      "name": "phone_number_verified",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "users"
+    },
+    {
+      "type": "user_role",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'farmer'",
+      "generated": null,
+      "identity": null,
+      "name": "role",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "users"
+    },
+    {
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "false",
+      "generated": null,
+      "identity": null,
+      "name": "banned",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "users"
     },
     {
       "type": "text",
       "typeSchema": null,
-      "notNull": true,
+      "notNull": false,
       "dimensions": 0,
       "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "ban_reason",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "users"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "ban_expires_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "users"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "city_office_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "users"
+    },
+    {
+      "type": "app_language",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'am'",
+      "generated": null,
+      "identity": null,
+      "name": "preferred_language",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "users"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 1,
+      "default": "'{}'",
+      "generated": null,
+      "identity": null,
+      "name": "assigned_kebele_ids",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "users"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "deleted_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "users"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
       "generated": null,
       "identity": null,
       "name": "id",
       "entityType": "columns",
       "schema": "public",
-      "table": "verification"
+      "table": "verifications"
     },
     {
-      "type": "text",
+      "type": "varchar(255)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -1332,7 +1462,7 @@
       "name": "identifier",
       "entityType": "columns",
       "schema": "public",
-      "table": "verification"
+      "table": "verifications"
     },
     {
       "type": "text",
@@ -1345,10 +1475,10 @@
       "name": "value",
       "entityType": "columns",
       "schema": "public",
-      "table": "verification"
+      "table": "verifications"
     },
     {
-      "type": "timestamp",
+      "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -1358,10 +1488,10 @@
       "name": "expires_at",
       "entityType": "columns",
       "schema": "public",
-      "table": "verification"
+      "table": "verifications"
     },
     {
-      "type": "timestamp",
+      "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -1371,10 +1501,10 @@
       "name": "created_at",
       "entityType": "columns",
       "schema": "public",
-      "table": "verification"
+      "table": "verifications"
     },
     {
-      "type": "timestamp",
+      "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -1384,7 +1514,7 @@
       "name": "updated_at",
       "entityType": "columns",
       "schema": "public",
-      "table": "verification"
+      "table": "verifications"
     },
     {
       "type": "uuid",
@@ -1459,7 +1589,7 @@
       "default": "false",
       "generated": null,
       "identity": null,
-      "name": "no_phone",
+      "name": "has_no_phone",
       "entityType": "columns",
       "schema": "public",
       "table": "farmers"
@@ -1498,7 +1628,7 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "assigned_da_id",
+      "name": "assigned_da_user_id",
       "entityType": "columns",
       "schema": "public",
       "table": "farmers"
@@ -1660,7 +1790,7 @@
       "table": "plot_crop_history"
     },
     {
-      "type": "varchar",
+      "type": "smallint",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -1803,7 +1933,7 @@
       "table": "plots"
     },
     {
-      "type": "varchar",
+      "type": "numeric(10,3)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -1816,8 +1946,8 @@
       "table": "plots"
     },
     {
-      "type": "varchar",
-      "typeSchema": null,
+      "type": "area_unit",
+      "typeSchema": "public",
       "notNull": true,
       "dimensions": 0,
       "default": null,
@@ -1829,73 +1959,137 @@
       "table": "plots"
     },
     {
-      "type": "varchar",
+      "type": "numeric(10,6)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "conversion_factor_used",
+      "name": "hectares_per_unit_applied",
       "entityType": "columns",
       "schema": "public",
       "table": "plots"
     },
     {
-      "type": "varchar",
+      "type": "numeric(10,4)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": {
+        "as": "round(area_value * hectares_per_unit_applied, 4)",
+        "type": "stored"
+      },
+      "identity": null,
+      "name": "area_hectares",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "plots"
+    },
+    {
+      "type": "numeric(9,6)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "centroid_lat",
+      "name": "centroid_latitude",
       "entityType": "columns",
       "schema": "public",
       "table": "plots"
     },
     {
-      "type": "varchar",
+      "type": "numeric(9,6)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "centroid_lng",
+      "name": "centroid_longitude",
       "entityType": "columns",
       "schema": "public",
       "table": "plots"
     },
     {
-      "type": "varchar",
+      "type": "geography(Point,4326)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": {
+        "as": "st_setsrid(st_makepoint(centroid_longitude, centroid_latitude), 4326)::geography",
+        "type": "stored"
+      },
+      "identity": null,
+      "name": "centroid_geom",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "plots"
+    },
+    {
+      "type": "numeric(6,1)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "gps_accuracy_m",
+      "name": "gps_accuracy_meters",
       "entityType": "columns",
       "schema": "public",
       "table": "plots"
     },
     {
-      "type": "varchar",
+      "type": "numeric(5,1)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": {
+        "as": "round(centroid_latitude, 1)",
+        "type": "stored"
+      },
+      "identity": null,
+      "name": "weather_grid_latitude",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "plots"
+    },
+    {
+      "type": "numeric(5,1)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": {
+        "as": "round(centroid_longitude, 1)",
+        "type": "stored"
+      },
+      "identity": null,
+      "name": "weather_grid_longitude",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "plots"
+    },
+    {
+      "type": "integer",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "elevation_m",
+      "name": "elevation_meters",
       "entityType": "columns",
       "schema": "public",
       "table": "plots"
     },
     {
-      "type": "varchar",
-      "typeSchema": null,
+      "type": "agro_zone",
+      "typeSchema": "public",
       "notNull": true,
       "dimensions": 0,
       "default": null,
@@ -1907,8 +2101,8 @@
       "table": "plots"
     },
     {
-      "type": "varchar",
-      "typeSchema": null,
+      "type": "agro_zone",
+      "typeSchema": "public",
       "notNull": true,
       "dimensions": 0,
       "default": null,
@@ -1946,8 +2140,8 @@
       "table": "plots"
     },
     {
-      "type": "varchar",
-      "typeSchema": null,
+      "type": "soil_class",
+      "typeSchema": "public",
       "notNull": false,
       "dimensions": 0,
       "default": null,
@@ -1959,8 +2153,8 @@
       "table": "plots"
     },
     {
-      "type": "varchar",
-      "typeSchema": null,
+      "type": "drainage_class",
+      "typeSchema": "public",
       "notNull": false,
       "dimensions": 0,
       "default": null,
@@ -1985,7 +2179,7 @@
       "table": "plots"
     },
     {
-      "type": "varchar",
+      "type": "smallint",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
@@ -1998,8 +2192,8 @@
       "table": "plots"
     },
     {
-      "type": "varchar",
-      "typeSchema": null,
+      "type": "plot_status",
+      "typeSchema": "public",
       "notNull": true,
       "dimensions": 0,
       "default": "'active'",
@@ -2284,14 +2478,14 @@
       "table": "crops"
     },
     {
-      "type": "varchar",
+      "type": "numeric(6,2)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
       "default": "'80'",
       "generated": null,
       "identity": null,
-      "name": "max_plausible_yield_qt_ha",
+      "name": "max_plausible_yield_qt_per_ha",
       "entityType": "columns",
       "schema": "public",
       "table": "crops"
@@ -2440,46 +2634,46 @@
       "table": "fertilizer_rates"
     },
     {
-      "type": "varchar",
+      "type": "numeric(8,2)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "urea_kg_ha",
+      "name": "urea_kg_per_ha",
       "entityType": "columns",
       "schema": "public",
       "table": "fertilizer_rates"
     },
     {
-      "type": "varchar",
+      "type": "numeric(8,2)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "nps_kg_ha",
+      "name": "nps_kg_per_ha",
       "entityType": "columns",
       "schema": "public",
       "table": "fertilizer_rates"
     },
     {
-      "type": "varchar",
+      "type": "numeric(8,2)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "seed_kg_ha",
+      "name": "seed_kg_per_ha",
       "entityType": "columns",
       "schema": "public",
       "table": "fertilizer_rates"
     },
     {
-      "type": "varchar",
+      "type": "integer",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -2512,7 +2706,7 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "created_by",
+      "name": "created_by_user_id",
       "entityType": "columns",
       "schema": "public",
       "table": "fertilizer_rates"
@@ -2629,7 +2823,7 @@
       "default": "false",
       "generated": null,
       "identity": null,
-      "name": "is_quarantine",
+      "name": "is_quarantine_pest",
       "entityType": "columns",
       "schema": "public",
       "table": "pest_catalog"
@@ -2772,13 +2966,13 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "ppe_text",
+      "name": "protective_equipment_text",
       "entityType": "columns",
       "schema": "public",
       "table": "registered_chemicals"
     },
     {
-      "type": "varchar",
+      "type": "smallint",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -2986,14 +3180,14 @@
       "table": "media_files"
     },
     {
-      "type": "varchar",
+      "type": "smallint",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "duration_s",
+      "name": "duration_seconds",
       "entityType": "columns",
       "schema": "public",
       "table": "media_files"
@@ -3012,14 +3206,14 @@
       "table": "media_files"
     },
     {
-      "type": "varchar(64)",
+      "type": "char(64)",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "sha256",
+      "name": "sha256_checksum",
       "entityType": "columns",
       "schema": "public",
       "table": "media_files"
@@ -3058,7 +3252,7 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "upload_id",
+      "name": "resumable_upload_id",
       "entityType": "columns",
       "schema": "public",
       "table": "media_files"
@@ -3168,7 +3362,7 @@
       "table": "crop_cycles"
     },
     {
-      "type": "varchar",
+      "type": "smallint",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -3415,7 +3609,7 @@
       "table": "fertilizer_logs"
     },
     {
-      "type": "varchar",
+      "type": "numeric(10,3)",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
@@ -3454,7 +3648,7 @@
       "table": "fertilizer_logs"
     },
     {
-      "type": "varchar",
+      "type": "numeric(8,2)",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
@@ -3467,7 +3661,7 @@
       "table": "fertilizer_logs"
     },
     {
-      "type": "varchar",
+      "type": "smallint",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
@@ -3610,14 +3804,14 @@
       "table": "field_operations"
     },
     {
-      "type": "varchar",
+      "type": "smallint",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "sequence_no",
+      "name": "sequence_number",
       "entityType": "columns",
       "schema": "public",
       "table": "field_operations"
@@ -3636,14 +3830,14 @@
       "table": "field_operations"
     },
     {
-      "type": "varchar",
+      "type": "numeric(10,3)",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "product_rate",
+      "name": "product_application_rate",
       "entityType": "columns",
       "schema": "public",
       "table": "field_operations"
@@ -3675,7 +3869,7 @@
       "table": "field_operations"
     },
     {
-      "type": "varchar",
+      "type": "integer",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
@@ -3805,7 +3999,7 @@
       "table": "harvest_records"
     },
     {
-      "type": "varchar",
+      "type": "numeric(10,3)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -3831,7 +4025,23 @@
       "table": "harvest_records"
     },
     {
-      "type": "varchar",
+      "type": "numeric(12,3)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": {
+        "as": "case entered_unit when 'quintal' then entered_volume * 100 else entered_volume end",
+        "type": "stored"
+      },
+      "identity": null,
+      "name": "volume_kg",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "harvest_records"
+    },
+    {
+      "type": "numeric(8,2)",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
@@ -3974,7 +4184,7 @@
       "table": "ledger_entries"
     },
     {
-      "type": "varchar",
+      "type": "numeric(12,2)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -4156,7 +4366,7 @@
       "table": "sowing_logs"
     },
     {
-      "type": "varchar",
+      "type": "numeric(10,3)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -4169,7 +4379,7 @@
       "table": "sowing_logs"
     },
     {
-      "type": "varchar",
+      "type": "numeric(8,2)",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
@@ -4390,7 +4600,7 @@
       "table": "diagnosis_cases"
     },
     {
-      "type": "varchar",
+      "type": "numeric(3,2)",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
@@ -4462,7 +4672,7 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "reviewed_by",
+      "name": "reviewed_by_user_id",
       "entityType": "columns",
       "schema": "public",
       "table": "diagnosis_cases"
@@ -4476,19 +4686,6 @@
       "generated": null,
       "identity": null,
       "name": "reviewed_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "diagnosis_cases"
-    },
-    {
-      "type": "uuid",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "result_audio_id",
       "entityType": "columns",
       "schema": "public",
       "table": "diagnosis_cases"
@@ -4598,20 +4795,20 @@
       "table": "outbreak_clusters"
     },
     {
-      "type": "varchar",
+      "type": "integer",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "radius_m",
+      "name": "radius_meters",
       "entityType": "columns",
       "schema": "public",
       "table": "outbreak_clusters"
     },
     {
-      "type": "varchar",
+      "type": "integer",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -4728,27 +4925,27 @@
       "table": "weather_alerts"
     },
     {
-      "type": "varchar",
+      "type": "numeric(5,1)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "grid_lat",
+      "name": "grid_latitude",
       "entityType": "columns",
       "schema": "public",
       "table": "weather_alerts"
     },
     {
-      "type": "varchar",
+      "type": "numeric(5,1)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "grid_lng",
+      "name": "grid_longitude",
       "entityType": "columns",
       "schema": "public",
       "table": "weather_alerts"
@@ -4832,27 +5029,27 @@
       "table": "weather_forecasts"
     },
     {
-      "type": "varchar",
+      "type": "numeric(5,1)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "grid_lat",
+      "name": "grid_latitude",
       "entityType": "columns",
       "schema": "public",
       "table": "weather_forecasts"
     },
     {
-      "type": "varchar",
+      "type": "numeric(5,1)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "grid_lng",
+      "name": "grid_longitude",
       "entityType": "columns",
       "schema": "public",
       "table": "weather_forecasts"
@@ -4891,7 +5088,7 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "current_obs",
+      "name": "current_observation",
       "entityType": "columns",
       "schema": "public",
       "table": "weather_forecasts"
@@ -4904,7 +5101,7 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "daily",
+      "name": "daily_forecasts",
       "entityType": "columns",
       "schema": "public",
       "table": "weather_forecasts"
@@ -5001,7 +5198,7 @@
       "table": "yield_gap_analyses"
     },
     {
-      "type": "varchar",
+      "type": "integer",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -5014,53 +5211,53 @@
       "table": "yield_gap_analyses"
     },
     {
-      "type": "varchar",
+      "type": "numeric(8,2)",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "plot_yield_qt_ha",
+      "name": "plot_yield_qt_per_ha",
       "entityType": "columns",
       "schema": "public",
       "table": "yield_gap_analyses"
     },
     {
-      "type": "varchar",
+      "type": "numeric(8,2)",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "cohort_median_qt_ha",
+      "name": "cohort_median_qt_per_ha",
       "entityType": "columns",
       "schema": "public",
       "table": "yield_gap_analyses"
     },
     {
-      "type": "varchar",
+      "type": "numeric(8,2)",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "cohort_p75_qt_ha",
+      "name": "cohort_top_quartile_qt_per_ha",
       "entityType": "columns",
       "schema": "public",
       "table": "yield_gap_analyses"
     },
     {
-      "type": "varchar",
+      "type": "numeric(6,2)",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "gap_pct_vs_p75",
+      "name": "gap_percent_vs_top_quartile",
       "entityType": "columns",
       "schema": "public",
       "table": "yield_gap_analyses"
@@ -5131,27 +5328,14 @@
       "table": "yield_gap_analyses"
     },
     {
-      "type": "varchar",
+      "type": "text",
       "typeSchema": null,
-      "notNull": false,
+      "notNull": true,
       "dimensions": 0,
-      "default": null,
+      "default": "''",
       "generated": null,
       "identity": null,
       "name": "narration_text",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "yield_gap_analyses"
-    },
-    {
-      "type": "uuid",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "narration_audio_id",
       "entityType": "columns",
       "schema": "public",
       "table": "yield_gap_analyses"
@@ -5339,7 +5523,7 @@
       "table": "da_tasks"
     },
     {
-      "type": "varchar",
+      "type": "date",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
@@ -5482,19 +5666,6 @@
       "table": "grievance_messages"
     },
     {
-      "type": "uuid",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "tts_media_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "grievance_messages"
-    },
-    {
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": false,
@@ -5612,27 +5783,27 @@
       "table": "grievances"
     },
     {
-      "type": "varchar",
+      "type": "numeric(9,6)",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "location_lat",
+      "name": "location_latitude",
       "entityType": "columns",
       "schema": "public",
       "table": "grievances"
     },
     {
-      "type": "varchar",
+      "type": "numeric(9,6)",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "location_lng",
+      "name": "location_longitude",
       "entityType": "columns",
       "schema": "public",
       "table": "grievances"
@@ -5898,7 +6069,7 @@
       "table": "crowd_transactions"
     },
     {
-      "type": "varchar",
+      "type": "numeric(10,2)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -5924,7 +6095,7 @@
       "table": "crowd_transactions"
     },
     {
-      "type": "varchar",
+      "type": "numeric(10,2)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -5937,7 +6108,7 @@
       "table": "crowd_transactions"
     },
     {
-      "type": "varchar",
+      "type": "numeric(12,3)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -6009,7 +6180,7 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "moderated_by",
+      "name": "moderated_by_user_id",
       "entityType": "columns",
       "schema": "public",
       "table": "crowd_transactions"
@@ -6236,7 +6407,7 @@
       "table": "market_surveys"
     },
     {
-      "type": "varchar",
+      "type": "numeric(10,2)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -6249,7 +6420,7 @@
       "table": "market_surveys"
     },
     {
-      "type": "varchar",
+      "type": "numeric(10,2)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -6262,7 +6433,7 @@
       "table": "market_surveys"
     },
     {
-      "type": "varchar",
+      "type": "numeric(10,2)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -6301,11 +6472,11 @@
       "table": "market_surveys"
     },
     {
-      "type": "varchar",
+      "type": "integer",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
-      "default": "'1'",
+      "default": "1",
       "generated": null,
       "identity": null,
       "name": "version",
@@ -6334,7 +6505,7 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "verified_by",
+      "name": "verified_by_user_id",
       "entityType": "columns",
       "schema": "public",
       "table": "market_surveys"
@@ -6405,7 +6576,7 @@
       "table": "demand_snapshots"
     },
     {
-      "type": "varchar",
+      "type": "smallint",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -6418,7 +6589,7 @@
       "table": "demand_snapshots"
     },
     {
-      "type": "varchar",
+      "type": "numeric(5,2)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -6464,7 +6635,7 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "created_by",
+      "name": "created_by_user_id",
       "entityType": "columns",
       "schema": "public",
       "table": "demand_snapshots"
@@ -6548,7 +6719,7 @@
       "table": "depot_stock_items"
     },
     {
-      "type": "varchar",
+      "type": "numeric(14,3)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -6626,7 +6797,7 @@
       "table": "depot_stock_movements"
     },
     {
-      "type": "varchar",
+      "type": "numeric(14,3)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -6698,7 +6869,7 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "recorded_by",
+      "name": "recorded_by_user_id",
       "entityType": "columns",
       "schema": "public",
       "table": "depot_stock_movements"
@@ -6912,20 +7083,20 @@
       "table": "announcement_deliveries"
     },
     {
-      "type": "varchar",
+      "type": "smallint",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "segments",
+      "name": "sms_segment_count",
       "entityType": "columns",
       "schema": "public",
       "table": "announcement_deliveries"
     },
     {
-      "type": "varchar",
+      "type": "numeric(8,4)",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
@@ -7088,7 +7259,7 @@
       "default": "true",
       "generated": null,
       "identity": null,
-      "name": "target_all",
+      "name": "targets_entire_city",
       "entityType": "columns",
       "schema": "public",
       "table": "announcements"
@@ -7127,7 +7298,7 @@
       "default": "'{}'",
       "generated": null,
       "identity": null,
-      "name": "target_zones",
+      "name": "target_agro_zones",
       "entityType": "columns",
       "schema": "public",
       "table": "announcements"
@@ -7198,7 +7369,7 @@
       "table": "announcements"
     },
     {
-      "type": "varchar",
+      "type": "smallint",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
@@ -7454,14 +7625,14 @@
       "table": "devices"
     },
     {
-      "type": "varchar",
+      "type": "text",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "push_token",
+      "name": "web_push_subscription",
       "entityType": "columns",
       "schema": "public",
       "table": "devices"
@@ -7474,7 +7645,7 @@
       "default": "0",
       "generated": null,
       "identity": null,
-      "name": "last_cursor",
+      "name": "last_sync_cursor",
       "entityType": "columns",
       "schema": "public",
       "table": "devices"
@@ -7527,7 +7698,7 @@
       "generated": null,
       "identity": {
         "type": "always",
-        "name": "sync_changes_seq_seq",
+        "name": "sync_changes_sequence_number_seq",
         "increment": "1",
         "startWith": "1",
         "minValue": "1",
@@ -7535,7 +7706,7 @@
         "cache": 1,
         "cycle": false
       },
-      "name": "seq",
+      "name": "sequence_number",
       "entityType": "columns",
       "schema": "public",
       "table": "sync_changes"
@@ -7561,7 +7732,7 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "entity",
+      "name": "entity_type",
       "entityType": "columns",
       "schema": "public",
       "table": "sync_changes"
@@ -7580,14 +7751,14 @@
       "table": "sync_changes"
     },
     {
-      "type": "sync_op",
+      "type": "sync_operation",
       "typeSchema": "public",
       "notNull": true,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "op",
+      "name": "operation",
       "entityType": "columns",
       "schema": "public",
       "table": "sync_changes"
@@ -7678,7 +7849,7 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "entity",
+      "name": "entity_type",
       "entityType": "columns",
       "schema": "public",
       "table": "sync_mutations"
@@ -7697,14 +7868,14 @@
       "table": "sync_mutations"
     },
     {
-      "type": "sync_op",
+      "type": "sync_operation",
       "typeSchema": "public",
       "notNull": true,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "op",
+      "name": "operation",
       "entityType": "columns",
       "schema": "public",
       "table": "sync_mutations"
@@ -7723,7 +7894,7 @@
       "table": "sync_mutations"
     },
     {
-      "type": "varchar(64)",
+      "type": "char(64)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -7743,7 +7914,7 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "client_seq",
+      "name": "client_sequence_number",
       "entityType": "columns",
       "schema": "public",
       "table": "sync_mutations"
@@ -7804,6 +7975,55 @@
       "nameExplicit": true,
       "columns": [
         {
+          "value": "city_office_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "lower(name)",
+          "isExpression": true,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": "deleted_at is null",
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "uq_kebeles_name_active",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "kebeles"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "city_office_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_kebeles_office",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "kebeles"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
           "value": "user_id",
           "isExpression": false,
           "asc": true,
@@ -7819,7 +8039,7 @@
       "name": "account_userId_idx",
       "entityType": "indexes",
       "schema": "public",
-      "table": "account"
+      "table": "accounts"
     },
     {
       "nameExplicit": true,
@@ -7840,7 +8060,7 @@
       "name": "session_userId_idx",
       "entityType": "indexes",
       "schema": "public",
-      "table": "session"
+      "table": "sessions"
     },
     {
       "nameExplicit": true,
@@ -7861,7 +8081,28 @@
       "name": "verification_identifier_idx",
       "entityType": "indexes",
       "schema": "public",
-      "table": "verification"
+      "table": "verifications"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "expires_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_verifications_expiry",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "verifications"
     },
     {
       "nameExplicit": true,
@@ -7944,7 +8185,7 @@
       "nameExplicit": true,
       "columns": [
         {
-          "value": "assigned_da_id",
+          "value": "assigned_da_user_id",
           "isExpression": false,
           "asc": true,
           "nullsFirst": false,
@@ -8002,6 +8243,34 @@
       "entityType": "indexes",
       "schema": "public",
       "table": "farmers"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "plot_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "season_year",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "uq_plot_crop_history_season",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "plot_crop_history"
     },
     {
       "nameExplicit": true,
@@ -8076,6 +8345,55 @@
       "method": "btree",
       "concurrently": false,
       "name": "idx_plots_office_kebele",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "plots"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "centroid_geom",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "gist",
+      "concurrently": false,
+      "name": "idx_plots_centroid",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "plots"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "weather_grid_latitude",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "weather_grid_longitude",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_plots_weather_grid",
       "entityType": "indexes",
       "schema": "public",
       "table": "plots"
@@ -8637,14 +8955,14 @@
       "nameExplicit": true,
       "columns": [
         {
-          "value": "grid_lat",
+          "value": "grid_latitude",
           "isExpression": false,
           "asc": true,
           "nullsFirst": false,
           "opclass": null
         },
         {
-          "value": "grid_lng",
+          "value": "grid_longitude",
           "isExpression": false,
           "asc": true,
           "nullsFirst": false,
@@ -9048,6 +9366,48 @@
           "asc": true,
           "nullsFirst": false,
           "opclass": null
+        },
+        {
+          "value": "item_type",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "coalesce(crop_id, '00000000-0000-0000-0000-000000000000'::uuid)",
+          "isExpression": true,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "coalesce(variety_id, '00000000-0000-0000-0000-000000000000'::uuid)",
+          "isExpression": true,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "uq_depot_stock_items",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "depot_stock_items"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "depot_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
         }
       ],
       "isUnique": false,
@@ -9365,7 +9725,7 @@
           "opclass": null
         },
         {
-          "value": "seq",
+          "value": "sequence_number",
           "isExpression": false,
           "asc": true,
           "nullsFirst": false,
@@ -9393,7 +9753,7 @@
           "opclass": null
         },
         {
-          "value": "seq",
+          "value": "sequence_number",
           "isExpression": false,
           "asc": true,
           "nullsFirst": false,
@@ -9421,7 +9781,7 @@
           "opclass": null
         },
         {
-          "value": "client_seq",
+          "value": "client_sequence_number",
           "isExpression": false,
           "asc": true,
           "nullsFirst": false,
@@ -9461,16 +9821,16 @@
         "user_id"
       ],
       "schemaTo": "public",
-      "tableTo": "user",
+      "tableTo": "users",
       "columnsTo": [
         "id"
       ],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
-      "name": "account_user_id_user_id_fkey",
+      "name": "accounts_user_id_users_id_fkey",
       "entityType": "fks",
       "schema": "public",
-      "table": "account"
+      "table": "accounts"
     },
     {
       "nameExplicit": false,
@@ -9478,16 +9838,33 @@
         "user_id"
       ],
       "schemaTo": "public",
-      "tableTo": "user",
+      "tableTo": "users",
       "columnsTo": [
         "id"
       ],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
-      "name": "session_user_id_user_id_fkey",
+      "name": "sessions_user_id_users_id_fkey",
       "entityType": "fks",
       "schema": "public",
-      "table": "session"
+      "table": "sessions"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "city_office_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "city_offices",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "users_city_office_id_city_offices_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "users"
     },
     {
       "nameExplicit": false,
@@ -9509,6 +9886,23 @@
     {
       "nameExplicit": false,
       "columns": [
+        "user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "SET NULL",
+      "name": "farmers_user_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "farmers"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
         "kebele_id"
       ],
       "schemaTo": "public",
@@ -9519,6 +9913,40 @@
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "name": "farmers_kebele_id_kebeles_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "farmers"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "assigned_da_user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "farmers_assigned_da_user_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "farmers"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "registered_by_user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "farmers_registered_by_user_id_users_id_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "farmers"
@@ -9570,6 +9998,23 @@
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "plot_crop_history_plot_id_plots_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "plot_crop_history"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "created_by_user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "plot_crop_history_created_by_user_id_users_id_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "plot_crop_history"
@@ -9713,6 +10158,23 @@
     {
       "nameExplicit": false,
       "columns": [
+        "created_by_user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "fertilizer_rates_created_by_user_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "fertilizer_rates"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
         "city_office_id"
       ],
       "schemaTo": "public",
@@ -9757,6 +10219,23 @@
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "name": "media_files_city_office_id_city_offices_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "media_files"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "owner_user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "media_files_owner_user_id_users_id_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "media_files"
@@ -9815,6 +10294,74 @@
     {
       "nameExplicit": false,
       "columns": [
+        "crop_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "crops",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "crop_cycles_crop_id_crops_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "crop_cycles"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "variety_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "crop_varieties",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "crop_cycles_variety_id_crop_varieties_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "crop_cycles"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "stage_changed_by_user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "crop_cycles_stage_changed_by_user_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "crop_cycles"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "created_by_user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "crop_cycles_created_by_user_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "crop_cycles"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
         "city_office_id"
       ],
       "schemaTo": "public",
@@ -9859,6 +10406,23 @@
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "fertilizer_logs_cycle_id_crop_cycles_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "fertilizer_logs"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "created_by_user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "fertilizer_logs_created_by_user_id_users_id_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "fertilizer_logs"
@@ -9917,6 +10481,40 @@
     {
       "nameExplicit": false,
       "columns": [
+        "chemical_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "registered_chemicals",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "field_operations_chemical_id_registered_chemicals_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "field_operations"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "created_by_user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "field_operations_created_by_user_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "field_operations"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
         "city_office_id"
       ],
       "schemaTo": "public",
@@ -9961,6 +10559,23 @@
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "harvest_records_cycle_id_crop_cycles_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "harvest_records"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "created_by_user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "harvest_records_created_by_user_id_users_id_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "harvest_records"
@@ -10019,6 +10634,23 @@
     {
       "nameExplicit": false,
       "columns": [
+        "created_by_user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "ledger_entries_created_by_user_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "ledger_entries"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
         "city_office_id"
       ],
       "schemaTo": "public",
@@ -10063,6 +10695,40 @@
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "sowing_logs_cycle_id_crop_cycles_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "sowing_logs"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "seed_variety_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "crop_varieties",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "sowing_logs_seed_variety_id_crop_varieties_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "sowing_logs"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "created_by_user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "sowing_logs_created_by_user_id_users_id_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "sowing_logs"
@@ -10138,6 +10804,57 @@
     {
       "nameExplicit": false,
       "columns": [
+        "requested_by_user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "diagnosis_cases_requested_by_user_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "diagnosis_cases"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "pest_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "pest_catalog",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "diagnosis_cases_pest_id_pest_catalog_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "diagnosis_cases"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "reviewed_by_user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "diagnosis_cases_reviewed_by_user_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "diagnosis_cases"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
         "city_office_id"
       ],
       "schemaTo": "public",
@@ -10148,6 +10865,40 @@
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "name": "outbreak_clusters_city_office_id_city_offices_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "outbreak_clusters"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "pest_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "pest_catalog",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "outbreak_clusters_pest_id_pest_catalog_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "outbreak_clusters"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "kebele_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "kebeles",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "outbreak_clusters_kebele_id_kebeles_id_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "outbreak_clusters"
@@ -10223,6 +10974,40 @@
     {
       "nameExplicit": false,
       "columns": [
+        "assignee_user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "da_tasks_assignee_user_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "da_tasks"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "created_by_user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "da_tasks_created_by_user_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "da_tasks"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
         "farmer_id"
       ],
       "schemaTo": "public",
@@ -10274,6 +11059,23 @@
     {
       "nameExplicit": false,
       "columns": [
+        "diagnosis_case_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "diagnosis_cases",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "da_tasks_diagnosis_case_id_diagnosis_cases_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "da_tasks"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
         "city_office_id"
       ],
       "schemaTo": "public",
@@ -10301,6 +11103,40 @@
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "grievance_messages_grievance_id_grievances_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "grievance_messages"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "sender_user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "grievance_messages_sender_user_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "grievance_messages"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "audio_media_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "media_files",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "grievance_messages_audio_media_id_media_files_id_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "grievance_messages"
@@ -10342,6 +11178,23 @@
     {
       "nameExplicit": false,
       "columns": [
+        "submitted_by_user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "grievances_submitted_by_user_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "grievances"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
         "plot_id"
       ],
       "schemaTo": "public",
@@ -10369,6 +11222,57 @@
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "name": "grievances_kebele_id_kebeles_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "grievances"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "audio_media_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "media_files",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "grievances_audio_media_id_media_files_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "grievances"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "pest_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "pest_catalog",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "grievances_pest_id_pest_catalog_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "grievances"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "assignee_user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "grievances_assignee_user_id_users_id_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "grievances"
@@ -10427,6 +11331,40 @@
     {
       "nameExplicit": false,
       "columns": [
+        "created_by_user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "crowd_transactions_created_by_user_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "crowd_transactions"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "crop_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "crops",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "crowd_transactions_crop_id_crops_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "crowd_transactions"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
         "market_centre_id"
       ],
       "schemaTo": "public",
@@ -10437,6 +11375,23 @@
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "name": "crowd_transactions_market_centre_id_market_centres_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "crowd_transactions"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "moderated_by_user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "crowd_transactions_moderated_by_user_id_users_id_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "crowd_transactions"
@@ -10495,6 +11450,40 @@
     {
       "nameExplicit": false,
       "columns": [
+        "crop_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "crops",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "market_surveys_crop_id_crops_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "market_surveys"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "enumerator_user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "market_surveys_enumerator_user_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "market_surveys"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
         "supersedes_id"
       ],
       "schemaTo": "public",
@@ -10505,6 +11494,23 @@
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "name": "market_surveys_supersedes_id_market_surveys_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "market_surveys"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "verified_by_user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "market_surveys_verified_by_user_id_users_id_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "market_surveys"
@@ -10529,6 +11535,23 @@
     {
       "nameExplicit": false,
       "columns": [
+        "created_by_user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "demand_snapshots_created_by_user_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "demand_snapshots"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
         "depot_id"
       ],
       "schemaTo": "public",
@@ -10546,6 +11569,40 @@
     {
       "nameExplicit": false,
       "columns": [
+        "crop_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "crops",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "depot_stock_items_crop_id_crops_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "depot_stock_items"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "variety_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "crop_varieties",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "depot_stock_items_variety_id_crop_varieties_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "depot_stock_items"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
         "depot_stock_item_id"
       ],
       "schemaTo": "public",
@@ -10556,6 +11613,23 @@
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "name": "depot_stock_movements_BDfOBEWURiTf_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "depot_stock_movements"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "recorded_by_user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "depot_stock_movements_recorded_by_user_id_users_id_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "depot_stock_movements"
@@ -10665,6 +11739,40 @@
     {
       "nameExplicit": false,
       "columns": [
+        "created_by_user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "announcements_created_by_user_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "announcements"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "pest_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "pest_catalog",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "announcements_pest_id_pest_catalog_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "announcements"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
         "city_office_id"
       ],
       "schemaTo": "public",
@@ -10678,6 +11786,40 @@
       "entityType": "fks",
       "schema": "public",
       "table": "audit_logs"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "actor_user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "audit_logs_actor_user_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "audit_logs"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "devices_user_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "devices"
     },
     {
       "nameExplicit": false,
@@ -10709,6 +11851,23 @@
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "sync_mutations_device_id_devices_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "sync_mutations"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "sync_mutations_user_id_users_id_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "sync_mutations"
@@ -10755,9 +11914,9 @@
         "id"
       ],
       "nameExplicit": false,
-      "name": "account_pkey",
+      "name": "accounts_pkey",
       "schema": "public",
-      "table": "account",
+      "table": "accounts",
       "entityType": "pks"
     },
     {
@@ -10765,9 +11924,9 @@
         "id"
       ],
       "nameExplicit": false,
-      "name": "session_pkey",
+      "name": "sessions_pkey",
       "schema": "public",
-      "table": "session",
+      "table": "sessions",
       "entityType": "pks"
     },
     {
@@ -10775,9 +11934,9 @@
         "id"
       ],
       "nameExplicit": false,
-      "name": "user_pkey",
+      "name": "users_pkey",
       "schema": "public",
-      "table": "user",
+      "table": "users",
       "entityType": "pks"
     },
     {
@@ -10785,9 +11944,9 @@
         "id"
       ],
       "nameExplicit": false,
-      "name": "verification_pkey",
+      "name": "verifications_pkey",
       "schema": "public",
-      "table": "verification",
+      "table": "verifications",
       "entityType": "pks"
     },
     {
@@ -11132,7 +12291,7 @@
     },
     {
       "columns": [
-        "seq"
+        "sequence_number"
       ],
       "nameExplicit": false,
       "name": "sync_changes_pkey",
@@ -11215,8 +12374,8 @@
     {
       "nameExplicit": true,
       "columns": [
-        "grid_lat",
-        "grid_lng",
+        "grid_latitude",
+        "grid_longitude",
         "alert_type",
         "starts_on"
       ],
@@ -11229,8 +12388,8 @@
     {
       "nameExplicit": true,
       "columns": [
-        "grid_lat",
-        "grid_lng"
+        "grid_latitude",
+        "grid_longitude"
       ],
       "nullsNotDistinct": false,
       "name": "weather_forecasts_grid_key",
@@ -11316,9 +12475,9 @@
         "token"
       ],
       "nullsNotDistinct": false,
-      "name": "session_token_key",
+      "name": "sessions_token_key",
       "schema": "public",
-      "table": "session",
+      "table": "sessions",
       "entityType": "uniques"
     },
     {
@@ -11327,9 +12486,31 @@
         "email"
       ],
       "nullsNotDistinct": false,
-      "name": "user_email_key",
+      "name": "users_email_key",
       "schema": "public",
-      "table": "user",
+      "table": "users",
+      "entityType": "uniques"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "phone_number"
+      ],
+      "nullsNotDistinct": false,
+      "name": "users_phone_number_key",
+      "schema": "public",
+      "table": "users",
+      "entityType": "uniques"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "user_id"
+      ],
+      "nullsNotDistinct": false,
+      "name": "farmers_user_id_key",
+      "schema": "public",
+      "table": "farmers",
       "entityType": "uniques"
     },
     {
@@ -11351,11 +12532,46 @@
       "table": "city_offices"
     },
     {
-      "value": "boundary is not null or (centroid_lat is not null and centroid_lng is not null and radius_m > 0)",
+      "value": "boundary is not null or (centroid_latitude is not null and centroid_longitude is not null and radius_meters > 0)",
       "name": "kebeles_territory_check",
       "entityType": "checks",
       "schema": "public",
       "table": "kebeles"
+    },
+    {
+      "value": "provider_id <> 'credential' or password is not null",
+      "name": "accounts_credential_password_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "accounts"
+    },
+    {
+      "value": "phone_number is null or phone_number ~ '^\\+251[79][0-9]{8}$'",
+      "name": "users_phone_format_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "users"
+    },
+    {
+      "value": "phone_number is not null or deleted_at is not null",
+      "name": "users_phone_or_deleted_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "users"
+    },
+    {
+      "value": "not phone_number_verified or phone_number is not null",
+      "name": "users_verified_needs_phone_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "users"
+    },
+    {
+      "value": "role in ('system_admin', 'farmer') or city_office_id is not null",
+      "name": "users_role_office_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "users"
     },
     {
       "value": "full_name = btrim(full_name) and char_length(full_name) between 2 and 120",
@@ -11365,8 +12581,8 @@
       "table": "farmers"
     },
     {
-      "value": "no_phone = (phone_number is null)",
-      "name": "farmers_no_phone_check",
+      "value": "has_no_phone = (phone_number is null)",
+      "name": "farmers_has_no_phone_check",
       "entityType": "checks",
       "schema": "public",
       "table": "farmers"
@@ -11386,11 +12602,67 @@
       "table": "farmers"
     },
     {
+      "value": "season_year between 2000 and 2100",
+      "name": "plot_crop_history_season_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "plot_crop_history"
+    },
+    {
       "value": "fallow = (crop_id is null)",
       "name": "plot_crop_history_fallow_check",
       "entityType": "checks",
       "schema": "public",
       "table": "plot_crop_history"
+    },
+    {
+      "value": "area_value > 0 and area_value <= 1000",
+      "name": "plots_area_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "plots"
+    },
+    {
+      "value": "hectares_per_unit_applied > 0",
+      "name": "plots_conversion_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "plots"
+    },
+    {
+      "value": "centroid_latitude between -90 and 90 and centroid_longitude between -180 and 180",
+      "name": "plots_coords_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "plots"
+    },
+    {
+      "value": "elevation_meters between 0 and 4500",
+      "name": "plots_elevation_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "plots"
+    },
+    {
+      "value": "agro_zone = agro_zone_derived or agro_zone_override_reason is not null",
+      "name": "plots_agro_zone_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "plots"
+    },
+    {
+      "value": "(planned_crop_id is null) = (planned_season_year is null)",
+      "name": "plots_planned_crop_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "plots"
+    },
+    {
+      "value": "planned_season_year is null or planned_season_year between 2000 and 2100",
+      "name": "plots_planned_year_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "plots"
     },
     {
       "value": "jsonb_typeof(weeding_windows) = 'array'",
@@ -11407,14 +12679,14 @@
       "table": "crops"
     },
     {
-      "value": "urea_kg_ha::numeric >= 0 and nps_kg_ha::numeric >= 0 and seed_kg_ha::numeric >= 0",
+      "value": "urea_kg_per_ha >= 0 and nps_kg_per_ha >= 0 and seed_kg_per_ha >= 0",
       "name": "fertilizer_rates_check",
       "entityType": "checks",
       "schema": "public",
       "table": "fertilizer_rates"
     },
     {
-      "value": "safety_interval_days::integer >= 0",
+      "value": "safety_interval_days >= 0",
       "name": "registered_chemicals_safety_check",
       "entityType": "checks",
       "schema": "public",
@@ -11428,18 +12700,46 @@
       "table": "media_files"
     },
     {
-      "value": "kind <> 'audio' or duration_s is null or duration_s::integer <= 180",
+      "value": "kind <> 'audio' or duration_seconds is null or duration_seconds <= 180",
       "name": "media_files_duration_check",
       "entityType": "checks",
       "schema": "public",
       "table": "media_files"
     },
     {
-      "value": "sha256 is null or sha256 ~ '^[0-9a-f]{64}$'",
+      "value": "sha256_checksum is null or sha256_checksum ~ '^[0-9a-f]{64}$'",
       "name": "media_files_sha256_check",
       "entityType": "checks",
       "schema": "public",
       "table": "media_files"
+    },
+    {
+      "value": "started_on <= current_date",
+      "name": "crop_cycles_started_on_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "crop_cycles"
+    },
+    {
+      "value": "season_year between 2000 and 2100",
+      "name": "crop_cycles_season_year_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "crop_cycles"
+    },
+    {
+      "value": "status <> 'closed' or closed_on is not null",
+      "name": "crop_cycles_closed_status_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "crop_cycles"
+    },
+    {
+      "value": "closed_on is null or closed_on >= started_on",
+      "name": "crop_cycles_closed_date_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "crop_cycles"
     },
     {
       "value": "\n        (application_type = 'basal' and fertilizer_product in ('nps', 'nps_zinc'))\n        or (application_type in ('urea_1', 'urea_2') and fertilizer_product = 'urea')\n      ",
@@ -11449,7 +12749,7 @@
       "table": "fertilizer_logs"
     },
     {
-      "value": "\n        (applied and quantity_kg::numeric > 0 and quantity_kg::numeric <= 1000\n           and application_date is not null\n           and skip_reason is null)\n        or\n        (not applied and skip_reason is not null\n           and quantity_kg is null and application_date is null)\n      ",
+      "value": "\n        (applied and quantity_kg > 0 and quantity_kg <= 1000\n           and application_date is not null and application_date <= current_date\n           and skip_reason is null)\n        or\n        (not applied and skip_reason is not null\n           and quantity_kg is null and application_date is null)\n      ",
       "name": "fertilizer_logs_applied_check",
       "entityType": "checks",
       "schema": "public",
@@ -11463,11 +12763,60 @@
       "table": "fertilizer_logs"
     },
     {
-      "value": "\n        (operation_type = 'plowing' and sequence_no::integer between 1 and 10)\n        or (operation_type = 'weeding' and sequence_no::integer between 1 and 6)\n        or (operation_type = 'spraying'\n            and chemical_id is not null and product_rate::numeric > 0 and rate_unit is not null)\n        or (operation_type = 'irrigation'\n            and irrigation_method is not null and duration_minutes::integer between 1 and 1440)\n      ",
+      "value": "operation_date <= current_date",
+      "name": "field_operations_date_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "field_operations"
+    },
+    {
+      "value": "\n        (operation_type = 'plowing' and sequence_number between 1 and 10)\n        or (operation_type = 'weeding' and sequence_number between 1 and 6)\n        or (operation_type = 'spraying'\n            and chemical_id is not null and product_application_rate > 0 and rate_unit is not null)\n        or (operation_type = 'irrigation'\n            and irrigation_method is not null and duration_minutes between 1 and 1440)\n      ",
       "name": "field_operations_type_check",
       "entityType": "checks",
       "schema": "public",
       "table": "field_operations"
+    },
+    {
+      "value": "entered_volume > 0",
+      "name": "harvest_records_volume_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "harvest_records"
+    },
+    {
+      "value": "harvest_date <= current_date",
+      "name": "harvest_records_date_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "harvest_records"
+    },
+    {
+      "value": "amount_etb > 0 and amount_etb <= 10000000",
+      "name": "ledger_entries_amount_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "ledger_entries"
+    },
+    {
+      "value": "entry_date <= current_date",
+      "name": "ledger_entries_date_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "ledger_entries"
+    },
+    {
+      "value": "planting_date <= current_date",
+      "name": "sowing_logs_planting_date_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "sowing_logs"
+    },
+    {
+      "value": "seed_quantity_kg > 0",
+      "name": "sowing_logs_seed_quantity_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "sowing_logs"
     },
     {
       "value": "seed_variety_id is not null or seed_variety_other is not null",
@@ -11477,7 +12826,7 @@
       "table": "sowing_logs"
     },
     {
-      "value": "confidence is null or (confidence::numeric >= 0 and confidence::numeric <= 1)",
+      "value": "confidence is null or (confidence >= 0 and confidence <= 1)",
       "name": "diagnosis_cases_confidence_check",
       "entityType": "checks",
       "schema": "public",
@@ -11491,7 +12840,7 @@
       "table": "diagnosis_cases"
     },
     {
-      "value": "case_count::integer >= 1",
+      "value": "case_count >= 1",
       "name": "outbreak_clusters_case_count_check",
       "entityType": "checks",
       "schema": "public",
@@ -11519,7 +12868,7 @@
       "table": "weather_alerts"
     },
     {
-      "value": "status <> 'completed' or cohort_size::integer >= 5",
+      "value": "status <> 'completed' or cohort_size >= 5",
       "name": "yield_gap_analyses_cohort_check",
       "entityType": "checks",
       "schema": "public",
@@ -11575,8 +12924,15 @@
       "table": "grievances"
     },
     {
-      "value": "\n        entered_price::numeric > 0 \n        and price_etb_per_kg::numeric > 0 \n        and volume_kg::numeric > 0\n      ",
+      "value": "\n        entered_price > 0 \n        and price_etb_per_kg > 0 \n        and volume_kg > 0\n      ",
       "name": "crowd_transactions_prices_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "crowd_transactions"
+    },
+    {
+      "value": "sale_date <= current_date and sale_date >= current_date - 30",
+      "name": "crowd_transactions_date_check",
       "entityType": "checks",
       "schema": "public",
       "table": "crowd_transactions"
@@ -11589,7 +12945,14 @@
       "table": "crowd_transactions"
     },
     {
-      "value": "\n        min_price_etb_per_kg::numeric > 0\n        and min_price_etb_per_kg::numeric <= avg_price_etb_per_kg::numeric\n        and avg_price_etb_per_kg::numeric <= max_price_etb_per_kg::numeric\n      ",
+      "value": "survey_date <= current_date",
+      "name": "market_surveys_date_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "market_surveys"
+    },
+    {
+      "value": "\n        min_price_etb_per_kg > 0\n        and min_price_etb_per_kg <= avg_price_etb_per_kg\n        and avg_price_etb_per_kg <= max_price_etb_per_kg\n      ",
       "name": "market_surveys_prices_check",
       "entityType": "checks",
       "schema": "public",
@@ -11603,14 +12966,14 @@
       "table": "market_surveys"
     },
     {
-      "value": "safety_margin_pct::numeric between 0 and 30",
+      "value": "safety_margin_pct between 0 and 30",
       "name": "demand_snapshots_margin_check",
       "entityType": "checks",
       "schema": "public",
       "table": "demand_snapshots"
     },
     {
-      "value": "quantity::numeric >= 0",
+      "value": "quantity >= 0",
       "name": "depot_stock_items_quantity_check",
       "entityType": "checks",
       "schema": "public",
@@ -11631,7 +12994,7 @@
       "table": "depot_stock_movements"
     },
     {
-      "value": "\n        (movement_type = 'receipt' and quantity_delta::numeric > 0)\n        or (movement_type = 'issue' and quantity_delta::numeric < 0)\n        or (movement_type = 'adjustment' and quantity_delta::numeric <> 0)\n      ",
+      "value": "\n        (movement_type = 'receipt' and quantity_delta > 0)\n        or (movement_type = 'issue' and quantity_delta < 0)\n        or (movement_type = 'adjustment' and quantity_delta <> 0)\n      ",
       "name": "depot_stock_movements_quantity_check",
       "entityType": "checks",
       "schema": "public",
@@ -11645,7 +13008,7 @@
       "table": "depot_stock_movements"
     },
     {
-      "value": "\n        target_all \n        or cardinality(target_kebele_ids) + cardinality(target_crop_ids) + cardinality(target_zones) > 0\n      ",
+      "value": "\n        targets_entire_city \n        or cardinality(target_kebele_ids) + cardinality(target_crop_ids) + cardinality(target_agro_zones) > 0\n      ",
       "name": "announcements_target_check",
       "entityType": "checks",
       "schema": "public",

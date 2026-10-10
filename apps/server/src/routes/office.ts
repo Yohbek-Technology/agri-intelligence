@@ -8,9 +8,12 @@ officeRouter.use('*', sessionGuard, tenantGuard)
 
 officeRouter.get('/me', async (c) => {
   const user = c.get('user')
+  if (!user.cityOfficeId) {
+    return c.json({ error: { code: 'not_found', message: 'User has no assigned city office.' } }, 404)
+  }
   const isOfficer = user.role === 'officer' || user.role === 'system_admin'
 
-  const office = await getOfficeSummary(user.cityOfficeId!, isOfficer)
+  const office = await getOfficeSummary(user.cityOfficeId, isOfficer)
 
   if (!office) {
     return c.json({ error: { code: 'not_found', message: 'City office not found.' } }, 404)
@@ -21,8 +24,11 @@ officeRouter.get('/me', async (c) => {
 
 officeRouter.get('/me/config', async (c) => {
   const user = c.get('user')
+  if (!user.cityOfficeId) {
+    return c.json({ error: { code: 'not_found', message: 'User has no assigned city office.' } }, 404)
+  }
 
-  const config = await getOfficeConfig(user.cityOfficeId!)
+  const config = await getOfficeConfig(user.cityOfficeId)
 
   if (!config) {
     return c.json({ error: { code: 'not_found', message: 'City office not found.' } }, 404)

@@ -1,5 +1,7 @@
 import type { z } from 'zod'
 import type {
+  PhoneSignUpSchema,
+  PhoneSignInSchema,
   PhoneOtpRequestSchema,
   PhoneOtpVerifySchema,
   AdminLoginSchema,
@@ -8,6 +10,8 @@ import type {
   LanguageSelectSchema,
 } from '../validators/auth.js'
 
+export type PhoneSignUp          = z.infer<typeof PhoneSignUpSchema>
+export type PhoneSignIn          = z.infer<typeof PhoneSignInSchema>
 export type PhoneOtpRequest      = z.infer<typeof PhoneOtpRequestSchema>
 export type PhoneOtpVerify       = z.infer<typeof PhoneOtpVerifySchema>
 export type AdminLogin           = z.infer<typeof AdminLoginSchema>
@@ -24,12 +28,14 @@ export interface AuthUser {
   email: string
   emailVerified: boolean
   image?: string | null
+  imageUrl?: string | null
   phoneNumber?: string | null
   phoneNumberVerified: boolean
   role: UserRole
   banned: boolean
   banReason?: string | null
   banExpires?: Date | null
+  banExpiresAt?: Date | null
   cityOfficeId?: string | null
   preferredLanguage: AppLanguage
   assignedKebeleIds: string

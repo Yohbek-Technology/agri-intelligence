@@ -1,6 +1,6 @@
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
-import { phoneNumber, openAPI, twoFactor } from 'better-auth/plugins'
+import { phoneNumber, openAPI } from 'better-auth/plugins'
 import { db } from '@/config/db.js'
 import * as schema from '@/db/index.js'
 import { sendSms, onPhoneVerified, normalizeEthiopianPhone } from '@/services/sms.js'
@@ -17,7 +17,14 @@ const ET_E164_REGEX = /^\+251[79][0-9]{8}$/
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: 'pg',
-    schema,
+    schema: {
+      ...schema,
+      users: schema.users,
+      accounts: schema.accounts,
+      sessions: schema.sessions,
+      verifications: schema.verifications,
+    },
+    usePlural: true,
   }),
 
   secret: BETTER_AUTH_SECRET,
@@ -69,29 +76,13 @@ export const auth = betterAuth({
         await onPhoneVerified(user.id)
       },
     }),
-
-    twoFactor({
-      issuer: 'AgriIntelligence',
-      skipVerificationOnEnable: true,
-      otpOptions: {
-        sendOTP: ({ user, otp }) => {
-          const rawUser = user as typeof user & { phoneNumber?: string | null }
-          const phone = rawUser.phoneNumber
-          if (!phone) {
-            throw new Error(
-              `[2fa] Administrator account (${user.id}) has no registered phone number for 2FA delivery.`
-            )
-          }
-          void sendSms(
-            normalizeEthiopianPhone(phone),
-            `[AgriIntelligence] Your 2FA code is: ${otp}. Valid for 10 minutes. Do not share this code.`
-          )
-        },
-      },
-    }),
   ],
 
   user: {
+    fields: {
+      image: 'image_url',
+      banExpires: 'ban_expires_at',
+    },
     additionalFields: {
       phoneNumber: {
         type: 'string',
@@ -122,11 +113,6 @@ export const auth = betterAuth({
         required: false,
         fieldName: 'ban_reason',
       },
-      banExpires: {
-        type: 'date',
-        required: false,
-        fieldName: 'ban_expires',
-      },
       cityOfficeId: {
         type: 'string',
         required: false,
@@ -152,9 +138,17 @@ export const auth = betterAuth({
     },
   },
 
+  account: {
+    fields: {
+      accountId: 'provider_account_id',
+    },
+  },
+
   advanced: {
+    database: {
+      generateId: 'uuid',
+    },
     cookiePrefix: 'agri',
-    generateId: () => crypto.randomUUID(),
     defaultCookieAttributes: {
       httpOnly: true,
       secure: IS_PRODUCTION,

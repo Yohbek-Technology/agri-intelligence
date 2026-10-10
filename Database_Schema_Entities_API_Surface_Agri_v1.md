@@ -1,18 +1,18 @@
 ---
-title: "Database Schema, Entities & API Surface — Agricultural Intelligence & Extension System (Version 1)"
-version: 1.0
-status: final (consolidated, 42 base tables)
-date: 2026-10-04
+title: "Database Schema, Entities & API Surface — Agricultural Intelligence & Extension System (Version 1.2)"
+version: 1.2
+status: final (reconciled to SRS v1.2, 42 base tables)
+date: 2026-10-09
 project: Autonomous Agricultural Intelligence & Extension System (Ethiopia)
 stack: PostgreSQL 15+ / PostGIS
 ---
 
 # Database Schema, Entities & API Surface
 
-**Autonomous Agricultural Intelligence & Extension System — Version 1**
+**Autonomous Agricultural Intelligence & Extension System — Version 1.2 (reconciled to SRS v1.2)**
 
 > [!note] How to read this document
-> Section 1 lists the entities. Section 2 describes the four authentication core tables (`users`, `accounts`, `sessions`, `verifications`) and the roles. Section 3 is the full PostgreSQL DDL. Section 4 is the API surface. Section 5 traces every SRS module to its tables and routes. Section 6 lists the base tables and Section 7 records what changed from v1.2. Requirement IDs in comments (e.g. `CROP-6`) refer to the SRS.
+> Section 1 lists the entities. Section 2 describes the four authentication core tables (`users`, `accounts`, `sessions`, `verifications`) and the roles. Section 3 is the full PostgreSQL DDL. Section 4 is the API surface. Section 5 traces every SRS module to its tables and routes. Section 6 lists the base tables and Section 7 records what changed in this reconciliation (document v1.0 → v1.2, aligned to SRS v1.2) and keeps the earlier 49 → 42 table consolidation history. Requirement IDs in comments (e.g. `CROP-6`) refer to the SRS.
 
 ---
 
@@ -20,14 +20,14 @@ stack: PostgreSQL 15+ / PostGIS
 
 | Entity | Description |
 |---|---|
-| `users` | **Auth core.** Base identity for every login (farmer, DA, officer, system admin): name, email, phone, role, city office, language, ban state, and `assigned_kebele_ids` (the kebeles a DA covers) |
-| `accounts` | **Auth core.** Credential record per user (`provider_id = 'credential'` holds the password hash for officers and admins) |
-| `sessions` | **Auth core.** Active login sessions (opaque token, expiry, IP, user agent) |
-| `verifications` | **Auth core.** Short-lived OTP codes (phone login, officer/admin second step) and password-reset values |
+| `users` | **Auth core.** Base identity for every login (farmer, DA, officer, system admin): name, placeholder or optional real email, verified phone number (the login identifier), role, city office, language, ban state, and `assigned_kebele_ids` (the kebeles a DA covers) |
+| `accounts` | **Auth core.** Credential record per user (`provider_id = 'credential'` holds the password hash for **every** role; sign-in is phone number + password) |
+| `sessions` | **Auth core.** Revocable server-side sessions (opaque token, sliding expiry, IP, user agent); deleting the row is sign-out / revocation |
+| `verifications` | **Auth core.** Short-lived 6-digit OTP codes for sign-up phone verification and password recovery (purpose encoded in `identifier`), plus optional officer/admin email-confirmation values. OTPs are never used at login |
 | `city_offices` | Tenant boundary; one autonomous office per city/woreda with jurisdiction polygon and the `parameters` jsonb configuration (land-unit factors, weather and alert thresholds, agro-climatic boundaries, quotas) |
 | `kebeles` | Kebele territory inside a city office (polygon or centroid + radius) |
 | `farmers` | Farmer profile, `is_verified` flag (no approval workflow), assigned DA, single consent flag; may exist before the farmer has a login (DA-registered) |
-| `plots` | Plot area, GPS centroid, soil, drainage, agro-zone and the planned crop for the coming season |
+| `plots` | Plot area, single GPS centroid (captured by the browser Geolocation API), soil, drainage, agro-zone and the planned crop for the coming season |
 | `plot_crop_history` | 1–3 season crop history (the planned crop for demand aggregation is stored on `plots`) |
 | `crops` / `crop_varieties` | Office-approved crop and variety catalog; `crops` also carries critical weeding windows and recommended successor crops |
 | `fertilizer_rates` | Versioned recommended Urea/NPS/seed rates per crop and agro-zone |
@@ -39,19 +39,19 @@ stack: PostgreSQL 15+ / PostGIS
 | `field_operations` | Plowing, weeding, spraying, irrigation events |
 | `harvest_records` | Actual harvest volume and computed yield (qt/ha) |
 | `ledger_entries` | Per-cycle cash ledger |
-| `yield_gap_analyses` | Server-computed peer comparison, ranked root causes, narration |
+| `yield_gap_analyses` | Server-computed peer comparison, ranked root causes, narration stored as text only (speech is synthesised on demand and never stored) |
 | `weather_forecasts` / `weather_alerts` | Cached 7-day forecast per 0.1° grid cell and extreme-weather alerts (historical rainfall for rain-onset is fetched on demand, not stored) |
-| `media_files` | Audio and photo metadata, resumable upload state, SHA-256 |
-| `diagnosis_cases` | Gemini Vision diagnosis requests (1–4 photo ids on the row) and filtered results |
+| `media_files` | Metadata for **human-recorded** audio and uploaded photos only, resumable upload state, SHA-256 checksum. AI-synthesised (Gemini TTS) audio never has a row here |
+| `diagnosis_cases` | Gemini Vision diagnosis requests (1–4 photo ids on the row) and filtered results stored as text/JSON (no audio column; voice playback is generated on demand) |
 | `outbreak_clusters` | Detected pest outbreak clusters, with contributing case ids stored on the row |
-| `grievances` / `grievance_messages` | Voice Box tickets (photo ids and status history stored on the ticket) and the two-way farmer / extension-desk message thread |
+| `grievances` / `grievance_messages` | Voice Box tickets (photo ids and status history stored on the ticket) and the two-way farmer / extension-desk message thread (recorded voice messages by `audio_media_id`; desk text is read aloud on demand, never persisted as audio) |
 | `da_tasks` | Tasks pushed to DAs (field visits, diagnosis reviews, grievance work) |
 | `market_centres` / `market_surveys` | Market centres and weekly officer-verified price surveys |
 | `crowd_transactions` | Farmer-submitted sale records awaiting moderation |
 | `depots` / `depot_stock_items` / `depot_stock_movements` | Cooperative depot inventory ledger; `depot_stock_movements` also carries expected and confirmed incoming shipments (`status`, `expected_on`) |
 | `demand_snapshots` | Frozen demand-aggregation results, including officer kebele-level overrides |
-| `announcements` / `announcement_deliveries` | Multi-channel broadcasting (app feed + SMS); localized title, body and audio live in `announcements.translations`; per-recipient delivery state |
-| `devices` | Registered mobile devices: sync cursor, push token |
+| `announcements` / `announcement_deliveries` | Multi-channel broadcasting (app feed + SMS); localized title, body and the Officer's authentic human recording (`audio_media_id`) live in `announcements.translations`; machine speech is generated on demand and never stored; per-recipient delivery state |
+| `devices` | Registered browser installs (PWA): sync cursor and serialised Web Push subscription |
 | `sync_mutations` / `sync_changes` | Idempotent client write log and server change feed for delta-sync |
 | `audit_logs` | Append-only audit trail, including parameter changes and privileged log corrections |
 
@@ -59,37 +59,37 @@ stack: PostgreSQL 15+ / PostGIS
 
 ## 2. Authentication Model
 
-Authentication uses exactly the **four Better Auth core tables**: `users`, `accounts`, `sessions`, `verifications`. Credentials live in `accounts`, not in `users`. No other auth tables exist (no two-factor table, no rate-limit table, no OTP table: OTP codes are rows in `verifications`).
+Authentication uses exactly the **four Better Auth core tables**: `users`, `accounts`, `sessions`, `verifications` (Better Auth with the `phoneNumber` plugin and the Drizzle adapter). Credentials live in `accounts`, not in `users`. No other auth tables exist (no two-factor table, no rate-limit table, no OTP table: OTP codes are short-lived rows in `verifications`). **One lifecycle serves all four roles** (ADM-8): sign-up with phone number + password verified by SMS OTP, login with phone number + password (no OTP at login), forgot-password / reset by SMS OTP, explicit sign-out, lockout and rate limiting.
 
 ### 2.1 Tables and relations
 
-> [!note] v1.3 change to the auth core
-> The four tables keep their v1.2 definitions. The single, directed exception is one added column, `users.assigned_kebele_ids uuid[]`, which replaces the dropped `da_kebele_assignments` junction table. Nothing else in `users`, `accounts`, `sessions` or `verifications` changed.
+> [!note] SRS v1.2 alignment of the auth core
+> The unified phone-and-password lifecycle removed the legacy officer/admin email-plus-second-step-OTP login. Auth-core columns were renamed for clarity: `users.image` → `image_url`, `users.ban_expires` → `ban_expires_at`, `accounts.account_id` → `provider_account_id`. Configure the Better Auth field mapping (Drizzle schema `fields`) so the adapter maps `image`, `banExpires` and `accountId` to these columns. New in v1.2 are database guards: `users` requires a phone number unless closed, a `credential` account requires a password hash, `verifications.identifier` must carry a purpose prefix, and `trg_sessions_eligibility` refuses to issue a session to an unverified, banned or closed user.
 
 | Table | Columns | Relations |
 |---|---|---|
-| `users` | `id`, `name`, `email`, `email_verified`, `image`, `phone_number`, `phone_number_verified`, `role`, `banned`, `ban_reason`, `ban_expires`, `city_office_id`, `preferred_language`, `assigned_kebele_ids`, `created_at`, `updated_at`, `deleted_at` | `city_office_id` → `city_offices.id`; `assigned_kebele_ids[]` → `kebeles.id` (validated by trigger, Section 3.4) |
-| `accounts` | `id`, `account_id`, `provider_id`, `user_id`, `access_token`, `refresh_token`, `id_token`, `access_token_expires_at`, `refresh_token_expires_at`, `scope`, `password`, `created_at`, `updated_at` | `user_id` → `users.id` (cascade) |
+| `users` | `id`, `name`, `email`, `email_verified`, `image_url`, `phone_number`, `phone_number_verified`, `role`, `banned`, `ban_reason`, `ban_expires_at`, `city_office_id`, `preferred_language`, `assigned_kebele_ids`, `created_at`, `updated_at`, `deleted_at` | `city_office_id` → `city_offices.id`; `assigned_kebele_ids[]` → `kebeles.id` (validated by trigger, Section 3.4) |
+| `accounts` | `id`, `provider_account_id`, `provider_id`, `user_id`, `access_token`, `refresh_token`, `id_token`, `access_token_expires_at`, `refresh_token_expires_at`, `scope`, `password`, `created_at`, `updated_at` | `user_id` → `users.id` (cascade) |
 | `sessions` | `id`, `user_id`, `token`, `expires_at`, `ip_address`, `user_agent`, `created_at`, `updated_at` | `user_id` → `users.id` (cascade) |
-| `verifications` | `id`, `identifier`, `value`, `expires_at`, `created_at`, `updated_at` | none (looked up by `identifier`, e.g. a phone number) |
+| `verifications` | `id`, `identifier`, `value`, `expires_at`, `created_at`, `updated_at` | none (looked up by `identifier`: `phone-signup:<E.164>`, `phone-recovery:<E.164>` or `email-confirm:<address>`) |
 
-Domain tables link to identity only through `users.id`: `farmers.user_id`, `devices.user_id`, and the `*_user_id` / `created_by` / `actor_user_id` audit columns.
+Domain tables link to identity only through `users.id`: `farmers.user_id`, `devices.user_id`, and the `*_user_id` audit columns.
 
-### 2.2 How each actor logs in
+### 2.2 How each actor signs up and signs in
 
-| Actor | Method | Storage |
+| Step | All roles (Farmer, DA, Officer, System Admin) | Storage |
 |---|---|---|
-| Farmer | Phone number + SMS OTP (PLOT-1) | OTP value in `verifications` (`identifier` = phone number, 10-minute expiry, 5 failed attempts). On first successful verification the `users` row is created with `role = farmer` and a placeholder email (`<digits>@phone.agri.invalid`), because `users.email` is required and unique. The farmer is **active immediately**; there is no approval step. |
-| DA | Phone number + SMS OTP | Same as farmer; an Officer pre-creates the user and sets `role = 'da'` and `assigned_kebele_ids`. |
-| Officer, System Admin | Email + password, then a mandatory SMS OTP (ADM-8) | Password hash in `accounts.password` (`provider_id = 'credential'`); the second-step OTP is a `verifications` row. A `sessions` row is created only after both steps succeed. Lockout (5 failures, 15 minutes) and OTP request throttling are enforced by the API using `audit_logs` (`action = 'auth.login_failed'`) and `verifications.created_at`. |
-| Farmer without a phone | **No login.** | Exists only as a `farmers` row (`user_id` null, `no_phone = true`), registered by a DA (AGENT-2). Claiming the profile later links `farmers.user_id` after the farmer completes OTP. |
+| Sign-up (PLOT-1, ADM-8) | Phone number + password (≥ 10 characters, standard complexity). A 6-digit SMS OTP is sent; the account is active only after valid OTP entry within 10 minutes (5 failed attempts per hour, 5 OTP requests per phone per hour). No approval gate. | OTP value in `verifications` (`identifier = 'phone-signup:+251…'`). On success `users.phone_number_verified = true`, a `credential` row is created in `accounts` holding the password hash. A self-registered farmer gets `role = farmer` and a placeholder email `<digits>@phone.agri.invalid`. |
+| Provisioned DA / Officer (ADM-2, ADM-7) | An Officer (DA) or System Admin (first Officer) pre-creates the `users` row (`role`, office, `assigned_kebele_ids`) and an SMS invitation is sent; the invitee verifies the phone by OTP and sets a password. | Same rows as sign-up; the pre-created `users` row has `phone_number_verified = false` until the invitation is accepted. |
+| Login | Phone number + password only. **No OTP at login.** A successful match issues a revocable session. | `accounts.password` (`provider_id = 'credential'`); `sessions` row created only if the phone is verified and the user is not banned or closed (trigger-enforced). Lockout (5 consecutive failures → 15 minutes) and OTP throttling are enforced by the API from `audit_logs` (`auth.login_failed`, `auth.lockout`) and `verifications.created_at`. |
+| Forgot password (ADM-8) | The user enters the registered phone number; the same neutral response is returned whether or not it exists. A 6-digit recovery OTP is sent (10-minute expiry); after verification a new compliant password is submitted. | `verifications` (`identifier = 'phone-recovery:+251…'`); `accounts.password` is replaced and **all** of the user's `sessions` rows are deleted; audit action `auth.password_reset`. |
+| Sign-out | Explicit endpoint deletes the session row; the client clears cookies and local session data (a DA's encrypted unsynced IndexedDB queue is preserved, AGENT-8). | `sessions` row deleted; audit action `auth.logout`. |
+| Optional email (Officer, System Admin) | May add, change or remove an email in account settings, solely for notifications, exports and desktop communications. Never used for sign-in or recovery. | `users.email` (unverified until confirmed via an `email-confirm:` row in `verifications`). |
+| Farmer without a phone | **No login.** | Exists only as a `farmers` row (`user_id` null, `has_no_phone = true`), registered by a DA (AGENT-2). The farmer can later claim the profile: complete phone sign-up (OTP + password), then claim by `local_id_number`, which links `farmers.user_id`. |
 
 ### 2.3 Sessions and offline use
 
-`sessions.token` is an opaque bearer token with a 30-day sliding expiry, longer than the 14-day offline requirement (SRS 4.4). The mobile app stores it in the Android Keystore and keeps working offline with the stored token; the API validates it on the next online call. The web dashboard sends the same token as a cookie and expires it after 30 minutes of inactivity (ADM-8). Revoking access means deleting the user's `sessions` rows.
-
-> [!note] Deviation to resolve: JWT vs server-side sessions
-> SRS 4.2 specifies a 15-minute access JWT with a rotating refresh token. This schema uses revocable server-side session tokens. Amend SRS 4.2 to "revocable server-side session tokens with 30-day sliding expiry".
+`sessions.token` is an opaque, unique, revocable bearer token. Expiry is sliding and depends on the client: **30 minutes of inactivity for the city web portal** (Officer / System Admin, secure HTTP-only SameSite cookie) and **30 days for the farmer / DA PWA**, longer than the 14-day offline requirement (SRS 4.4). The PWA keeps working offline with the stored session (HTTP-only cookie, mirrored where the offline queue requires it as an AES-GCM encrypted record in IndexedDB under a non-extractable Web Crypto key); the API validates it on the next online call. Revoking access (sign-out, deactivation, password reset) means deleting the user's `sessions` rows. SRS v1.2 specifies the same revocable server-side session model, so the earlier JWT discrepancy is resolved.
 
 ### 2.4 Roles
 
@@ -101,10 +101,10 @@ Domain tables link to identity only through `users.id`: `farmers.user_id`, `devi
 
 ### 2.5 Account lifecycle rules
 
-- **Office assignment.** A farmer's `users.city_office_id` is null at first OTP sign-up and is set when the farmer creates a profile (`POST /v1/farmers/me`). DAs and officers always have an office; `system_admin` has none. The check constraint on `users` allows exactly these cases.
-- **Soft delete (`DELETE /v1/users/me`).** Sets `users.deleted_at`, deletes all the user's `sessions`, then rewrites `email` to `deleted+<id>@phone.agri.invalid` and nulls `phone_number`. This frees the identifiers for reuse while keeping plain unique constraints. Session creation is rejected for users with `deleted_at` set.
-- **Bans / deactivation.** `users.banned = true` (optionally with `ban_reason`, `ban_expires`); the user's sessions are deleted.
-- **Phone uniqueness.** `users.phone_number` is globally unique (PLOT-1). `farmers.phone_number` mirrors it for farmers with a login and holds the number for DA-registered farmers.
+- **Office assignment.** A farmer's `users.city_office_id` is null at first phone sign-up and is set when the farmer creates a profile (`POST /v1/farmers/me`). DAs and officers always have an office; `system_admin` has none. The check constraint on `users` allows exactly these cases.
+- **Soft delete (`DELETE /v1/users/me`).** Sets `users.deleted_at`, deletes all the user's `sessions`, then rewrites `email` to `deleted+<id>@phone.agri.invalid` and nulls `phone_number` (the only state in which `users.phone_number` may be null). This frees the identifiers for reuse while keeping plain unique constraints. Session creation is rejected for users with `deleted_at` set (`trg_sessions_eligibility`).
+- **Bans / deactivation.** `users.banned = true` (optionally with `ban_reason`, `ban_expires_at`); the user's sessions are deleted and no new session is issued while the ban is in force.
+- **Phone uniqueness.** `users.phone_number` is globally unique (PLOT-1). `farmers.phone_number` mirrors it for farmers with a login and holds the number for DA-registered farmers who have a phone.
 - **DA kebele coverage.** A DA covers one or two kebeles, stored as `users.assigned_kebele_ids` (used only when `role = 'da'`). The trigger `validate_user_kebele_ids()` rejects ids that are duplicated, soft-deleted or in another office, and rejects a non-empty array on any other role.
 - **Farmer verification is not a login gate.** `farmers.is_verified` never blocks any feature (Section 3.3.1).
 
@@ -121,7 +121,9 @@ Conventions applied to every table unless stated otherwise:
 - `version integer not null default 1` on entities with optimistic concurrency; incremented by the application on update.
 - Weights and quantities are `numeric(12,3)`, money is `numeric(12,2)` in ETB, agronomic event dates are `date`.
 - Media is never stored in rows; rows reference `media_files(id)`: a single audio file through a foreign key, and photo sets (`diagnosis_cases.photo_media_ids`, `grievances.photo_media_ids`) through `uuid[]` columns validated by the trigger `validate_photo_media_ids()` (Section 3.4).
-- Mobile mapping (React Native + WatermelonDB): `uuid[]` and `jsonb` columns are carried through sync as JSON arrays and objects and stored on the device as serialized JSON fields.
+- PWA mapping (IndexedDB, SRS 6): `uuid[]` and `jsonb` columns are carried through sync as JSON arrays and objects and stored in the browser's IndexedDB as serialized JSON fields.
+- **AI-generated speech is ephemeral.** Gemini TTS audio is synthesised on demand and streamed to the client; it is never written to PostgreSQL or object storage, so no table has a foreign key to `media_files` for synthetic audio. `media_files` holds human recordings and photos only.
+- **Naming.** Columns spell out their meaning: coordinates are `*_latitude` / `*_longitude`, distances `*_meters`, durations `*_seconds`, per-hectare rates `*_per_ha`, actors `*_by_user_id`; see the rename map in Section 7.
 
 ## 3.1 Extensions & Enums
 
@@ -233,7 +235,7 @@ create type delivery_channel as enum ('app', 'sms');
 
 create type delivery_status as enum ('queued', 'sent', 'delivered', 'failed');
 
-create type sync_op as enum ('insert', 'update', 'delete');
+create type sync_operation as enum ('insert', 'update', 'delete');
 
 create type sync_mutation_status as enum ('applied', 'rejected', 'duplicate');
 
@@ -304,9 +306,9 @@ create table kebeles (
   -- Boundaries are approximate and may overlap; no database rule rejects overlap.
   -- A plot that falls in several kebeles gets the smallest containing one; otherwise the nearest centroid.
   boundary         geography(MultiPolygon, 4326),
-  centroid_lat     numeric(9,6),
-  centroid_lng     numeric(9,6),
-  radius_m         integer,
+  centroid_latitude     numeric(9,6),
+  centroid_longitude     numeric(9,6),
+  radius_meters         integer,
 
   created_at       timestamptz not null default now(),
   updated_at       timestamptz not null default now(),
@@ -314,7 +316,7 @@ create table kebeles (
 
   check (
     boundary is not null
-    or (centroid_lat is not null and centroid_lng is not null and radius_m > 0)
+    or (centroid_latitude is not null and centroid_longitude is not null and radius_meters > 0)
   )
 );
 
@@ -325,7 +327,8 @@ where deleted_at is null;
 
 -- ============================================================
 -- AUTH CORE: users
--- Phone-only users get a placeholder *.invalid email (Section 2.2).
+-- Every user signs up with a verified phone number + password (SRS v1.2).
+-- Users without a real email get a placeholder *.invalid email (Section 2.2).
 -- ============================================================
 
 create table users (
@@ -334,15 +337,18 @@ create table users (
   name                     varchar(255) not null,
   email                    varchar(255) not null unique,
   email_verified           boolean not null default false,
-  image                    varchar(500),
+  image_url                varchar(500),
 
+  -- Login identifier for every role (E.164, globally unique). Null only after account closure.
   phone_number             varchar(20) unique,
+  -- Becomes true only after the sign-up / invitation OTP is validated; no session can be
+  -- issued while false (trg_sessions_eligibility, Section 3.4).
   phone_number_verified    boolean not null default false,
 
   role                     user_role not null default 'farmer',
   banned                   boolean not null default false,
   ban_reason               text,
-  ban_expires              timestamptz,
+  ban_expires_at              timestamptz,
 
   -- null for system_admin, and for a farmer who has not created a profile yet (Section 2.5)
   city_office_id           uuid references city_offices(id),
@@ -361,21 +367,24 @@ create table users (
   deleted_at               timestamptz,
 
   check (phone_number is null or phone_number ~ '^\+251[79][0-9]{8}$'),
+  check (phone_number is not null or deleted_at is not null),
+  check (not phone_number_verified or phone_number is not null),
   check (role in ('system_admin', 'farmer') or city_office_id is not null)
 );
 
 
 -- ============================================================
 -- AUTH CORE: accounts
--- One row per login method per user. Officers/admins have a
--- 'credential' row holding the password hash. Phone-OTP users
--- normally have no account row.
+-- One row per login method per user. Every user (all four roles)
+-- has a 'credential' row holding the password hash once sign-up or
+-- invitation OTP validation succeeds (phone number + password login).
+-- Other providers are reserved and unused in V1.
 -- ============================================================
 
 create table accounts (
   id                        uuid primary key default gen_random_uuid(),
 
-  account_id                varchar(255) not null,   -- provider-side id; for 'credential' = user id
+  provider_account_id                varchar(255) not null,   -- provider-side id; for 'credential' = user id
   provider_id               varchar(100) not null,   -- 'credential' | 'google' | ...
 
   user_id                   uuid not null references users(id) on delete cascade,
@@ -387,17 +396,23 @@ create table accounts (
   refresh_token_expires_at  timestamptz,
   scope                     text,
 
-  password                  text,                     -- hash, only for provider_id = 'credential'
+  password                  text,                     -- password hash for provider_id = 'credential'; replaced on password reset
 
   created_at                timestamptz not null default now(),
   updated_at                timestamptz not null default now(),
 
-  unique (provider_id, account_id)
+  unique (provider_id, provider_account_id),
+  check (provider_id <> 'credential' or password is not null)
 );
 
 
 -- ============================================================
 -- AUTH CORE: sessions
+-- Revocable server-side sessions. Sliding expiry by client type:
+-- 30 minutes of inactivity (city web portal) or 30 days (farmer/DA PWA).
+-- Sign-out, deactivation and password reset delete the rows.
+-- Eligibility (verified phone, not banned, not closed) is enforced by
+-- trg_sessions_eligibility (Section 3.4).
 -- ============================================================
 
 create table sessions (
@@ -418,8 +433,14 @@ create table sessions (
 
 -- ============================================================
 -- AUTH CORE: verifications
--- Holds OTP codes (identifier = phone number, or email for the
--- officer second step) and password-reset tokens.
+-- Short-lived 6-digit OTP codes (10-minute expiry, single use). The
+-- purpose is encoded in the identifier so values cannot be mixed:
+--   'phone-signup:+2519XXXXXXXX'    sign-up / invitation phone verification
+--   'phone-recovery:+2519XXXXXXXX'  forgot-password OTP
+--   'email-confirm:<address>'       optional Officer/Admin email confirmation
+-- OTPs are never used at login. Throttling (5 requests and 5 failed
+-- attempts per phone per hour) is enforced by the API from created_at
+-- and audit_logs.
 -- ============================================================
 
 create table verifications (
@@ -431,7 +452,10 @@ create table verifications (
   expires_at  timestamptz not null,
 
   created_at  timestamptz not null default now(),
-  updated_at  timestamptz not null default now()
+  updated_at  timestamptz not null default now(),
+
+  check (identifier ~ '^(phone-signup|phone-recovery):\+251[79][0-9]{8}$'
+         or identifier ~ '^email-confirm:.+@.+$')
 );
 ```
 
@@ -454,12 +478,12 @@ create table farmers (
 
   full_name            varchar(120) not null,
   phone_number         varchar(20),
-  no_phone             boolean not null default false,
+  has_no_phone             boolean not null default false,
 
   local_id_number      varchar(40) not null,
   kebele_id            uuid not null references kebeles(id),
 
-  assigned_da_id       uuid references users(id),
+  assigned_da_user_id       uuid references users(id),
   registered_by_user_id uuid references users(id),
 
   preferred_language   app_language  not null default 'am',   -- content / SMS language (authoritative when no login exists)
@@ -479,7 +503,7 @@ create table farmers (
   deleted_at           timestamptz,
 
   check (full_name = btrim(full_name) and char_length(full_name) between 2 and 120),
-  check (no_phone = (phone_number is null)),
+  check (has_no_phone = (phone_number is null)),
   check (phone_number is null or phone_number ~ '^\+251[79][0-9]{8}$'),
   check (not consent_agreed or consent_agreed_at is not null)
 );
@@ -509,23 +533,23 @@ create table plots (
 
   area_value                 numeric(10,3) not null,
   area_unit                  area_unit not null,
-  conversion_factor_used     numeric(10,6) not null,    -- hectares per unit in force at save time
+  hectares_per_unit_applied     numeric(10,6) not null,    -- hectares per unit in force at save time
   area_hectares              numeric(10,4)
-    generated always as (round(area_value * conversion_factor_used, 4)) stored,
+    generated always as (round(area_value * hectares_per_unit_applied, 4)) stored,
 
-  centroid_lat               numeric(9,6) not null,
-  centroid_lng               numeric(9,6) not null,
+  centroid_latitude               numeric(9,6) not null,
+  centroid_longitude               numeric(9,6) not null,
   centroid_geom              geography(Point, 4326)
-    generated always as (st_setsrid(st_makepoint(centroid_lng, centroid_lat), 4326)::geography) stored,
-  gps_accuracy_m             numeric(6,1) not null,
+    generated always as (st_setsrid(st_makepoint(centroid_longitude, centroid_latitude), 4326)::geography) stored,
+  gps_accuracy_meters             numeric(6,1) not null,
 
   -- 0.1° grid cell used to share cached weather across plots (Section 5.2 of SRS).
-  weather_grid_lat           numeric(5,1)
-    generated always as (round(centroid_lat, 1)) stored,
-  weather_grid_lng           numeric(5,1)
-    generated always as (round(centroid_lng, 1)) stored,
+  weather_grid_latitude           numeric(5,1)
+    generated always as (round(centroid_latitude, 1)) stored,
+  weather_grid_longitude           numeric(5,1)
+    generated always as (round(centroid_longitude, 1)) stored,
 
-  elevation_m                integer not null,
+  elevation_meters                integer not null,
   agro_zone_derived          agro_zone not null,
   agro_zone                  agro_zone not null,
   agro_zone_override_reason  varchar(255),
@@ -549,9 +573,9 @@ create table plots (
   deleted_at                 timestamptz,
 
   check (area_value > 0 and area_value <= 1000),
-  check (conversion_factor_used > 0),
-  check (centroid_lat between -90 and 90 and centroid_lng between -180 and 180),
-  check (elevation_m between 0 and 4500),
+  check (hectares_per_unit_applied > 0),
+  check (centroid_latitude between -90 and 90 and centroid_longitude between -180 and 180),
+  check (elevation_meters between 0 and 4500),
   check (agro_zone = agro_zone_derived or agro_zone_override_reason is not null),
   check ((planned_crop_id is null) = (planned_season_year is null)),
   check (planned_season_year is null or planned_season_year between 2000 and 2100)
@@ -583,11 +607,11 @@ create table crops (
   name_ti                     varchar(100),
 
   -- Plausibility ceiling for CROP-10 (quintals per hectare).
-  max_plausible_yield_qt_ha   numeric(6,2) not null default 80,
+  max_plausible_yield_qt_per_ha   numeric(6,2) not null default 80,
 
   -- Critical weeding windows, days after sowing (YIELD-5). 1-3 entries typical:
-  -- [{"sequence_no": 1, "start_day": 25, "end_day": 35}]. Validated by the API
-  -- (sequence_no 1-6, start_day >= 0, end_day >= start_day).
+  -- [{"sequence_number": 1, "start_day": 25, "end_day": 35}]. Validated by the API
+  -- (sequence_number 1-6, start_day >= 0, end_day >= start_day).
   weeding_windows             jsonb not null default '[]',
 
   -- Recommended successor crops (DIAG-8). Array order = priority (first = most recommended).
@@ -637,18 +661,18 @@ create table fertilizer_rates (
   crop_id           uuid not null references crops(id) on delete cascade,
   agro_zone         agro_zone not null,
 
-  urea_kg_ha        numeric(8,2) not null,
-  nps_kg_ha         numeric(8,2) not null,
-  seed_kg_ha        numeric(8,2) not null,
+  urea_kg_per_ha        numeric(8,2) not null,
+  nps_kg_per_ha         numeric(8,2) not null,
+  seed_kg_per_ha        numeric(8,2) not null,
 
   rates_version     integer not null,
   effective_from    date not null,
 
-  created_by        uuid references users(id),
+  created_by_user_id        uuid references users(id),
   created_at        timestamptz not null default now(),
 
   unique (city_office_id, crop_id, agro_zone, effective_from),
-  check (urea_kg_ha >= 0 and nps_kg_ha >= 0 and seed_kg_ha >= 0)
+  check (urea_kg_per_ha >= 0 and nps_kg_per_ha >= 0 and seed_kg_per_ha >= 0)
 );
 
 
@@ -666,7 +690,7 @@ create table pest_catalog (
   name               jsonb not null,                  -- {"en":"...","am":"...","om":"...","ti":"..."}
   prevention_advice  jsonb,                           -- same language keys
   reference_media_id uuid,                            -- fk added after media_files
-  is_quarantine      boolean not null default false,  -- migratory pests (Fall Armyworm, Desert Locust, Yellow Rust)
+  is_quarantine_pest      boolean not null default false,  -- migratory pests (Fall Armyworm, Desert Locust, Yellow Rust)
 
   status             catalog_status not null default 'active',
 
@@ -694,7 +718,7 @@ create table registered_chemicals (
   category               chemical_category not null,
 
   dosage_text            jsonb not null,              -- {"en":"...","am":"...",...}
-  ppe_text               jsonb,
+  protective_equipment_text               jsonb,
   safety_interval_days   smallint not null,           -- pre-harvest interval
 
   label_media_id         uuid,                        -- fk added after media_files
@@ -756,8 +780,9 @@ alter table plots
 ```sql
 -- ============================================================
 -- MEDIA FILES
--- Audio (grievances, responses, TTS) and images (diagnosis, grievance,
--- catalog). Supports resumable chunked upload (SYNC-7): the client
+-- Human-recorded audio (grievance voice notes, desk replies, Officer
+-- announcement recordings) and images (diagnosis, grievance, catalog).
+-- AI-synthesised (Gemini TTS) audio is never stored and has no row here. Supports resumable chunked upload (SYNC-7): the client
 -- sends 256 KB chunks; bytes_received lets it resume after a drop.
 -- ============================================================
 
@@ -770,20 +795,20 @@ create table media_files (
   kind              media_kind not null,
   mime_type         varchar(100) not null,
   size_bytes        bigint,
-  duration_s        smallint,
+  duration_seconds        smallint,
 
   storage_key       varchar(500) not null unique,   -- S3-compatible object key
-  sha256            char(64),                       -- client-declared; verified server-side on complete
+  sha256_checksum            char(64),                       -- client-declared; verified server-side on complete
   status            media_status not null default 'pending',
   bytes_received    bigint not null default 0,
-  upload_id         varchar(200),                   -- multipart upload id
+  resumable_upload_id         varchar(200),                   -- multipart upload id
 
   created_at        timestamptz not null default now(),
   updated_at        timestamptz not null default now(),
 
   check (size_bytes is null or size_bytes >= 0),
-  check (kind <> 'audio' or duration_s is null or duration_s <= 180),
-  check (sha256 is null or sha256 ~ '^[0-9a-f]{64}$')
+  check (kind <> 'audio' or duration_seconds is null or duration_seconds <= 180),
+  check (sha256_checksum is null or sha256_checksum ~ '^[0-9a-f]{64}$')
 );
 
 alter table pest_catalog
@@ -954,11 +979,11 @@ create table field_operations (
   operation_date      date not null,
 
   -- plowing: pass number 1–10; weeding: 1st, 2nd, 3rd... (1–6)
-  sequence_no         smallint,
+  sequence_number         smallint,
 
   -- spraying
   chemical_id         uuid references registered_chemicals(id),
-  product_rate        numeric(10,3),
+  product_application_rate        numeric(10,3),
   rate_unit           varchar(20),
 
   -- irrigation
@@ -973,10 +998,10 @@ create table field_operations (
 
   check (operation_date <= current_date),
   check (
-    (operation_type = 'plowing'    and sequence_no between 1 and 10)
-    or (operation_type = 'weeding' and sequence_no between 1 and 6)
+    (operation_type = 'plowing'    and sequence_number between 1 and 10)
+    or (operation_type = 'weeding' and sequence_number between 1 and 6)
     or (operation_type = 'spraying'
-        and chemical_id is not null and product_rate > 0 and rate_unit is not null)
+        and chemical_id is not null and product_application_rate > 0 and rate_unit is not null)
     or (operation_type = 'irrigation'
         and irrigation_method is not null and duration_minutes between 1 and 1440)
   )
@@ -1071,10 +1096,10 @@ create table yield_gap_analyses (
   cohort_definition     jsonb not null,   -- {crop_id, soil_class, season_year, zone, widened}
   cohort_size           integer not null,
 
-  plot_yield_qt_ha      numeric(8,2),
-  cohort_median_qt_ha   numeric(8,2),
-  cohort_p75_qt_ha      numeric(8,2),
-  gap_pct_vs_p75        numeric(6,2),     -- negative when the plot is above the top quartile
+  plot_yield_qt_per_ha      numeric(8,2),
+  cohort_median_qt_per_ha   numeric(8,2),
+  cohort_top_quartile_qt_per_ha      numeric(8,2),
+  gap_percent_vs_top_quartile        numeric(6,2),     -- negative when the plot is above the top quartile
 
   -- [{factor, farmer_value, peer_value, delta, contribution_score, flags[]}]
   factor_results        jsonb not null default '[]',
@@ -1083,8 +1108,10 @@ create table yield_gap_analyses (
   recommendations       jsonb not null default '[]',      -- 1–5 {factor, target_value, unit, message_key}
 
   narration_lang        app_language,
-  narration_text        text,
-  narration_audio_id    uuid references media_files(id),
+  -- Plain-language explanation stored as text only (<= 600 words, numbers verified against
+  -- factor_results). Spoken audio is NEVER stored: Gemini TTS synthesises it on demand from
+  -- narration_text when the farmer taps play.
+  narration_text        text not null default '',
 
 
   created_at            timestamptz not null default now(),
@@ -1107,24 +1134,24 @@ create table yield_gap_analyses (
 create table weather_forecasts (
   id            uuid primary key default gen_random_uuid(),
 
-  grid_lat      numeric(5,1) not null,
-  grid_lng      numeric(5,1) not null,
+  grid_latitude      numeric(5,1) not null,
+  grid_longitude      numeric(5,1) not null,
 
   fetched_at    timestamptz not null,
   expires_at    timestamptz not null,              -- fetched_at + 3 hours
 
-  current_obs   jsonb not null,    -- temp, rain probability, humidity, wind
-  daily         jsonb not null,    -- 7 entries: min/max, rain prob, mm, wind, soil moisture index
+  current_observation   jsonb not null,    -- temp, rain probability, humidity, wind
+  daily_forecasts jsonb not null,  -- 7 entries: min/max, rain prob, mm, wind, soil moisture index
 
-  unique (grid_lat, grid_lng)
+  unique (grid_latitude, grid_longitude)
 );
 
 
 create table weather_alerts (
   id              uuid primary key default gen_random_uuid(),
 
-  grid_lat        numeric(5,1) not null,
-  grid_lng        numeric(5,1) not null,
+  grid_latitude        numeric(5,1) not null,
+  grid_longitude        numeric(5,1) not null,
 
   alert_type      weather_alert_type not null,
   starts_on       date not null,
@@ -1133,7 +1160,7 @@ create table weather_alerts (
 
   created_at      timestamptz not null default now(),
 
-  unique (grid_lat, grid_lng, alert_type, starts_on),
+  unique (grid_latitude, grid_longitude, alert_type, starts_on),
   check (ends_on >= starts_on)
 );
 
@@ -1173,10 +1200,11 @@ create table diagnosis_cases (
   removed_chemicals         jsonb not null default '[]',     -- audit of anything the filter dropped
 
   review_status             diagnosis_review_status not null default 'none',
-  reviewed_by               uuid references users(id),
+  reviewed_by_user_id               uuid references users(id),
   reviewed_at               timestamptz,
 
-  result_audio_id           uuid references media_files(id),
+  -- No audio column: diagnosis voice playback is generated on demand by Gemini TTS from
+  -- diagnosis_label and filtered_recommendations (DIAG-7).
   failure_reason            varchar(255),
 
   created_at                timestamptz not null default now(),
@@ -1202,7 +1230,7 @@ create table outbreak_clusters (
   kebele_id       uuid references kebeles(id),
 
   centroid        geography(Point, 4326) not null,
-  radius_m        integer not null,
+  radius_meters        integer not null,
   case_count      integer not null,
 
   -- Replaces the former outbreak_cluster_cases junction table. Holds diagnosis_cases.id and
@@ -1246,8 +1274,8 @@ create table grievances (
   kebele_id             uuid references kebeles(id),
 
   -- Plot centroid by default; device location only if the farmer shares it.
-  location_lat          numeric(9,6),
-  location_lng          numeric(9,6),
+  location_latitude          numeric(9,6),
+  location_longitude          numeric(9,6),
 
   audio_media_id        uuid references media_files(id),
   text_note             varchar(1000),
@@ -1287,8 +1315,9 @@ create table grievances (
 -- Two-way threaded conversation between the farmer and the extension desk
 -- (DA or officer). Replaces grievance_responses. id is client-generated, so a
 -- message sent offline replays idempotently (SYNC-5). Append-only except
--- read_at and tts_media_id (set when the TTS job finishes), enforced by
--- trg_grievance_messages_protect.
+-- read_at (every other column is immutable), enforced by
+-- trg_grievance_messages_protect. Desk text replies are read aloud on demand on the
+-- client through Gemini TTS; no synthetic audio is generated or persisted.
 -- The table carries no farmer_id; record_sync_change() scopes each message
 -- to the farmer through the parent grievance (Section 3.4).
 -- ============================================================
@@ -1302,8 +1331,7 @@ create table grievance_messages (
 
   message_type     message_kind not null,
   text_body        varchar(2000),
-  audio_media_id   uuid references media_files(id),       -- recorded voice message
-  tts_media_id     uuid references media_files(id),       -- generated from text_body
+  audio_media_id   uuid references media_files(id),       -- human-recorded voice message (MediaRecorder)
 
   read_at          timestamptz,                           -- set when the other party opens it
 
@@ -1402,7 +1430,7 @@ create table market_surveys (
   version               integer not null default 1,
   supersedes_id         uuid references market_surveys(id),
 
-  verified_by           uuid references users(id),
+  verified_by_user_id           uuid references users(id),
   verified_at           timestamptz,
 
   created_at            timestamptz not null default now(),
@@ -1444,7 +1472,7 @@ create table crowd_transactions (
   moderation_status    moderation_status not null default 'pending',
   outlier_flag         boolean not null default false,   -- >50% from latest verified survey average
   rejection_reason     varchar(255),
-  moderated_by         uuid references users(id),
+  moderated_by_user_id         uuid references users(id),
   moderated_at         timestamptz,
 
   created_at           timestamptz not null default now(),
@@ -1529,7 +1557,7 @@ create table depot_stock_movements (
   status               varchar(20) not null default 'received',
   expected_on          date,
 
-  recorded_by          uuid not null references users(id),
+  recorded_by_user_id          uuid not null references users(id),
   created_at           timestamptz not null default now(),
   updated_at           timestamptz not null default now(),
 
@@ -1561,11 +1589,11 @@ create table demand_snapshots (
   -- {
   --   "rows":      [{kebele_id, crop_id, hectares, urea_kg, nps_kg, seed_kg}],
   --   "totals":    {urea_kg, nps_kg, seed_kg, hectares},
-  --   "overrides": [{kebele_id, crop_id, hectares_override, reason, created_by}]   -- replaces kebele_crop_overrides
+  --   "overrides": [{kebele_id, crop_id, hectares_override, reason, created_by_user_id}]   -- replaces kebele_crop_overrides
   -- }
   result             jsonb not null,
 
-  created_by         uuid references users(id),
+  created_by_user_id         uuid references users(id),
   created_at         timestamptz not null default now(),
 
   check (safety_margin_pct between 0 and 30)
@@ -1588,11 +1616,11 @@ create table announcements (
   announcement_type           announcement_type not null,
   status                      announcement_status not null default 'draft',
 
-  -- Targeting (COMM-2). Empty arrays + target_all = whole city.
-  target_all                  boolean not null default true,
+  -- Targeting (COMM-2). Empty arrays + targets_entire_city = whole city.
+  targets_entire_city                  boolean not null default true,
   target_kebele_ids           uuid[] not null default '{}',
   target_crop_ids             uuid[] not null default '{}',
-  target_zones                agro_zone[] not null default '{}',
+  target_agro_zones                agro_zone[] not null default '{}',
 
   pest_id                     uuid references pest_catalog(id),     -- quarantine broadcasts
   template_code               varchar(60),                           -- optional code of a client/web-application template (no table)
@@ -1613,7 +1641,7 @@ create table announcements (
   created_at                  timestamptz not null default now(),
   updated_at                  timestamptz not null default now(),
 
-  check (target_all or cardinality(target_kebele_ids) + cardinality(target_crop_ids) + cardinality(target_zones) > 0),
+  check (targets_entire_city or cardinality(target_kebele_ids) + cardinality(target_crop_ids) + cardinality(target_agro_zones) > 0),
   check (status <> 'published' or published_at is not null),
   check (jsonb_typeof(translations) = 'object'),
   check ((translations - 'am' - 'om' - 'ti' - 'en') = '{}'::jsonb),
@@ -1633,7 +1661,7 @@ create table announcement_deliveries (
   status               delivery_status not null default 'queued',
 
   provider_message_id  varchar(120),           -- SMS gateway reference
-  segments             smallint,
+  sms_segment_count             smallint,
   cost_etb             numeric(8,4),
   failure_reason       varchar(255),
 
@@ -1660,11 +1688,11 @@ create table devices (
   user_id            uuid not null references users(id) on delete cascade,
   city_office_id     uuid references city_offices(id),
 
-  device_identifier  varchar(120) not null,       -- stable per-install id sent as X-Device-Id
+  device_identifier  varchar(120) not null,       -- stable per-browser-install id sent as X-Device-Id
   app_version        varchar(20),
-  push_token         text,                         -- FCM
+  web_push_subscription  text,                    -- serialised Web Push subscription (endpoint + keys)
 
-  last_cursor        bigint not null default 0,    -- last sync_changes.seq delivered (SYNC-4)
+  last_sync_cursor        bigint not null default 0,    -- last sync_changes.sequence_number delivered (SYNC-4)
   last_sync_at       timestamptz,
 
   created_at         timestamptz not null default now(),
@@ -1687,12 +1715,12 @@ create table sync_mutations (
   user_id          uuid not null references users(id),
   city_office_id   uuid not null references city_offices(id),
 
-  entity           varchar(60) not null,      -- table name
+  entity_type      varchar(60) not null,      -- table name
   entity_id        uuid not null,
-  op               sync_op not null,
+  operation        sync_operation not null,
   payload          jsonb not null,
   payload_hash     char(64) not null,         -- SHA-256 of canonical payload, recomputed by server
-  client_seq       bigint not null,           -- client queue order
+  client_sequence_number       bigint not null,           -- client queue order
   client_created_at timestamptz not null,
 
   status           sync_mutation_status not null,
@@ -1707,18 +1735,18 @@ create table sync_mutations (
 -- ============================================================
 -- SYNC: SERVER CHANGE FEED (SYNC-4)
 -- Appended by triggers on every synced table. Devices pull rows with
--- seq > devices.last_cursor, filtered to what they may see:
+-- sequence_number > devices.last_sync_cursor, filtered to what they may see:
 --   farmer → rows with farmer_id = own, or farmer_id null (office catalog)
 --   DA     → rows whose farmer_id is among assigned farmers, or null
 -- ============================================================
 
 create table sync_changes (
-  seq             bigint generated always as identity primary key,
+  sequence_number bigint generated always as identity primary key,
 
   city_office_id  uuid not null,
-  entity          varchar(60) not null,
+  entity_type     varchar(60) not null,
   entity_id       uuid not null,
-  op              sync_op not null,
+  operation       sync_operation not null,
   farmer_id       uuid,                        -- null for office-wide catalog data
   changed_at      timestamptz not null default now()
 );
@@ -1734,7 +1762,7 @@ create table audit_logs (
   city_office_id   uuid references city_offices(id),   -- null for platform-level actions
   actor_user_id    uuid references users(id),
 
-  action           varchar(80) not null,               -- e.g. 'farmer.verify', 'office.parameters_update', 'log.correct', 'auth.login_failed'
+  action           varchar(80) not null,               -- e.g. 'farmer.verify', 'office.parameters_update', 'log.correct', 'auth.signup', 'auth.login_failed', 'auth.lockout', 'auth.password_reset', 'auth.logout'
   entity_type      varchar(60),
   entity_id        uuid,
   changes_json     jsonb,                              -- {"before": {...}, "after": {...}} or event details
@@ -1757,19 +1785,20 @@ create index idx_sessions_user           on sessions(user_id);
 create index idx_sessions_expiry         on sessions(expires_at);
 create index idx_accounts_user           on accounts(user_id);
 create index idx_verifications_identifier on verifications(identifier, created_at desc);
+create index idx_verifications_expiry     on verifications(expires_at);   -- purge of expired OTP rows
 
 create index idx_kebeles_office          on kebeles(city_office_id);
 create index idx_kebeles_boundary        on kebeles using gist (boundary);
 
 create index idx_farmers_office_verified on farmers(city_office_id, is_verified) where deleted_at is null;
-create index idx_farmers_da              on farmers(assigned_da_id) where deleted_at is null;
+create index idx_farmers_da              on farmers(assigned_da_user_id) where deleted_at is null;
 create index idx_farmers_kebele          on farmers(kebele_id);
 create index idx_farmers_name_fts        on farmers using gin (to_tsvector('simple', full_name));
 
 create index idx_plots_farmer            on plots(farmer_id) where deleted_at is null;
 create index idx_plots_office_kebele     on plots(city_office_id, kebele_id) where deleted_at is null;
 create index idx_plots_centroid          on plots using gist (centroid_geom);
-create index idx_plots_weather_grid      on plots(weather_grid_lat, weather_grid_lng);
+create index idx_plots_weather_grid      on plots(weather_grid_latitude, weather_grid_longitude);
 create index idx_plots_soil_zone         on plots(city_office_id, soil_class, agro_zone) where deleted_at is null;
 create index idx_plots_planned_crop      on plots(city_office_id, planned_crop_id) where deleted_at is null and planned_crop_id is not null;
 
@@ -1782,7 +1811,7 @@ create index idx_ledger_cycle            on ledger_entries(cycle_id) where delet
 create index idx_harvest_yield           on harvest_records(yield_qt_per_ha) where deleted_at is null;
 
 create index idx_yield_gap_office        on yield_gap_analyses(city_office_id, created_at desc);
-create index idx_weather_alerts_grid     on weather_alerts(grid_lat, grid_lng, starts_on);
+create index idx_weather_alerts_grid     on weather_alerts(grid_latitude, grid_longitude, starts_on);
 
 create index idx_media_owner             on media_files(owner_user_id, created_at desc);
 create index idx_media_status            on media_files(status) where status in ('pending', 'uploading');
@@ -1817,9 +1846,9 @@ create index idx_deliveries_farmer       on announcement_deliveries(farmer_id, q
 create index idx_deliveries_unread       on announcement_deliveries(farmer_id, queued_at desc) where channel = 'app' and read_at is null;
 
 create index idx_devices_user            on devices(user_id);
-create index idx_sync_mutations_device   on sync_mutations(device_id, client_seq);
-create index idx_sync_changes_pull       on sync_changes(city_office_id, seq);
-create index idx_sync_changes_farmer     on sync_changes(farmer_id, seq);
+create index idx_sync_mutations_device   on sync_mutations(device_id, client_sequence_number);
+create index idx_sync_changes_pull       on sync_changes(city_office_id, sequence_number);
+create index idx_sync_changes_farmer     on sync_changes(farmer_id, sequence_number);
 
 create index idx_audit_office            on audit_logs(city_office_id, id desc);
 create index idx_audit_entity            on audit_logs(entity_type, entity_id);
@@ -1987,7 +2016,7 @@ declare
 begin
   v_kg := case new.entered_unit when 'quintal' then new.entered_volume * 100 else new.entered_volume end;
 
-  select p.area_hectares, cr.max_plausible_yield_qt_ha, s.planting_date
+  select p.area_hectares, cr.max_plausible_yield_qt_per_ha, s.planting_date
     into v_area, v_ceiling, v_planted
   from crop_cycles c
   join plots p  on p.id  = c.plot_id
@@ -2179,7 +2208,42 @@ for each row execute function maintain_grievance_status_history();
 
 
 -- ============================================================
--- GRIEVANCE MESSAGES: append-only except read_at and tts_media_id
+-- SESSIONS: eligibility guard (ADM-8)
+-- A session can be issued only to a user whose phone was verified by OTP,
+-- who is not banned (or whose ban has expired) and whose account is not closed.
+-- ============================================================
+
+create or replace function enforce_session_eligibility()
+returns trigger
+language plpgsql
+as $$
+declare
+  u users%rowtype;
+begin
+  select * into u from users where id = new.user_id;
+  if not found then
+    raise exception 'session_user_missing' using errcode = '23503';
+  end if;
+  if u.deleted_at is not null then
+    raise exception 'account_closed' using errcode = '23514';
+  end if;
+  if not u.phone_number_verified then
+    raise exception 'phone_not_verified' using errcode = '23514';
+  end if;
+  if u.banned and (u.ban_expires_at is null or u.ban_expires_at > now()) then
+    raise exception 'account_banned' using errcode = '23514';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger trg_sessions_eligibility
+before insert on sessions
+for each row execute function enforce_session_eligibility();
+
+
+-- ============================================================
+-- GRIEVANCE MESSAGES: append-only except read_at
 -- ============================================================
 
 create or replace function protect_grievance_message()
@@ -2187,6 +2251,7 @@ returns trigger
 language plpgsql
 as $$
 begin
+  -- every column except read_at is immutable
   if (new.id, new.city_office_id, new.grievance_id, new.sender_user_id, new.message_type,
       new.text_body, new.audio_media_id, new.created_at)
      is distinct from
@@ -2230,9 +2295,9 @@ begin
     raise exception 'depot_stock_movements is immutable' using errcode = '42501';
   end if;
 
-  if (new.id, new.depot_stock_item_id, new.movement_type, new.recorded_by, new.created_at)
+  if (new.id, new.depot_stock_item_id, new.movement_type, new.recorded_by_user_id, new.created_at)
      is distinct from
-     (old.id, old.depot_stock_item_id, old.movement_type, old.recorded_by, old.created_at) then
+     (old.id, old.depot_stock_item_id, old.movement_type, old.recorded_by_user_id, old.created_at) then
     raise exception 'movement_immutable' using errcode = '42501';
   end if;
 
@@ -2311,14 +2376,14 @@ begin
     where g.id = (r->>'grievance_id')::uuid;
   end if;
 
-  insert into sync_changes (city_office_id, entity, entity_id, op, farmer_id)
+  insert into sync_changes (city_office_id, entity_type, entity_id, operation, farmer_id)
   values (
     coalesce(
       nullif(r->>'city_office_id', '')::uuid,
       case when tg_table_name = 'city_offices' then (r->>'id')::uuid end),
     tg_table_name,
     (r->>'id')::uuid,
-    case tg_op when 'INSERT' then 'insert' when 'DELETE' then 'delete' else 'update' end::sync_op,
+    case tg_op when 'INSERT' then 'insert' when 'DELETE' then 'delete' else 'update' end::sync_operation,
     v_farmer);
   return null;
 end;
@@ -2405,7 +2470,7 @@ group by c.id;
 
 
 -- Live city-wide input demand (REG-4). Reads only plots, farmers, crop_cycles and
--- fertilizer_rates, so it is unaffected by the v1.3 consolidation. Uses the active cycle's crop,
+-- fertilizer_rates, so it is unaffected by the earlier table consolidation. Uses the active cycle's crop,
 -- falling back to the plot's planned crop (plots.planned_crop_id). All active farmers count;
 -- is_verified is exposed so planners can filter verified vs. unverified.
 create or replace view v_city_input_demand_live as
@@ -2426,9 +2491,9 @@ with plot_crop as (
 select
   pc.city_office_id, pc.kebele_id, pc.crop_id, pc.is_verified,
   sum(pc.area_hectares)                  as hectares,
-  sum(pc.area_hectares * fr.urea_kg_ha)  as urea_kg,
-  sum(pc.area_hectares * fr.nps_kg_ha)   as nps_kg,
-  sum(pc.area_hectares * fr.seed_kg_ha)  as seed_kg,
+  sum(pc.area_hectares * fr.urea_kg_per_ha)  as urea_kg,
+  sum(pc.area_hectares * fr.nps_kg_per_ha)   as nps_kg,
+  sum(pc.area_hectares * fr.seed_kg_per_ha)  as seed_kg,
   max(fr.rates_version)                  as rates_version
 from plot_crop pc
 join lateral (
@@ -2471,8 +2536,8 @@ group by d.city_office_id, i.item_type, i.crop_id;
 -- $1 office, $2 crop, $3 season_year, $4 soil_class
 select
   count(*)                                                    as cohort_size,
-  percentile_cont(0.50) within group (order by h.yield_qt_per_ha) as median_qt_ha,
-  percentile_cont(0.75) within group (order by h.yield_qt_per_ha) as p75_qt_ha
+  percentile_cont(0.50) within group (order by h.yield_qt_per_ha) as median_qt_per_ha,
+  percentile_cont(0.75) within group (order by h.yield_qt_per_ha) as top_quartile_qt_per_ha
 from crop_cycles c
 join harvest_records h on h.cycle_id = c.id and h.deleted_at is null
 join plots   p on p.id = c.plot_id
@@ -2482,7 +2547,7 @@ where c.city_office_id = $1
   and p.soil_class     = $4
   and c.status         = 'closed'
   and c.deleted_at is null;
--- The engine then takes cycles with yield >= p75 as the "top-quartile producers"
+-- The engine then takes cycles with yield >= the top-quartile threshold as the "top-quartile producers"
 -- and computes the median of each input factor over that group.
 ```
 
@@ -2585,7 +2650,7 @@ Base URL: `https://<host>/api`. Authentication routes are under `/api/auth/*`; a
 | HTTP | `code` | Meaning |
 |---|---|---|
 | 400 | `validation_failed` | Schema validation failed; `details` lists fields |
-| 401 | `unauthenticated`, `invalid_credentials`, `otp_invalid`, `otp_expired` | No / expired / revoked session; wrong password or OTP |
+| 401 | `unauthenticated`, `invalid_credentials`, `otp_invalid`, `otp_expired`, `phone_not_verified` | No / expired / revoked session; wrong phone number or password; wrong or expired sign-up / recovery OTP; sign-in before OTP verification |
 | 403 | `forbidden` | Role not allowed |
 | 404 | `not_found` | Missing or in another office |
 | 409 | `conflict`, `insufficient_stock`, `one_active_cycle`, `slot_exists` | Constraint violations mapped from PostgreSQL errors |
@@ -2626,19 +2691,22 @@ The tenant-scope step also runs `set_config('app.actor_user_id', <user id>, true
 
 ## 4.2 Authentication
 
+One lifecycle for all roles (ADM-8), served by Better Auth (`phoneNumber` plugin, credential accounts). Login is phone number + password only; OTPs are used solely for sign-up / invitation verification and password recovery. Web-portal sessions use a secure, HTTP-only, SameSite cookie with a 30-minute sliding expiry; PWA sessions use a 30-day sliding window. Every auth event is audit-logged (`auth.signup`, `auth.login_failed`, `auth.lockout`, `auth.password_reset`, `auth.logout`).
+
 | Method | Endpoint | Roles | Description |
 |---|---|---|---|
-| `POST` | `/api/auth/phone/send-otp` | Public | `{phone_number}` — store the code in `verifications` and send the 6-digit SMS (10-minute expiry; max 5 requests per phone per hour) |
-| `POST` | `/api/auth/phone/verify` | Public | `{phone_number, code}` — verify (max 5 attempts); creates the user on first success (`role = farmer`, active immediately) and starts a session |
-| `POST` | `/api/auth/login` | Public | Officer / system admin `{email, password}`; on success sends the second-step SMS OTP; 5 failures lock the account for 15 minutes |
-| `POST` | `/api/auth/login/verify-otp` | Public | Verify the second-step OTP (mandatory for officers and admins, ADM-8); starts the session |
+| `POST` | `/api/auth/sign-up/phone` | Public | `{phone_number, password, name?, preferred_language?}` — validates the password (≥ 10 characters, standard complexity), creates the unverified `users` row (`role = farmer`, placeholder email) and the `credential` account, and sends the 6-digit SMS OTP (`verifications`, `identifier = 'phone-signup:<phone>'`, 10-minute expiry, max 5 requests per phone per hour). **No session is issued yet** |
+| `POST` | `/api/auth/phone/verify-otp` | Public | `{phone_number, code}` — verifies the sign-up OTP (single use; max 5 failed attempts per hour); sets `phone_number_verified = true`, activates the account (no approval gate) and starts a session |
+| `POST` | `/api/auth/phone/resend-otp` | Public | `{phone_number}` — resend the sign-up OTP (counts toward the 5-per-hour limit) |
+| `POST` | `/api/auth/invitations/accept` | Public | `{phone_number, code, password}` — a provisioned DA / Officer (ADM-2, ADM-7) verifies the invitation OTP and sets a password; activates the pre-created `users` row and starts a session |
+| `POST` | `/api/auth/sign-in/phone` | Public | `{phone_number, password}` — **no OTP at login**; issues a revocable session (cookie for the web portal, 30-minute sliding; 30-day sliding for the PWA, selected by `X-Client-Type`). Refused for unverified, banned or closed accounts; 5 consecutive failures lock the account for 15 minutes (`account_locked`) |
+| `POST` | `/api/auth/forgot-password` | Public | `{phone_number}` — sends a 6-digit recovery OTP (`identifier = 'phone-recovery:<phone>'`, 10-minute expiry). Returns the same neutral response whether or not the number is registered |
+| `POST` | `/api/auth/reset-password` | Public | `{phone_number, code, new_password}` — verifies the recovery OTP, replaces `accounts.password` and **revokes all of the user's sessions on every device** |
 | `GET` | `/api/auth/session` | Any | Return current session and user |
-| `POST` | `/api/auth/sign-out` | Any | End the current session |
+| `POST` | `/api/auth/sign-out` | Any | Delete the current session row; the client clears cookies and locally stored session data (a DA's encrypted unsynced queue is preserved, AGENT-8) |
 | `GET` | `/api/auth/sessions` | Any | List the user's active sessions |
 | `POST` | `/api/auth/sessions/revoke` | Any | Revoke one session |
-| `POST` | `/api/auth/change-password` | O, A | Change password (revokes other sessions) |
-| `POST` | `/api/auth/request-password-reset` | O, A | Email reset link (token stored in `verifications`) |
-| `POST` | `/api/auth/reset-password` | Public | Complete reset with token |
+| `POST` | `/api/auth/change-password` | Any | `{current_password, new_password, revoke_other_sessions}` — change password (other sessions revoked) |
 | `POST` | `/v1/admin/users/{id}/deactivate` | A | Set `banned = true` and delete the user's sessions |
 | `POST` | `/v1/admin/users/{id}/reactivate` | A | Set `banned = false` |
 
@@ -2647,7 +2715,10 @@ Application-level account endpoints:
 | Method | Endpoint | Roles | Description |
 |---|---|---|---|
 | `GET` | `/v1/users/me` | Any | Profile, role, office, language, farmer record id |
-| `PATCH` | `/v1/users/me` | Any | Update `name`, `preferred_language` |
+| `PATCH` | `/v1/users/me` | Any | Update `name`, `preferred_language`, `image_url` |
+| `PUT` | `/v1/users/me/email` | O, A | Add or change the optional email (stored unverified; confirmation sent through an `email-confirm:` row in `verifications`). Used only for notifications, exports and desktop communications — never for sign-in or recovery |
+| `DELETE` | `/v1/users/me/email` | O, A | Remove the optional email (the placeholder `*.invalid` address is restored) |
+| `POST` | `/v1/users/me/email/confirm` | O, A | `{code}` — confirm the optional email |
 | `DELETE` | `/v1/users/me` | Any | Soft-delete (close) the account; tombstones email/phone (Section 2.5) |
 
 ---
@@ -2664,7 +2735,7 @@ Application-level account endpoints:
 | `PATCH` | `/v1/office/kebeles/{id}` | O | Update territory or name |
 | `DELETE` | `/v1/office/kebeles/{id}` | O | Soft-delete (blocked if farmers are assigned; the id is removed from every DA's `assigned_kebele_ids` in the same transaction) |
 | `GET` | `/v1/office/users` | O | List DAs and officers of the office |
-| `POST` | `/v1/office/users` | O | Create a DA or officer (role limited to `da`/`officer`); optional `assigned_kebele_ids[]` for a DA; sends an SMS invite (DA) or email invite (officer) |
+| `POST` | `/v1/office/users` | O | Create a DA or officer (role limited to `da`/`officer`); `phone_number` required; optional `assigned_kebele_ids[]` for a DA; creates an unverified `users` row and sends an SMS invitation (the invitee verifies the phone by OTP and sets a password through `/api/auth/invitations/accept`) |
 | `PATCH` | `/v1/office/users/{id}` | O | Update name, phone, role (DA ↔ officer) and `assigned_kebele_ids[]` (DA only; replaces the whole array; every id must be an active kebele of the office; changing a DA to officer must send an empty array) |
 | `POST` | `/v1/office/users/{id}/deactivate` | O | Deactivate (`banned = true`); deletes the user's sessions within 60 s |
 | `POST` | `/v1/office/farmers/reassign` | O | Bulk reassign farmers to a DA (`farmer_ids[]` up to 200, or CSV upload) |
@@ -2675,12 +2746,12 @@ Application-level account endpoints:
 
 | Method | Endpoint | Roles | Description |
 |---|---|---|---|
-| `POST` | `/v1/farmers/me` | F | Create own farmer profile after OTP login (name, local ID, kebele, `consent_agreed`); sets `users.city_office_id`. The farmer is active immediately; `is_verified = false` |
+| `POST` | `/v1/farmers/me` | F | Create own farmer profile after phone sign-up (name, local ID, kebele, `consent_agreed`); sets `users.city_office_id`. The farmer is active immediately; `is_verified = false` |
 | `GET` | `/v1/farmers/me` | F | Get own profile and `is_verified` flag |
 | `PATCH` | `/v1/farmers/me` | F | Update profile fields |
-| `POST` | `/v1/farmers/claim` | F | Claim a DA-registered profile (`local_id_number`); merges into the OTP-verified user |
-| `POST` | `/v1/farmers` | D | Register a farmer on someone's behalf; `phone_number` optional (`no_phone = true`) |
-| `GET` | `/v1/farmers` | D, O | Search and filter (`q`, `kebele_id`, `da_id`, `is_verified`, `crop_id`, `soil_class`) |
+| `POST` | `/v1/farmers/claim` | F | Claim a DA-registered profile (`local_id_number`); merges into the phone-verified, signed-in user |
+| `POST` | `/v1/farmers` | D | Register a farmer on someone's behalf; `phone_number` optional (`has_no_phone = true`) |
+| `GET` | `/v1/farmers` | D, O | Search and filter (`q`, `kebele_id`, `assigned_da_user_id`, `is_verified`, `crop_id`, `soil_class`) |
 | `GET` | `/v1/farmers/{id}` | D, O | Farmer detail (DAs: assigned farmers only) |
 | `PATCH` | `/v1/farmers/{id}` | D, O | Update profile |
 | `PATCH` | `/v1/farmers/{id}/verify` | D, O | Set `is_verified = true` after meeting the farmer in the field; audit-logged. Never blocks any feature |
@@ -2816,7 +2887,7 @@ Explicit skip:
 | Method | Endpoint | Roles | Description |
 |---|---|---|---|
 | `GET` | `/v1/cycles/{id}/yield-gap` | F (own), D, O | Latest analysis: status, yields, factor results, top causes, recommendations, narration text |
-| `GET` | `/v1/cycles/{id}/yield-gap/audio` | F (own), D, O | Narration audio for `?lang=` (signed URL; generated on demand and cached) |
+| `GET` | `/v1/cycles/{id}/yield-gap/audio` | F (own), D, O | Streams Gemini TTS audio of `narration_text` for `?lang=`, synthesised on demand and never stored |
 | `POST` | `/v1/office/cycles/{id}/yield-gap/regenerate` | O, A | Recompute (e.g. after a data correction); rate-limited |
 | `POST` | `/v1/cycles/{id}/yield-gap/reminders` | F (own), D | Save recommendations as reminders on the next cycle |
 
@@ -2832,10 +2903,10 @@ Rain onset (YIELD-4) is computed on demand: the engine queries the historical we
     "cycle_id": "…",
     "status": "completed",
     "cohort": { "size": 14, "widened": false },
-    "plot_yield_qt_ha": 12.0,
-    "cohort_median_qt_ha": 26.5,
-    "cohort_p75_qt_ha": 31.0,
-    "gap_pct_vs_p75": 61.3,
+    "plot_yield_qt_per_ha": 12.0,
+    "cohort_median_qt_per_ha": 26.5,
+    "cohort_top_quartile_qt_per_ha": 31.0,
+    "gap_percent_vs_top_quartile": 61.3,
     "top_causes": ["urea2_timing", "weeding_delay", "seed_source"],
     "factor_results": [
       { "factor": "urea2_timing", "farmer_value": 49, "peer_value": 28, "delta": 21,
@@ -2845,7 +2916,7 @@ Rain onset (YIELD-4) is computed on demand: the engine queries the historical we
       { "factor": "urea2_timing", "target_value": 28, "unit": "days_after_sowing",
         "message_key": "rec.urea2.timing" }
     ],
-    "narration": { "lang": "am", "text": "…", "audio_url": "…" }
+    "narration": { "lang": "am", "text": "…" }
   }
 }
 ```
@@ -2857,7 +2928,7 @@ Rain onset (YIELD-4) is computed on demand: the engine queries the historical we
 | Method | Endpoint | Roles | Description |
 |---|---|---|---|
 | `GET` | `/v1/plots/{id}/weather` | F (own), D | Current conditions, 7-day forecast, soil moisture index, "Farm or Not" indicators, `fetched_at`, `is_stale` |
-| `GET` | `/v1/plots/{id}/weather/summary-audio` | F (own), D | Weekly advisory audio (≤ 60 s) for `?lang=` |
+| `GET` | `/v1/plots/{id}/weather/summary-audio` | F (own), D | Streams the weekly advisory as Gemini TTS audio (≤ 60 s) for `?lang=`, synthesised on demand from the advisory text and never stored |
 | `GET` | `/v1/plots/{id}/weather/alerts` | F (own), D | Active alerts (frost, downpour, dry spell) |
 | `GET` | `/v1/office/weather/alerts` | O | Active alerts affecting the office's plots, with plot counts |
 
@@ -2882,7 +2953,7 @@ Indicators are computed on the server from `city_offices.parameters` thresholds 
 | `POST` | `/v1/diagnoses` | F, D | Create a request: `plot_id`, `photo_media_ids[1..4]` (stored directly on `diagnosis_cases.photo_media_ids`; each id must be an image media row of the same office, uploads may still be in progress), optional notes. Idempotent by client `id`; returns `202` with `job_status = queued`. |
 | `GET` | `/v1/diagnoses/{id}` | F (own), D, O | Status, `photo_media_ids` and, when complete, the filtered result |
 | `GET` | `/v1/plots/{id}/diagnoses` | F (own), D, O | Diagnosis history |
-| `GET` | `/v1/diagnoses/{id}/audio` | F (own), D | Spoken result for `?lang=` |
+| `GET` | `/v1/diagnoses/{id}/audio` | F (own), D | Streams the diagnosis as Gemini TTS audio for `?lang=`, synthesised on demand from `diagnosis_label` and `filtered_recommendations` (no audio is stored on the case) |
 | `PATCH` | `/v1/diagnoses/{id}/review` | D | DA confirms or amends a low-confidence result |
 | `GET` | `/v1/rotation-advice` | F, D | `?plot_id=` — next three seasons from plot crop history, soil, climate and `crops.recommended_successors` |
 
@@ -2908,7 +2979,7 @@ Processing pipeline (worker): load plot context → build the prompt from the ve
 
 | Method | Endpoint | Roles | Description |
 |---|---|---|---|
-| `POST` | `/v1/media/uploads` | Any | Initialise: `kind`, `mime_type`, `size_bytes`, `sha256`; returns `media_id`, `chunk_size` (262144) |
+| `POST` | `/v1/media/uploads` | Any | Initialise: `kind`, `mime_type`, `size_bytes`, `sha256_checksum`; returns `media_id`, `chunk_size` (262144) |
 | `GET` | `/v1/media/uploads/{id}` | Any | Resume info: `bytes_received`, `status` |
 | `PUT` | `/v1/media/uploads/{id}` | Any | Upload a chunk (`Content-Range: bytes start-end/total`) |
 | `POST` | `/v1/media/uploads/{id}/complete` | Any | Server recomputes SHA-256; `verified` on match, `failed` otherwise |
@@ -2928,7 +2999,7 @@ Limits: audio ≤ 5 MB, image ≤ 2 MB; MIME and size validated on init and on c
 | `POST` | `/v1/grievances/{id}/reopen` | F (own) | Reopen within 7 days of `resolved_at` |
 | `POST` | `/v1/grievances/{id}/confirm` | F (own) | Confirm resolution |
 | `GET` | `/v1/grievances/{id}/messages` | F (own), D, O | Message thread, oldest first (`limit`, `cursor`) |
-| `POST` | `/v1/grievances/{id}/messages` | F (own), D, O | Add a message: `{id, message_type: "text" \| "audio", text_body \| audio_media_id}`. `sender_user_id` is always the caller; text sent by the desk gets a TTS rendering for the farmer. Idempotent by client `id`; farmers may post only while the ticket is open or within 7 days of `resolved_at` |
+| `POST` | `/v1/grievances/{id}/messages` | F (own), D, O | Add a message: `{id, message_type: "text" \| "audio", text_body \| audio_media_id}`. `sender_user_id` is always the caller; desk text is read aloud on demand on the client through `POST /v1/voice/tts` (no synthetic audio is stored). Idempotent by client `id`; farmers may post only while the ticket is open or within 7 days of `resolved_at` |
 | `PATCH` | `/v1/grievances/{id}/messages/{messageId}/read` | F (own), D, O | Mark a message from the other party read |
 | `GET` | `/v1/da/grievances` | D | Grievances assigned to the DA |
 | `PATCH` | `/v1/grievances/{id}/status` | D | Move an assigned ticket to `in_progress` or `resolved` with a note |
@@ -2988,8 +3059,8 @@ The expected-revenue calculator runs locally from the cached board; there is no 
 
 | Method | Endpoint | Roles | Description |
 |---|---|---|---|
-| `POST` | `/v1/devices` | F, D | Register or refresh a device (`device_identifier`, `app_version`, `push_token`) |
-| `PATCH` | `/v1/devices/{id}` | F, D | Update push token or app version |
+| `POST` | `/v1/devices` | F, D | Register or refresh a device (`device_identifier`, `app_version`, `web_push_subscription`) |
+| `PATCH` | `/v1/devices/{id}` | F, D | Update the Web Push subscription or app version |
 | `GET` | `/v1/sync/bootstrap` | F, D | Initial full dataset for the user's scope (paged); returns a starting cursor |
 | `POST` | `/v1/sync/push` | F, D | Send queued mutations (≤ 50 records or ≤ 500 KB gzip) |
 | `GET` | `/v1/sync/pull` | F, D | `?cursor=&limit=` — changes since the cursor, scoped to the caller |
@@ -3003,10 +3074,10 @@ The expected-revenue calculator runs locally from the cached board; there is no 
   "mutations": [
     {
       "id": "0f6b…",
-      "client_seq": 412,
-      "entity": "fertilizer_logs",
+      "client_sequence_number": 412,
+      "entity_type": "fertilizer_logs",
       "entity_id": "9d31…",
-      "op": "insert",
+      "operation": "insert",
       "payload": { "cycle_id": "…", "application_type": "urea_1", "fertilizer_product": "urea",
                    "applied": true, "quantity_kg": 25, "application_date": "2026-08-12",
                    "growth_stage_at_application": "vegetative" },
@@ -3036,22 +3107,22 @@ Rules:
 
 - The server recomputes `payload_hash`; mismatches are rejected.
 - A mutation `id` seen before returns `duplicate` without re-applying (idempotent replay).
-- Mutations are applied in `client_seq` order inside one transaction per mutation; a `rejected` mutation never blocks later ones.
+- Mutations are applied in `client_sequence_number` order inside one transaction per mutation; a `rejected` mutation never blocks later ones.
 - Conflict rules (SYNC-6): last-writer-wins per field (server-received time) for mutable profile fields; append-only for logs; server-authoritative for `is_verified` and catalog data. Overwritten values are kept in `audit_logs`.
-- `/sync/pull` returns `sync_changes` rows with `seq > cursor` filtered by role: farmers receive rows where `farmer_id` is their own or null; DAs receive rows for assigned farmers or null; `da_tasks` go only to the assignee; `grievance_messages` rows carry no `farmer_id` and are scoped through their parent grievance; `city_offices` rows go to every user of the office and are projected to `name`, `default_language` and `parameters`.
+- `/sync/pull` returns `sync_changes` rows with `sequence_number > cursor` filtered by role: farmers receive rows where `farmer_id` is their own or null; DAs receive rows for assigned farmers or null; `da_tasks` go only to the assignee; `grievance_messages` rows carry no `farmer_id` and are scoped through their parent grievance; `city_offices` rows go to every user of the office and are projected to `name`, `default_language` and `parameters`.
 
 ---
 
 ## 4.15 Voice & Localisation (VOICE-1 to VOICE-12)
 
-On-device speech recognition and intent classification are the primary path; these endpoints are online enhancements and asset delivery.
+Local intent resolution from the cached command catalog is the offline path; Gemini STT and TTS (`stt.ts`, `tts.ts`) are the online speech services. AI-generated audio is ephemeral and never persisted.
 
 | Method | Endpoint | Roles | Description |
 |---|---|---|---|
 | `GET` | `/v1/voice/intents` | F, D | Versioned intent catalog and per-language utterance examples (used to update the on-device classifier) |
 | `POST` | `/v1/voice/intent` | F, D | Low-confidence fallback: `{transcript, lang, screen}` → `{intent, slots, confidence}` restricted to catalog intents (never free-form actions) |
-| `POST` | `/v1/voice/transcribe` | F, D | Cloud speech-to-text for languages lacking an on-device engine (multipart audio) |
-| `POST` | `/v1/voice/tts` | F, D | Render text or a `template_key` to speech; returns a `media_id` |
+| `POST` | `/v1/voice/transcribe` | F, D | Gemini speech-to-text for `am` / `om` / `ti` / `en` (multipart audio chunk); the audio is processed transiently and not stored |
+| `POST` | `/v1/voice/tts` | F, D | `{text \| template_key \| source: {type, id}, lang}` — synthesises speech on demand through Gemini TTS and **streams the audio in the response** (`audio/wav`); nothing is written to PostgreSQL or object storage and no `media_files` row is created. Subject to the per-office `ai.daily_call_quota` (`429 ai_quota_exceeded`) |
 
 ---
 
@@ -3059,7 +3130,7 @@ On-device speech recognition and intent classification are the primary path; the
 
 | Method | Endpoint | Roles | Description |
 |---|---|---|---|
-| `GET` | `/v1/office/registry/farmers` | O | Master directory; filters `kebele_id`, `da_id`, `crop_id`, `soil_class`; `unit=hectare\|timad\|kert` |
+| `GET` | `/v1/office/registry/farmers` | O | Master directory; filters `kebele_id`, `assigned_da_user_id`, `crop_id`, `soil_class`; `unit=hectare\|timad\|kert` |
 | `GET` | `/v1/office/registry/plots` | O | Plots with area, active crop, soil, zone |
 | `POST` | `/v1/office/registry/exports` | O | Start a CSV/XLSX export of the current filter (async; audit-logged) |
 | `GET` | `/v1/office/registry/exports/{id}` | O | Export status and download URL |
@@ -3106,7 +3177,7 @@ Farmer / DA side:
 
 | Method | Endpoint | Roles | Description |
 |---|---|---|---|
-| `GET` | `/v1/announcements` | F, D | Feed (emergency pinned); each item carries its `translations` object with a signed audio URL per language |
+| `GET` | `/v1/announcements` | F, D | Feed (emergency pinned); each item carries its `translations` object; a signed audio URL is returned only for an Officer's authentic recording (`audio_media_id`), otherwise the client requests on-demand speech through `POST /v1/voice/tts` (labelled as automated) |
 | `POST` | `/v1/announcements/{id}/read` | F, D | Mark read |
 | `POST` | `/v1/announcements/{id}/ack` | F, D | Acknowledge an emergency announcement (stops the SMS fallback) |
 
@@ -3130,7 +3201,7 @@ Create draft payload:
 ```json
 {
   "announcement_type": "emergency",
-  "target_all": false,
+  "targets_entire_city": false,
   "target_kebele_ids": ["9b1e4f30-62ad-4c8b-a7d5-18c3e0f94a26"],
   "requires_acknowledgement": true,
   "sms_fallback_after_minutes": 30,
@@ -3189,7 +3260,7 @@ Rules: SMS is segmented at 160 characters (70 for Ge'ez script) with per-recipie
 
 ## 4.21 In-App Inbox & Badges (derived)
 
-There is no notifications table. Push alerts (FCM) and SMS are sent by workers and carry only a generic message and a deep-link id. The in-app inbox and unread badges are computed on request from three existing sources:
+There is no notifications table. Web Push alerts (service-worker notifications) and SMS are sent by workers and carry only a generic message and a deep-link id. The in-app inbox and unread badges are computed on request from three existing sources:
 
 | Source | What counts as unread | Read state |
 |---|---|---|
@@ -3210,10 +3281,10 @@ Items are cleared with the existing routes `POST /v1/announcements/{id}/read`, `
 
 | Method | Endpoint | Roles | Description |
 |---|---|---|---|
-| `GET` | `/v1/office/audit-logs` | O | Own office audit trail (`action`, `actor`, `entity`, `from`, `to`) |
+| `GET` | `/v1/office/audit-logs` | O | Own office audit trail (`action`, `actor`, `entity_type`, `from`, `to`) |
 | `GET` | `/v1/admin/audit-logs` | A | Cross-office audit trail |
 | `GET` | `/v1/admin/offices` | A | List offices |
-| `POST` | `/v1/admin/offices` | A | Provision an office: seeds the default `city_offices.parameters` (SRS defaults), creates the first officer and sends an invite |
+| `POST` | `/v1/admin/offices` | A | Provision an office: seeds the default `city_offices.parameters` (SRS defaults), creates the first officer (identified by `phone_number`) and sends an SMS invitation, through which the officer verifies the phone by OTP and sets a password |
 | `PATCH` | `/v1/admin/offices/{id}` | A | Update or deactivate |
 | `GET` | `/v1/admin/health` | A | API error rate, sync queue lag, AI call/failure counts, SMS delivery rates (24 h / 7 d trends) |
 | `GET` | `/v1/admin/ai-usage` | A | Today's call and failure counts per office and feature, read from the Redis rate-limiter counters and application metrics (not from PostgreSQL) |
@@ -3228,8 +3299,8 @@ Every privileged write inserts into `audit_logs` (actor, office, action, entity,
 
 | SRS requirements | Primary tables | Route sections |
 |---|---|---|
-| VOICE-1 to VOICE-12 | `city_offices.parameters` (`voice.intent_confidence_threshold`, `ai.daily_call_quota`); fallback-call counters in Redis / application logs | 4.15, 4.22 |
-| PLOT-1 to PLOT-10, ADM-1 to ADM-8 | `users` (incl. `assigned_kebele_ids`), `accounts`, `sessions`, `verifications`, `city_offices` (incl. `parameters`), `kebeles`, `farmers`, `plots` (incl. planned crop), `plot_crop_history` | 4.2 – 4.5 |
+| VOICE-1 to VOICE-12 | `city_offices.parameters` (`voice.intent_confidence_threshold`, `ai.daily_call_quota`); fallback-call counters in Redis / application logs. Gemini STT/TTS audio is ephemeral: no table or column stores it | 4.15, 4.22 |
+| PLOT-1 to PLOT-10, ADM-1 to ADM-8 | `users` (incl. `assigned_kebele_ids`), `accounts` (password hash for every role), `sessions` (guarded by `trg_sessions_eligibility`), `verifications` (sign-up / recovery OTP), `city_offices` (incl. `parameters`), `kebeles`, `farmers`, `plots` (incl. planned crop), `plot_crop_history` | 4.2 – 4.5 |
 | CROP-1 to CROP-14 | `crop_cycles`, `sowing_logs`, `fertilizer_logs`, `field_operations`, `harvest_records`, `ledger_entries`; corrections in `audit_logs` (`log.correct`) | 4.7 |
 | YIELD-1 to YIELD-12, ANLY-1 to ANLY-9 | `yield_gap_analyses` (incl. `rain_onset_date`), `v_cycle_fertilizer_splits`, `city_offices.parameters` (`rain_onset.*`, `yield.cohort_min_size`); rainfall from the historical weather API on demand | 4.8, 4.17 |
 | WEATH-1 to WEATH-9 | `weather_forecasts`, `weather_alerts`, `city_offices.parameters` (`weather.*`) | 4.9 |
@@ -3252,11 +3323,67 @@ Every privileged write inserts into `audit_logs` (actor, office, action, entity,
 
 ---
 
-# 7. Change Log: v1.2 → v1.3
+# 7. Change Log
 
-49 base tables became 42. The four authentication tables are unchanged apart from one added column on `users`.
+## 7.1 Reconciliation to SRS v1.2 (document v1.0 → v1.2)
 
-| v1.2 object | v1.3 replacement |
+The table count is unchanged: **42 base tables** (verified by executing the full DDL on PostgreSQL with PostGIS: 42 base tables, plus PostGIS's own `spatial_ref_sys`). No table was added or dropped.
+
+### Removed (deprecated in SRS v1.2)
+
+| Removed | Reason |
+|---|---|
+| `yield_gap_analyses.narration_audio_id` | AI speech is never stored; Gemini TTS synthesises from `narration_text` on demand (YIELD-8) |
+| `diagnosis_cases.result_audio_id` | No audio column; playback is generated from `diagnosis_label` and `filtered_recommendations` (DIAG-7) |
+| `grievance_messages.tts_media_id` | Desk text replies are read aloud on demand on the client; no synthetic audio persisted. Trigger `protect_grievance_message()` now documents that every column except `read_at` is immutable |
+| Officer / admin email + second-step OTP login (`POST /api/auth/login`, `/api/auth/login/verify-otp`, email reset link routes) | One unified phone + password lifecycle for all roles (ADM-8); OTP only at sign-up / invitation and password recovery |
+| React Native / WatermelonDB, Android Keystore, FCM wording | The client is a PWA (IndexedDB, HTTP-only cookie, Web Push); `devices.push_token` now holds a serialised Web Push subscription |
+| JWT-vs-sessions deviation note | SRS v1.2 specifies revocable server-side sessions |
+
+### Added database guards (no new tables)
+
+| Object | Purpose |
+|---|---|
+| `users` checks: phone required unless closed; verified flag requires a phone | Phone number is the login identifier for every role |
+| `accounts` check: `credential` rows must hold a password hash | Every user signs in with phone + password |
+| `verifications` check on `identifier` prefix (`phone-signup:`, `phone-recovery:`, `email-confirm:`) and index `idx_verifications_expiry` | Sign-up and recovery OTPs cannot be mixed; expired OTP purge |
+| `enforce_session_eligibility()` / `trg_sessions_eligibility` | No session for an unverified, banned or closed user |
+| `yield_gap_analyses.narration_text` is `not null default ''` | SRS 6.2.3 (text only, never audio) |
+| Audit actions `auth.signup`, `auth.login_failed`, `auth.lockout`, `auth.password_reset`, `auth.logout` | SRS 4.2 |
+
+### Column rename map (types, nullability and foreign keys unchanged)
+
+| Table | Old → new |
+|---|---|
+| `users` | `image` → `image_url`; `ban_expires` → `ban_expires_at` |
+| `accounts` | `account_id` → `provider_account_id` |
+| `kebeles`, `plots`, `grievances` | `centroid_lat` / `centroid_lng` → `centroid_latitude` / `centroid_longitude`; `location_lat` / `location_lng` → `location_latitude` / `location_longitude`; `radius_m` → `radius_meters` |
+| `plots` | `weather_grid_lat` / `weather_grid_lng` → `weather_grid_latitude` / `weather_grid_longitude`; `gps_accuracy_m` → `gps_accuracy_meters`; `elevation_m` → `elevation_meters`; `conversion_factor_used` → `hectares_per_unit_applied` |
+| `weather_forecasts`, `weather_alerts` | `grid_lat` / `grid_lng` → `grid_latitude` / `grid_longitude`; `current_obs` → `current_observation`; `daily` → `daily_forecasts` |
+| `farmers` | `no_phone` → `has_no_phone`; `assigned_da_id` → `assigned_da_user_id` |
+| `crops`, `fertilizer_rates` | `max_plausible_yield_qt_ha` → `max_plausible_yield_qt_per_ha`; `urea_kg_ha` / `nps_kg_ha` / `seed_kg_ha` → `urea_kg_per_ha` / `nps_kg_per_ha` / `seed_kg_per_ha`; weeding-window JSON key `sequence_no` → `sequence_number` |
+| `field_operations` | `sequence_no` → `sequence_number`; `product_rate` → `product_application_rate` |
+| `yield_gap_analyses` | `plot_yield_qt_ha` → `plot_yield_qt_per_ha`; `cohort_median_qt_ha` → `cohort_median_qt_per_ha`; `cohort_p75_qt_ha` → `cohort_top_quartile_qt_per_ha`; `gap_pct_vs_p75` → `gap_percent_vs_top_quartile` |
+| `media_files` | `duration_s` → `duration_seconds`; `sha256` → `sha256_checksum`; `upload_id` → `resumable_upload_id` |
+| `registered_chemicals`, `pest_catalog` | `ppe_text` → `protective_equipment_text`; `is_quarantine` → `is_quarantine_pest` |
+| `announcements` | `target_all` → `targets_entire_city`; `target_zones` → `target_agro_zones` |
+| `announcement_deliveries` | `segments` → `sms_segment_count` |
+| Actor columns | `fertilizer_rates.created_by`, `demand_snapshots.created_by` → `created_by_user_id`; `market_surveys.verified_by` → `verified_by_user_id`; `crowd_transactions.moderated_by` → `moderated_by_user_id`; `diagnosis_cases.reviewed_by` → `reviewed_by_user_id`; `depot_stock_movements.recorded_by` → `recorded_by_user_id` |
+| `devices` | `push_token` → `web_push_subscription`; `last_cursor` → `last_sync_cursor` |
+| `sync_mutations`, `sync_changes` | `entity` → `entity_type`; `op` → `operation`; `client_seq` → `client_sequence_number`; `seq` → `sequence_number`; enum `sync_op` → `sync_operation` |
+
+All generated columns, triggers (`compute_*`, `record_sync_change()`, `protect_stock_movement()`), views (`v_cycle_fertilizer_splits`, `v_city_input_demand_live`, `v_office_stock`, …), indexes and the reference peer-cohort query were updated to the new names. Matching API changes: query filter `da_id` → `assigned_da_user_id`; sync payload keys `entity_type` / `operation` / `client_sequence_number`; pull cursor is `sequence_number`; yield-gap response fields use the `*_per_ha` / `top_quartile` names; `/v1/voice/tts` and the `…/audio` routes now stream on-demand speech instead of returning a `media_id` or stored URL; Section 4.2 is the unified phone + password lifecycle.
+
+### SRS v1.2 text to correct (DDL governs, SRS 6)
+
+SRS 6.2 still lists the pre-rename names (`no_phone`, `push_token`, `*_qt_ha`, `*_lat` / `*_lng`, `entity` / `op` / `seq`, and similar). Update those entries to the names in Section 7.1 when the SRS is next revised. Configure the Better Auth field mapping for `image_url`, `ban_expires_at` and `provider_account_id`, and set the `phoneNumber` plugin's verification identifiers to the `phone-signup:` / `phone-recovery:` prefixes required by the `verifications` check.
+
+## 7.2 Earlier consolidation (49 → 42 tables)
+
+
+49 base tables became 42 (retained as history).
+
+| Earlier object | Replacement |
 |---|---|
 | `office_parameters` (table, 3 routes, index) | `city_offices.parameters jsonb`; read via `GET /v1/offices/me` and `/v1/offices/me/config`, written via `PATCH /v1/offices/me`; history in `audit_logs` (`office.parameters_update`) |
 | `da_kebele_assignments` (table, route, index) | `users.assigned_kebele_ids uuid[]`, validated by `trg_users_kebele_ids`; set via `POST`/`PATCH /v1/office/users` |
@@ -3264,6 +3391,6 @@ Every privileged write inserts into `audit_logs` (actor, office, action, entity,
 | `log_revisions` (table, trigger, index, `/revisions` route) | `audit_logs` (`action = 'log.correct'`) |
 | `weather_daily_precip` | Historical weather API queried on demand for rain onset; result kept in `yield_gap_analyses.rain_onset_date` |
 | `incoming_deliveries` (table, index, 2 routes, `delivery_state` enum) | `depot_stock_movements.status` and `expected_on`; `v_office_stock.incoming_kg`; `PATCH …/movements/{movementId}` |
-| `notifications` (table, index, 3 routes) | Derived inbox and badges (`GET /v1/inbox`, `/v1/inbox/summary`) plus external FCM/SMS and delta-sync |
+| `notifications` (table, index, 3 routes) | Derived inbox and badges (`GET /v1/inbox`, `/v1/inbox/summary`) plus external Web Push/SMS and delta-sync |
 
 Supporting changes: `apply_stock_movement()` now applies only `received` movements; `protect_stock_movement()` replaces the blanket immutability trigger on `depot_stock_movements`; `record_sync_change()` handles `city_offices` (office-scoped, so configuration reaches devices offline); `set_updated_at` is unchanged and now also covers `depot_stock_movements`; row-level security is generated for every table with a `city_office_id` and explicit policies cover the rest.

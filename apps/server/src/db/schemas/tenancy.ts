@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, uuid, varchar, timestamp, boolean, jsonb, numeric, integer, check } from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar, timestamp, boolean, jsonb, numeric, integer, check, uniqueIndex, index } from "drizzle-orm/pg-core";
 import { customType } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm/_relations";
 import { appLanguage } from "./enums.js";
@@ -45,9 +45,9 @@ export const kebeles = pgTable(
       .references(() => cityOffices.id, { onDelete: "cascade" }),
     name: varchar("name", { length: 120 }).notNull(),
     boundary: geographyMultiPolygon("boundary"),
-    centroidLat: numeric("centroid_lat", { precision: 9, scale: 6 }),
-    centroidLng: numeric("centroid_lng", { precision: 9, scale: 6 }),
-    radiusM: integer("radius_m"),
+    centroidLatitude: numeric("centroid_latitude", { precision: 9, scale: 6 }),
+    centroidLongitude: numeric("centroid_longitude", { precision: 9, scale: 6 }),
+    radiusMeters: integer("radius_meters"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
@@ -55,8 +55,12 @@ export const kebeles = pgTable(
   (table) => ({
     territoryCheck: check(
       "kebeles_territory_check",
-      sql`boundary is not null or (centroid_lat is not null and centroid_lng is not null and radius_m > 0)`
+      sql`boundary is not null or (centroid_latitude is not null and centroid_longitude is not null and radius_meters > 0)`
     ),
+    uqKebelesNameActive: uniqueIndex("uq_kebeles_name_active")
+      .on(table.cityOfficeId, sql`lower(name)`)
+      .where(sql`deleted_at is null`),
+    idxKebelesOffice: index("idx_kebeles_office").on(table.cityOfficeId),
   })
 );
 

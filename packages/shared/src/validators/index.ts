@@ -1,4 +1,6 @@
 export {
+  PhoneSignUpSchema,
+  PhoneSignInSchema,
   PhoneOtpRequestSchema,
   PhoneOtpVerifySchema,
   AdminLoginSchema,

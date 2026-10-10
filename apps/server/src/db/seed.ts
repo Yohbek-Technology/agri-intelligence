@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm'
 import { db, pool } from '@/config/db.js'
 import { auth } from '@/config/auth.js'
 import { cityOffices } from '@/db/schemas/tenancy.js'
-import { user } from '@/db/schemas/auth-schema.js'
+import { users } from '@/db/schemas/auth-schema.js'
 
 const ADAMA_OFFICE_NAME = 'Adama City Agriculture Office'
 
@@ -73,9 +73,9 @@ async function seedCityOffice(): Promise<string> {
 
 async function seedSystemAdmin(cityOfficeId: string): Promise<void> {
   const existing = await db
-    .select({ id: user.id })
-    .from(user)
-    .where(eq(user.email, SEED_ADMIN.email))
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.email, SEED_ADMIN.email))
     .limit(1)
 
   if (existing.length) {
@@ -89,6 +89,7 @@ async function seedSystemAdmin(cityOfficeId: string): Promise<void> {
       name: SEED_ADMIN.name,
       email: SEED_ADMIN.email,
       password: SEED_ADMIN.password,
+      phoneNumber: SEED_ADMIN.phoneNumber,
     },
   })
 
@@ -99,26 +100,15 @@ async function seedSystemAdmin(cityOfficeId: string): Promise<void> {
   const adminId = signUpResponse.user.id
 
   await db
-    .update(user)
+    .update(users)
     .set({
       role: 'system_admin',
       phone_number: SEED_ADMIN.phoneNumber,
-      city_office_id: cityOfficeId,
+      phone_number_verified: true,
+      city_office_id: null,
       preferred_language: 'am',
     })
-    .where(eq(user.id, adminId))
-
-  const sessionCookies = signUpHeaders.getSetCookie().join('; ')
-
-  if (sessionCookies) {
-    await auth.api
-      .enableTwoFactor({
-        body: { password: SEED_ADMIN.password },
-        headers: new Headers({ Cookie: sessionCookies }),
-      })
-      .then(() => console.log(`[seed] 2FA enabled on admin account.`))
-      .catch(() => console.warn('[seed] 2FA auto-enable failed — admin must enable it on first login.'))
-  }
+    .where(eq(users.id, adminId))
 
   console.log(`[seed] System admin created — ${SEED_ADMIN.email} (id: ${adminId})`)
   console.log(`[seed] Role: system_admin | Phone: ${SEED_ADMIN.phoneNumber}`)
