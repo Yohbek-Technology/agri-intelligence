@@ -1,159 +1,203 @@
-# Turborepo starter
+# Autonomous Agricultural Intelligence & Extension System
 
-This Turborepo starter is maintained by the Turborepo core team.
+A modern, multi-tenant monorepo powering the **Autonomous Agricultural Intelligence & Extension System** for highland agriculture in Ethiopia (Adama Zone reference implementation).
 
-## Using this example
+The platform serves three primary roles across web, mobile, and field operations:
+- **Smallholder Farmers**: Plot management, tillering diagnostics, 7-day "Farm or Not" agro-meteorological advisories, disease identification, and market intelligence.
+- **Development Agents (DAs)**: Kebele field hub, offline-first farmer rosters, visit scheduling, and crop observation logging.
+- **City Agriculture Officers**: Municipal yield aggregates, strategic fertilizer/seed depot ledgers, and emergency multi-language SMS broadcast dispatch.
 
-Run the following command:
+---
 
-```sh
-npx create-turbo@latest
+## 🏗️ Repository Architecture
+
+This repository is managed with [Turborepo](https://turbo.build/repo) and [pnpm](https://pnpm.io/) workspaces:
+
+```text
+agri-intelligence/
+├── apps/
+│   ├── server/             # Hono.js backend API (Node.js, Drizzle ORM, Better Auth, Socket.IO)
+│   ├── web/                # Next.js 16 frontend portal (App Router, Turbopack, Tailwind CSS)
+│   └── mobile/             # React Native / WatermelonDB mobile client for field devices
+├── packages/
+│   ├── shared/             # Canonical TypeScript contracts, Zod schemas, and domain types
+│   ├── ui/                 # Shared atomic UI primitives
+│   ├── typescript-config/  # Shared tsconfig bases
+│   └── eslint-config/      # Shared ESLint configurations
+├── turbo.json              # Turborepo task pipeline configuration
+└── pnpm-workspace.yaml     # Workspace boundary definitions
 ```
 
-## What's inside?
+---
 
-This Turborepo includes the following packages/apps:
+## ⚡ Prerequisites
 
-### Apps and Packages
+Before setting up the project, ensure you have the following installed:
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `@next/eslint-plugin-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+1. **Node.js**: `v20.x` or later (`v24.x` recommended)
+   ```bash
+   node --version
+   ```
+2. **pnpm**: `v9.x` or later (repository targets `pnpm@12.x`)
+   ```bash
+   corepack enable
+   corepack prepare pnpm@latest --activate
+   ```
+3. **PostgreSQL**: PostgreSQL 15+ instance (Local, or cloud providers such as [Neon](https://neon.tech) / [Supabase](https://supabase.com)).
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+---
 
-### Utilities
+## 🚀 Quickstart & Setup Guide
 
-This Turborepo has some additional tools already setup for you:
+### 1. Clone the Repository
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo build
+```bash
+git clone https://github.com/Yohbek-Technology/agri-intelligence.git
+cd agri-intelligence
 ```
 
-Without global `turbo`, use your package manager:
+### 2. Install Monorepo Dependencies
 
-```sh
-cd my-turborepo
-npx turbo build
-pnpm exec turbo build
-pnpm exec turbo build
+Install dependencies across all apps and packages in the workspace:
+
+```bash
+pnpm install
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+### 3. Configure Environment Variables
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+#### Backend (`apps/server`)
+Copy the sample environment configuration:
 
-```sh
-turbo build --filter=docs
+```bash
+cp apps/server/.env.example apps/server/.env
 ```
 
-Without global `turbo`:
+Edit `apps/server/.env` with your credentials:
+- `DATABASE_URL`: Your PostgreSQL connection string (e.g. `postgresql://user:pass@host/db?sslmode=require`)
+- `BETTER_AUTH_SECRET`: Random 32-byte secret (generate via `pnpx @better-auth/cli secret`)
+- `BETTER_AUTH_URL`: `http://localhost:5000`
+- `PORT`: `5000`
+- `CORS_ORIGIN`: `http://localhost:3000`
+- `OPENROUTER_API_KEY` / `GEMINI_API_KEY`: API key for agronomic reasoning & LLM diagnostics
+- `AT_SANDBOX_API_KEY`: Africa's Talking API key for SMS advisories (`AT_USERNAME=sandbox`)
+- `CLOUDINARY_*`: Cloudinary cloud name, API key, and secret for leaf imagery storage
 
-```sh
-npx turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
+#### Frontend (`apps/web`)
+Copy the web application environment configuration:
+
+```bash
+cp apps/web/.env.example apps/web/.env
 ```
 
-### Develop
-
-To develop all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo dev
+Defaults to:
+```env
+NEXT_PUBLIC_SERVER_URL=http://localhost:5000
 ```
 
-Without global `turbo`, use your package manager:
+---
 
-```sh
-cd my-turborepo
-npx turbo dev
-pnpm exec turbo dev
-pnpm exec turbo dev
+### 4. Database Setup & Seeding
+
+Run Drizzle schema generation, execute migrations, and seed initial records:
+
+```bash
+# 1. Generate any pending Drizzle migration SQL
+pnpm --filter server db:generate
+
+# 2. Apply migrations to your PostgreSQL database
+pnpm --filter server db:migrate
+
+# 3. Seed initial city office, administrative roles, and demo data
+pnpm --filter server db:seed
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+> **Note**: The seed script configures the **Adama City Agriculture Office** (`ad5b692f-f1fb-4bc8-afe1-98a703b017b0`) and provisions default administrative accounts.
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+---
 
-```sh
-turbo dev --filter=web
+### 5. Launch Development Servers
+
+Start all workspaces concurrently via Turborepo:
+
+```bash
+pnpm dev
 ```
 
-Without global `turbo`:
+The services will be available at:
+- **Frontend Web Portal**: [http://localhost:3000](http://localhost:3000)
+- **Backend API & Hono Server**: [http://localhost:5000](http://localhost:5000)
+- **Better Auth Interactive API Docs**: [http://localhost:5000/api/auth/reference](http://localhost:5000/api/auth/reference)
 
-```sh
-npx turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
+To launch workspaces individually:
+
+```bash
+# Launch only the frontend
+pnpm --filter web dev
+
+# Launch only the backend server
+pnpm --filter server dev
 ```
 
-### Remote Caching
+---
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+## 🛠️ Common Workspace Commands
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+### Testing & Code Quality
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+```bash
+# Run backend unit tests (Vitest)
+pnpm --filter server test
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+# Run backend integration tests
+pnpm --filter server test:integration
 
-```sh
-cd my-turborepo
-turbo login
+# Run all test suites
+pnpm --filter server test:all
+
+# Lint entire monorepo
+pnpm lint
+
+# Type-check all packages
+pnpm check-types
+
+# Production bundle build
+pnpm build
 ```
 
-Without global `turbo`, use your package manager:
+### Database Operations (Drizzle ORM)
 
-```sh
-cd my-turborepo
-npx turbo login
-pnpm exec turbo login
-pnpm exec turbo login
+All database operations are encapsulated in `apps/server`:
+
+```bash
+# Generate SQL migration files from schema definitions
+pnpm --filter server db:generate
+
+# Execute pending migrations against target database
+pnpm --filter server db:migrate
+
+# Re-run database seeding
+pnpm --filter server db:seed
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+---
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+## 💡 Important Gotchas & Team Guidelines
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+1. **Strict Contract Integrity (`@repo/shared`)**:
+   - Validation schemas (Zod) and TypeScript types must **only** be defined in `packages/shared`.
+   - Never duplicate validation logic or types in `apps/web` or `apps/server`. Always import from `@repo/shared`.
 
-```sh
-turbo link
-```
+2. **Node.js IPv4 DNS Resolution**:
+   - If using a cloud database pooler (e.g. Neon, Supabase) and encountering `ECONNREFUSED` or `ETIMEDOUT` during migrations or seeding, prepend `NODE_OPTIONS='--dns-result-order=ipv4first'`. This is automatically configured in the `pnpm --filter server db:seed` script.
 
-Without global `turbo`:
+3. **PostgreSQL SSL Configuration**:
+   - With modern `pg` drivers, pass `sslmode=require` or `sslmode=verify-full` in your `DATABASE_URL` query parameters to prevent connection warnings.
 
-```sh
-npx turbo link
-pnpm exec turbo link
-pnpm exec turbo link
-```
+4. **Component vs. Page Separation**:
+   - In `apps/web/`, keep full page layout, workflows, and form state directly in their respective `app/**/page.tsx` files.
+   - `components/ui/` is reserved strictly for generic, reusable design primitives (`Button`, `Input`, `Select`, `Card`, `Badge`, `Notice`, `BrandLogo`).
 
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+5. **Authentication Lifecycle**:
+   - The platform uses phone number + password with 6-digit SMS OTP via Africa's Talking.
+   - Role-based route guards (`farmer`, `da`, `officer`, `system_admin`) protect dashboard workspaces (`/farmer`, `/da`, `/officer`).
