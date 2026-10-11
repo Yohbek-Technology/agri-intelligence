@@ -16,7 +16,7 @@ export function middleware(request: NextRequest) {
     request.cookies.get('better-auth.session_token')?.value
 
   if (!sessionToken) {
-    const signInUrl = new URL('/sign-in', request.url)
+    const signInUrl = new URL('/signIn', request.url)
     signInUrl.searchParams.set('redirect', pathname)
     return NextResponse.redirect(signInUrl)
   }

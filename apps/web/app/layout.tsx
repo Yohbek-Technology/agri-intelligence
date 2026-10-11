@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
+import { AppProviders } from '../providers/appProviders'
 import './globals.css'
-import { AppProviders } from '../src/providers/app-providers'
 
 export const metadata: Metadata = {
-  title: 'AgriIntelligence — Autonomous Agricultural Intelligence & Extension System',
+  title: 'AgriIntelligence — Autonomous Agricultural Extension Operating System',
   description:
-    'Highland agricultural operating system for smallholder field telemetry, Gemini disease diagnostics, 7-day micro-weather, and fertilizer distribution.',
+    'Autonomous Agricultural Intelligence and Extension Operating System for Highland Vertisol Agronomy, Adama Woreda Municipal Extension Branch.',
 }
 
 export default function RootLayout({
@@ -14,8 +14,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className="min-h-screen bg-background text-text-primary antialiased">
+    <html lang="en" className="scroll-smooth">
+      <body className="bg-background text-text-primary min-h-screen antialiased flex flex-col">
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

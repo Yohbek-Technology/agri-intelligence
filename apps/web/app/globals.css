@@ -1,49 +1,45 @@
 @import "tailwindcss";
 
 :root {
-  --color-background: #F7F5F0;
-  --color-surface: #EFECE4;
-  --color-surface-subtle: #E7E3D8;
-  --color-background-dark: #121411;
-  --color-surface-dark: #1A1D18;
-  --color-primary: #344C2F;
-  --color-primary-hover: #263822;
-  --color-primary-subtle: #4A6B43;
-  --color-accent: #B07824;
-  --color-accent-hover: #96651D;
-  --color-danger: #9B3822;
-  --color-danger-subtle: #7F2B17;
-  --color-text-primary: #141712;
-  --color-text-muted: #5C6356;
-  --color-text-faint: #8E9487;
-  --color-border: #D8D3C5;
-  --color-border-strong: #2E332A;
-}
+  --color-background: #FAF8F4;
+  --color-surface: #FFFFFF;
+  --color-surface-subtle: #F3EFE6;
+  --color-surface-elevated: #FFFFFF;
+  --color-surface-glass: rgba(255, 255, 255, 0.82);
 
-@theme {
-  --color-background: var(--color-background);
-  --color-surface: var(--color-surface);
-  --color-surface-subtle: var(--color-surface-subtle);
-  --color-background-dark: var(--color-background-dark);
-  --color-surface-dark: var(--color-surface-dark);
-  --color-primary: var(--color-primary);
-  --color-primary-hover: var(--color-primary-hover);
-  --color-primary-subtle: var(--color-primary-subtle);
-  --color-accent: var(--accent);
-  --color-accent-hover: var(--color-accent-hover);
-  --color-danger: var(--color-danger);
-  --color-danger-subtle: var(--color-danger-subtle);
-  --color-text-primary: var(--color-text-primary);
-  --color-text-muted: var(--color-text-muted);
-  --color-text-faint: var(--color-text-faint);
-  --color-border: var(--color-border);
-  --color-border-strong: var(--color-border-strong);
+  --color-primary: #274422;
+  --color-primary-hover: #1C3318;
+  --color-primary-subtle: #3D6636;
+  --color-primary-light: #EBF3EA;
+
+  --color-accent: #C78326;
+  --color-accent-hover: #AB6E1B;
+  --color-accent-subtle: #DE9B3E;
+  --color-accent-light: #FDF4E5;
+
+  --color-danger: #9E3520;
+  --color-danger-subtle: #842A17;
+  --color-danger-light: #FBECE8;
+
+  --color-success: #1E6F38;
+  --color-success-light: #EAF7EE;
+
+  --color-text-primary: #151A14;
+  --color-text-muted: #566153;
+  --color-text-faint: #899386;
+
+  --color-border: #DFD9CB;
+  --color-border-strong: #242E22;
+  --color-border-subtle: #EAE6DB;
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
 body {
   background-color: var(--color-background);
   color: var(--color-text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--font-sans);
   min-height: 100vh;
   margin: 0;
   padding: 0;
@@ -51,6 +47,25 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+::selection {
+  background-color: var(--color-primary);
+  color: #FFFFFF;
+}
+
 input, button, select, textarea {
   font-family: inherit;
+}
+
+.glass-panel {
+  background: var(--color-surface-glass);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.ambient-glow-primary {
+  box-shadow: 0 0 35px -8px rgba(39, 68, 34, 0.18);
+}
+
+.ambient-glow-accent {
+  box-shadow: 0 0 35px -8px rgba(199, 131, 38, 0.22);
 }
