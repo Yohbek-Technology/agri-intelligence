@@ -3,7 +3,7 @@ import { relations } from "drizzle-orm/_relations";
 import { sql } from "drizzle-orm";
 import { cityOffices } from "./tenancy.js";
 import { users } from "./auth-schema.js";
-import { syncOperation, syncMutationStatus } from "./enums.js";
+import { syncOperation, syncMutationStatus, devicePlatform } from "./enums.js";
 
 export const devices = pgTable(
   "devices",
@@ -14,8 +14,10 @@ export const devices = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     cityOfficeId: uuid("city_office_id").references(() => cityOffices.id),
     deviceIdentifier: varchar("device_identifier", { length: 120 }).notNull(),
+    platform: devicePlatform("platform").notNull().default("pwa"),
     appVersion: varchar("app_version", { length: 20 }),
     webPushSubscription: text("web_push_subscription"),
+    fcmToken: text("fcm_token"),
     lastSyncCursor: bigint("last_sync_cursor", { mode: "number" }).notNull().default(0),
     lastSyncAt: timestamp("last_sync_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -24,6 +26,14 @@ export const devices = pgTable(
   (table) => ({
     uqUserDevice: unique("devices_user_device_key").on(table.userId, table.deviceIdentifier),
     idxUser: index("idx_devices_user").on(table.userId),
+    devicesAndroidNoWebPush: check(
+      "devices_android_no_web_push",
+      sql`platform <> 'android' or web_push_subscription is null`
+    ),
+    devicesPwaNoFcm: check(
+      "devices_pwa_no_fcm",
+      sql`platform <> 'pwa' or fcm_token is null`
+    ),
   })
 );
 
@@ -137,3 +147,41 @@ export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+export const AUDIT_ACTIONS = {
+  FARMER_VERIFY: "farmer.verify",
+  OFFICE_PARAMETERS_UPDATE: "office.parameters_update",
+  LOG_CORRECT: "log.correct",
+  AUTH_SIGNUP: "auth.signup",
+  AUTH_LOGIN_FAILED: "auth.login_failed",
+  AUTH_LOCKOUT: "auth.lockout",
+  AUTH_PASSWORD_RESET: "auth.password_reset",
+  AUTH_LOGOUT: "auth.logout",
+  AUTH_CLIENT_DENIED: "auth.client_denied",
+} as const;
+
+export type AuditAction = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS] | (string & {});
+
+export const enforceAndroidDeviceRolesTriggerSql = sql`
+create or replace function enforce_android_device_roles()
+returns trigger
+language plpgsql
+as $$
+declare
+  r user_role;
+begin
+  if new.platform = 'android' then
+    select role into r from users where id = new.user_id;
+    if r is null or r not in ('farmer', 'da') then
+      raise exception 'client_not_permitted' using errcode = '23514';
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+create trigger trg_devices_android_roles
+before insert or update of platform, user_id on devices
+for each row execute function enforce_android_device_roles();
+`;
+

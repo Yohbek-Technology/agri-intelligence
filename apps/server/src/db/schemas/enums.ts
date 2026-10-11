@@ -219,3 +219,6 @@ export const syncMutationStatus = pgEnum("sync_mutation_status", [
   "rejected",
   "duplicate",
 ]);
+
+export const devicePlatform = pgEnum("device_platform", ["pwa", "android"]);
+
