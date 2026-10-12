@@ -82,16 +82,16 @@ export function BrandLogo({
 
       <div className="flex flex-col">
         <div className="flex items-center gap-2">
-          <span className={`font-mono font-bold tracking-tight text-text-primary uppercase ${titleSizes}`}>
-            Agri<span className="text-primary font-extrabold">Intel</span>
+          <span className={`font-sans font-bold tracking-tight text-slate-900 ${titleSizes}`}>
+            Agri<span className="text-emerald-700 font-extrabold">Intel</span>
           </span>
-          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-accent-light text-accent font-semibold border border-accent/20">
-            v2.6
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 font-semibold border border-emerald-200">
+            ETHIOPIA
           </span>
         </div>
         {showSubtitle && (
-          <span className="text-[10px] font-mono tracking-wider text-text-muted uppercase">
-            Autonomous Extension Engine
+          <span className="text-[10px] font-mono tracking-wider text-slate-500 uppercase">
+            Autonomous Agronomic Extension
           </span>
         )}
       </div>

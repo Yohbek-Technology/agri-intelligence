@@ -4,70 +4,36 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
+import {
+  ArrowUpRight,
+  ArrowRight,
+  CheckCircle2,
+  PhoneCall,
+  MessageSquareText,
+  ShieldCheck,
+  MapPin,
+  TrendingUp
+} from 'lucide-react'
 import { useAuthSession } from '@/hooks/useAuth'
 import { Navbar } from '@/components/navigation/navbar'
 import { Footer } from '@/components/navigation/footer'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 
 export default function HomePage() {
   const { isAuthenticated, dashboardPath, role } = useAuthSession()
-  const [activeSpecimen, setActiveSpecimen] = useState(0)
+  const [emailOrPhone, setEmailOrPhone] = useState('')
+  const [ctaSubmitted, setCtaSubmitted] = useState(false)
 
-  const specimens = [
-    {
-      crop: 'Magna Teff (Quncho)',
-      condition: 'Stem Borer & Heavy Soil Saturation',
-      confidence: '98.4%',
-      severity: 'Medium Alert',
-      severityColor: 'accent' as const,
-      prescription: 'Excavate perimeter drainage furrows within 24h. Apply targeted biological neem extract.',
-      image: 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=1000&q=80',
-      audioPrompt: 'የጤፍ ግንድ ተባይ ምርመራ ውጤት: ፈሳሽ ማስተንፈሻ ቦይ ይቆፍሩ።',
-    },
-    {
-      crop: 'Kingbird Durum Wheat',
-      condition: 'Stripe Rust (Puccinia striiformis)',
-      confidence: '96.2%',
-      severity: 'Critical Urgency',
-      severityColor: 'danger' as const,
-      prescription: 'Emergency Triazole fungicide spray required within 48h. Notify Kebele DA immediately.',
-      image: 'https://images.unsplash.com/photo-1574943320219-553eb213f72d?auto=format&fit=crop&w=1000&q=80',
-      audioPrompt: 'የስንዴ ቢጫ ዋግ በሽታ ተገኝቷል። በ48 ሰዓታት ውስጥ ፀረ-ፈንገስ ይርጩ።',
-    },
-    {
-      crop: 'Highland Haricot Bean',
-      condition: 'Nitrogen & Zinc Micronutrient Deficiency',
-      confidence: '95.1%',
-      severity: 'Advisory Level',
-      severityColor: 'primary' as const,
-      prescription: 'Side-dress with NPS Boron compound prior to forecasted light precipitation.',
-      image: 'https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?auto=format&fit=crop&w=1000&q=80',
-      audioPrompt: 'የቦሎቄ ማዳበሪያ ጉድለት: የNPS ቦሮን ማዳበሪያ ከዝናብ በፊት ይጨምሩ።',
-    },
-  ]
-
-  const active = specimens[activeSpecimen]!
-
-  const weatherTicks = [
-    { location: 'Adama Central', temp: '26°C', condition: 'Clear Sky', wind: '8 km/h', moisture: '34%', alert: 'Optimal Spray Window' },
-    { location: 'Wonji Plains', temp: '28°C', condition: 'Dry Silt', wind: '11 km/h', moisture: '28%', alert: 'Irrigation Required' },
-    { location: 'Boku Ridge', temp: '24°C', condition: 'High Solar', wind: '6 km/h', moisture: '38%', alert: 'Tillering Phase' },
-    { location: 'Lume Basin', temp: '25°C', condition: 'Scattered Cloud', wind: '9 km/h', moisture: '31%', alert: 'Fertilizer Ready' },
-    { location: 'Arsi Foothills', temp: '21°C', condition: 'Dew Cover', wind: '5 km/h', moisture: '42%', alert: 'Monitor Rust' },
-  ]
-
-  const marketQuotes = [
-    { crop: 'Quncho Teff Magna (White)', market: 'Adama Central Grain Exchange', price: '9,450 ETB / Q', change: '+2.7%', status: 'up' },
-    { crop: 'Sergegna Mixed Teff', market: 'Wonji Secondary Depot', price: '7,800 ETB / Q', change: '-0.6%', status: 'down' },
-    { crop: 'Kingbird Durum Wheat', market: 'Boku Cooperative Union', price: '5,600 ETB / Q', change: '+3.7%', status: 'up' },
-    { crop: 'Red Haricot Beans (Export Grade)', market: 'Adama Terminal Market', price: '6,200 ETB / Q', change: '+1.6%', status: 'up' },
-    { crop: 'Urea (46% Nitrogen Fertilizer)', market: 'Government Subsidized Depot', price: '3,850 ETB / Q', change: '0.0%', status: 'flat' },
-    { crop: 'NPS Boron Compound Fertilizer', market: 'East Shewa Cooperative Hub', price: '4,100 ETB / Q', change: '0.0%', status: 'flat' },
-  ]
+  const handleCtaSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (emailOrPhone.trim()) {
+      setCtaSubmitted(true)
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col selection:bg-primary selection:text-white">
+    <div className="min-h-screen bg-[#FBFBF9] text-slate-900 flex flex-col antialiased selection:bg-emerald-600 selection:text-white">
+      {/* Top Navigation */}
       <Navbar
         isAuthenticated={isAuthenticated}
         dashboardPath={dashboardPath}
@@ -75,494 +41,772 @@ export default function HomePage() {
       />
 
       <main className="flex-1">
-        <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-black text-white">
+        {/* =========================================================================
+            SECTION 1: HERO SECTION (With Amazing Landscape Background Image)
+            ========================================================================= */}
+        <section
+          id="overview"
+          className="relative min-h-[85vh] flex items-center justify-center overflow-hidden bg-[#061009] text-white pt-24 pb-28 md:pt-32 md:pb-36 border-b border-emerald-950/70"
+        >
+          {/* Stunning Background Image with High-End Cinematic Grading */}
           <div className="absolute inset-0 z-0">
             <Image
-              src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=2000&q=85"
-              alt="Ethiopian highland agriculture fields"
+              src="/images/hero-bg.jpg"
+              alt="Ethiopian highland agricultural crop terraces at sunrise"
               fill
               priority
               sizes="100vw"
-              className="object-cover object-center opacity-45 scale-105"
+              className="object-cover object-center scale-[1.03]"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-black/60 to-black/80" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(39,68,34,0.35),transparent_60%)]" />
+            {/* Rich gradient layers for crystal-clear readability */}
+            <div className="absolute inset-0 bg-gradient-to-b from-[#061009]/92 via-[#061009]/78 to-[#061009]/96" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.18)_0%,transparent_75%)]" />
           </div>
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32 relative z-10 w-full">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+            {/* Clean Bold Headline */}
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, ease: 'easeOut' }}
-              className="max-w-3xl space-y-6 text-center sm:text-left"
+              transition={{ duration: 0.6 }}
+              className="text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight text-white leading-[1.08] max-w-4xl mx-auto"
             >
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-mono font-medium tracking-wide">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                <span>ADAMA AGRICULTURAL INTELLIGENCE OS 2.6</span>
-              </div>
-
-              <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.08] font-mono text-white">
-                Autonomous{' '}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-300">
-                  Extension OS
-                </span>{' '}
-                for Highland Agronomy
-              </h1>
-
-              <p className="text-base sm:text-lg text-white/85 font-sans leading-relaxed max-w-2xl">
-                Real-time agro-meteorological radar, computer vision disease diagnostics, offline field agent mesh synchronization, and localized grain market price telemetry for Ethiopian smallholder ecosystems.
-              </p>
-
-              <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
-                {isAuthenticated ? (
-                  <Link href={dashboardPath} className="w-full sm:w-auto">
-                    <Button variant="primary" size="lg" fullWidth className="font-mono text-sm px-8 shadow-2xl">
-                      Launch Operations Station ({role || 'Operator'}) →
-                    </Button>
-                  </Link>
-                ) : (
-                  <>
-                    <Link href="/signUp" className="w-full sm:w-auto">
-                      <Button variant="primary" size="lg" fullWidth className="font-mono text-sm px-8 shadow-2xl">
-                        Deploy Station Profile →
-                      </Button>
-                    </Link>
-                    <Link href="/signIn" className="w-full sm:w-auto">
-                      <Button variant="secondary" size="lg" fullWidth className="font-mono text-sm px-8">
-                        Operator Sign In
-                      </Button>
-                    </Link>
-                  </>
-                )}
-              </div>
-
-              <div className="pt-10 grid grid-cols-3 gap-6 border-t border-white/15 max-w-lg mx-auto sm:mx-0">
-                <div>
-                  <div className="text-2xl sm:text-3xl font-mono font-extrabold text-white">
-                    38 Kebeles
-                  </div>
-                  <div className="text-xs font-mono text-white/70 mt-0.5">
-                    Digitized Vertisols
-                  </div>
-                </div>
-                <div>
-                  <div className="text-2xl sm:text-3xl font-mono font-extrabold text-emerald-400">
-                    96.4%
-                  </div>
-                  <div className="text-xs font-mono text-white/70 mt-0.5">
-                    AI Diagnostic Precision
-                  </div>
-                </div>
-                <div>
-                  <div className="text-2xl sm:text-3xl font-mono font-extrabold text-amber-300">
-                    2G SMS
-                  </div>
-                  <div className="text-xs font-mono text-white/70 mt-0.5">
-                    Offline Telephony Fallback
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-
-          <motion.div
-            animate={{ y: [0, -10, 0] }}
-            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-            className="hidden xl:block absolute right-16 top-1/3 z-20 w-80 bg-white/95 text-text-primary p-5 rounded-3xl shadow-2xl border border-white/40 backdrop-blur-xl"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-mono font-bold text-primary">[RADAR TELEMETRY]</span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">
-                OPTIMAL
+              Autonomous Agronomic <br />
+              Intelligence. <br />
+              <span className="text-emerald-400 drop-shadow-[0_0_35px_rgba(16,185,129,0.4)]">
+                Yields Proven by Timing.
               </span>
-            </div>
-            <div className="text-sm font-bold font-mono">Boku Ridge Plot 03</div>
-            <div className="text-xs text-text-muted font-mono mb-3">Magna Teff Field (1.2 Ha)</div>
-            <div className="space-y-2 text-xs font-mono bg-surface-subtle p-3 rounded-2xl border border-border">
-              <div className="flex justify-between">
-                <span className="text-text-muted">Vertisol Moisture:</span>
-                <span className="font-bold text-text-primary">34.2%</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-text-muted">Rain Onset:</span>
-                <span className="font-bold text-emerald-700">In 36 Hours</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-text-muted">Spray Verdict:</span>
-                <span className="font-bold text-primary">Farm Recommended</span>
-              </div>
-            </div>
-          </motion.div>
-        </section>
+            </motion.h1>
 
-        <section className="bg-[#151A14] text-white py-3.5 overflow-hidden border-y border-[#263126] font-mono text-xs">
-          <div className="max-w-7xl mx-auto px-4 flex items-center gap-8 overflow-x-auto whitespace-nowrap no-scrollbar">
-            <span className="font-bold text-accent uppercase tracking-wider flex items-center gap-2 flex-shrink-0">
-              <span className="w-2 h-2 rounded-full bg-accent animate-ping" />
-              Live Agro-Meteorology // Adama Basin:
-            </span>
-            {weatherTicks.map((tick, i) => (
-              <div key={i} className="inline-flex items-center gap-2 flex-shrink-0 text-white/70">
-                <span className="text-white font-semibold">{tick.location}:</span>
-                <span>{tick.temp}</span>
-                <span>•</span>
-                <span>{tick.condition}</span>
-                <span>•</span>
-                <span className="text-emerald-400">{tick.alert}</span>
-                <span className="text-white/20">|</span>
-              </div>
-            ))}
-          </div>
-        </section>
+            {/* Subtitle Description */}
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.15 }}
+              className="mt-6 text-base sm:text-lg text-slate-200/90 max-w-2xl mx-auto leading-relaxed font-normal"
+            >
+              Precision agronomy intelligence platform engineered for Ethiopian highlands farming,
+              delivering automated crop timing alerts and kebele-level resource coordination.
+            </motion.p>
 
-        <section id="diagnostics" className="py-24 sm:py-32 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
-              <Badge variant="primary" dot>
-                COMPUTER VISION BENCHMARK
-              </Badge>
-              <h2 className="text-3xl sm:text-5xl font-extrabold text-text-primary tracking-tight font-mono uppercase">
-                Multimodal Crop Disease Scanner
-              </h2>
-              <p className="text-base text-text-muted font-sans">
-                Fine-tuned on 85,000+ highland crop specimens across Ethiopian micro-climates. Generates instant actionable advisories in Amharic, Afaan Oromoo, and Tigrinya.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-              <div className="lg:col-span-5 space-y-4">
-                <span className="text-xs font-mono text-text-muted uppercase tracking-wider block font-semibold">
-                  Select Field Specimen to Inspect:
-                </span>
-                {specimens.map((spec, idx) => (
-                  <motion.div
-                    key={idx}
-                    whileHover={{ scale: 1.015 }}
-                    whileTap={{ scale: 0.99 }}
-                    onClick={() => setActiveSpecimen(idx)}
-                    className={`p-5 rounded-3xl border-2 transition-all cursor-pointer ${
-                      activeSpecimen === idx
-                        ? 'bg-surface-subtle border-primary shadow-lg ring-2 ring-primary/10'
-                        : 'bg-white border-border hover:border-border-strong shadow-xs'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-mono font-bold text-base text-text-primary">{spec.crop}</span>
-                      <Badge variant={activeSpecimen === idx ? 'primary' : 'neutral'}>
-                        {spec.confidence} Match
-                      </Badge>
-                    </div>
-                    <p className="text-xs font-mono text-text-muted">{spec.condition}</p>
-                  </motion.div>
-                ))}
-              </div>
-
-              <div className="lg:col-span-7">
-                <div className="bg-white border-2 border-border-strong rounded-3xl overflow-hidden shadow-2xl relative">
-                  <div className="relative h-72 sm:h-96 overflow-hidden bg-black">
-                    <Image
-                      src={active.image}
-                      alt={active.condition}
-                      fill
-                      sizes="(max-width: 1024px) 100vw, 50vw"
-                      className="object-cover object-center opacity-90"
-                    />
-                    <motion.div
-                      animate={{ top: ['0%', '95%', '0%'] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                      className="absolute left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400 shadow-[0_0_15px_#34d399] z-20 pointer-events-none"
-                    />
-                    <div className="absolute top-4 left-4 z-10">
-                      <Badge variant="danger" dot>
-                        DIAGNOSTIC SCANNER ACTIVE
-                      </Badge>
-                    </div>
-                    <div className="absolute bottom-4 right-4 z-10 bg-black/75 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/20 text-white font-mono text-xs">
-                      Confidence Score: {active.confidence}
-                    </div>
-                  </div>
-
-                  <div className="p-6 sm:p-8 space-y-5">
-                    <div className="flex items-center justify-between flex-wrap gap-2">
-                      <div>
-                        <span className="text-xs font-mono text-text-muted uppercase">Detected Condition:</span>
-                        <h3 className="text-xl font-bold font-mono text-text-primary mt-0.5">{active.condition}</h3>
-                      </div>
-                      <Badge variant={active.severityColor}>{active.severity}</Badge>
-                    </div>
-
-                    <div className="p-5 rounded-2xl bg-surface-subtle border border-border">
-                      <span className="font-bold text-primary block mb-1 font-mono uppercase text-xs">
-                        Agronomic Protocol Prescription:
-                      </span>
-                      <p className="text-sm text-text-primary font-sans leading-relaxed">{active.prescription}</p>
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs font-mono">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">🔊</span>
-                        <span className="text-emerald-900 font-bold">Audio Extension Dispatch:</span>
-                      </div>
-                      <span className="text-emerald-800 truncate max-w-xs">{active.audioPrompt}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="intelligence" className="py-24 sm:py-32 bg-surface-subtle border-t border-border">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-3xl mx-auto mb-20 space-y-3">
-              <Badge variant="primary" dot>
-                FIELD-TESTED INFRASTRUCTURE
-              </Badge>
-              <h2 className="text-3xl sm:text-5xl font-extrabold text-text-primary tracking-tight font-mono uppercase">
-                Engineered for Highland Realities
-              </h2>
-              <p className="text-base text-text-muted font-sans">
-                Solving the structural disconnect between rural smallholders, frontline field agents, and municipal agricultural bureaus.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              <div className="bg-white p-8 rounded-3xl border border-border shadow-md space-y-4 hover:shadow-xl transition-all">
-                <div className="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-3xl font-bold">
-                  🌦
-                </div>
-                <h3 className="text-xl font-bold font-mono text-text-primary">
-                  7-Day &ldquo;Farm or Not&rdquo; Radar
-                </h3>
-                <p className="text-sm text-text-muted leading-relaxed font-sans">
-                  Algorithmic precipitation analysis calculating soil washoff risks, wind shear thresholds, and solar irradiance windows before farmers commit expensive fertilizer inputs.
-                </p>
-                <div className="pt-3 border-t border-border-subtle">
-                  <span className="text-xs font-mono font-bold text-accent">RADAR AGRO-AI</span>
-                </div>
-              </div>
-
-              <div className="bg-white p-8 rounded-3xl border border-border shadow-md space-y-4 hover:shadow-xl transition-all">
-                <div className="w-14 h-14 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center text-3xl font-bold">
-                  🌱
-                </div>
-                <h3 className="text-xl font-bold font-mono text-text-primary">
-                  Highland Vertisol Dynamics
-                </h3>
-                <p className="text-sm text-text-muted leading-relaxed font-sans">
-                  Deep moisture simulation calibrated specifically for heavy cracking clay vertisols found across the Great Rift Valley and East Shewa basin.
-                </p>
-                <div className="pt-3 border-t border-border-subtle">
-                  <span className="text-xs font-mono font-bold text-accent">SOIL PHYSICS</span>
-                </div>
-              </div>
-
-              <div className="bg-white p-8 rounded-3xl border border-border shadow-md space-y-4 hover:shadow-xl transition-all">
-                <div className="w-14 h-14 rounded-2xl bg-teal-100 text-teal-800 flex items-center justify-center text-3xl font-bold">
-                  📡
-                </div>
-                <h3 className="text-xl font-bold font-mono text-text-primary">
-                  Offline Field Agent Mesh
-                </h3>
-                <p className="text-sm text-text-muted leading-relaxed font-sans">
-                  Development agents manage 30 to 50 smallholders completely offline in remote kebeles, auto-synchronizing ledger records upon reconnecting to municipal WiFi or cellular mesh.
-                </p>
-                <div className="pt-3 border-t border-border-subtle">
-                  <span className="text-xs font-mono font-bold text-accent">OFFLINE SYNC</span>
-                </div>
-              </div>
-
-              <div className="bg-white p-8 rounded-3xl border border-border shadow-md space-y-4 hover:shadow-xl transition-all">
-                <div className="w-14 h-14 rounded-2xl bg-indigo-100 text-indigo-800 flex items-center justify-center text-3xl font-bold">
-                  🎙
-                </div>
-                <h3 className="text-xl font-bold font-mono text-text-primary">
-                  Voice & 2G SMS Telephony
-                </h3>
-                <p className="text-sm text-text-muted leading-relaxed font-sans">
-                  Smallholders without smartphones interact in spoken Amharic, Afaan Oromoo, or Tigrinya over standard 2G mobile phone networks with zero internet connectivity required.
-                </p>
-                <div className="pt-3 border-t border-border-subtle">
-                  <span className="text-xs font-mono font-bold text-accent">MULTILINGUAL VOICE</span>
-                </div>
-              </div>
-
-              <div className="bg-white p-8 rounded-3xl border border-border shadow-md space-y-4 hover:shadow-xl transition-all">
-                <div className="w-14 h-14 rounded-2xl bg-orange-100 text-orange-800 flex items-center justify-center text-3xl font-bold">
-                  🏛
-                </div>
-                <h3 className="text-xl font-bold font-mono text-text-primary">
-                  Depot Stock & Quota Ledgers
-                </h3>
-                <p className="text-sm text-text-muted leading-relaxed font-sans">
-                  Municipal agriculture officers supervise real-time warehouse inventory, fertilizer buffer quotas, and automated shortage alarms across 14 woredas.
-                </p>
-                <div className="pt-3 border-t border-border-subtle">
-                  <span className="text-xs font-mono font-bold text-accent">MUNICIPAL GOVERNANCE</span>
-                </div>
-              </div>
-
-              <div className="bg-white p-8 rounded-3xl border border-border shadow-md space-y-4 hover:shadow-xl transition-all">
-                <div className="w-14 h-14 rounded-2xl bg-rose-100 text-rose-800 flex items-center justify-center text-3xl font-bold">
-                  🛡
-                </div>
-                <h3 className="text-xl font-bold font-mono text-text-primary">
-                  Outbreak Containment Desk
-                </h3>
-                <p className="text-sm text-text-muted leading-relaxed font-sans">
-                  Automated radius geofencing detects clustered pathology reports within 15 km, instantly triggering emergency SMS broadcast containment protocols.
-                </p>
-                <div className="pt-3 border-t border-border-subtle">
-                  <span className="text-xs font-mono font-bold text-accent">BIOSECURITY MESH</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="markets" className="py-24 sm:py-32 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
-              <div>
-                <Badge variant="accent" dot>
-                  TRANSPARENCY LEDGER
-                </Badge>
-                <h2 className="text-3xl sm:text-5xl font-extrabold text-text-primary tracking-tight font-mono uppercase mt-2">
-                  Adama Grain & Input Market Board
-                </h2>
-                <p className="text-base text-text-muted font-sans mt-1">
-                  Verified cooperative exchange rates updated twice daily via SMS telemetry.
-                </p>
-              </div>
-
-              <div className="text-xs font-mono text-text-muted">
-                Last Telemetry Sync: Today, 14:00 EAT
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {marketQuotes.map((q, i) => (
-                <div
-                  key={i}
-                  className="bg-white border-2 border-border/80 rounded-3xl p-6 shadow-md hover:border-border-strong hover:shadow-xl transition-all"
-                >
-                  <div className="flex items-start justify-between gap-2 mb-3">
-                    <span className="font-mono text-sm font-bold text-text-primary">{q.crop}</span>
-                    <Badge variant={q.status === 'up' ? 'success' : q.status === 'down' ? 'danger' : 'neutral'}>
-                      {q.change}
-                    </Badge>
-                  </div>
-
-                  <div className="text-3xl font-mono font-extrabold text-text-primary my-3">
-                    {q.price}
-                  </div>
-
-                  <div className="text-xs text-text-muted font-mono border-t border-border-subtle pt-3 mt-3 truncate">
-                    {q.market}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="impact" className="py-24 sm:py-32 bg-[#121612] text-white relative overflow-hidden">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="text-center max-w-2xl mx-auto mb-20 space-y-3">
-              <Badge variant="accent" dot>
-                VERIFIABLE EXTENSION METRICS
-              </Badge>
-              <h2 className="text-3xl sm:text-5xl font-extrabold font-mono uppercase tracking-tight text-white">
-                Impact Across the Basin
-              </h2>
-            </div>
-
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-10 text-center">
-              <div className="space-y-2">
-                <div className="text-5xl sm:text-7xl font-extrabold font-mono text-emerald-400">
-                  250K+
-                </div>
-                <div className="text-sm font-mono uppercase tracking-wider text-white/90">
-                  Registered Plots
-                </div>
-                <p className="text-xs text-white/60 font-sans">
-                  Geomapped across East Shewa
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <div className="text-5xl sm:text-7xl font-extrabold font-mono text-amber-300">
-                  96.4%
-                </div>
-                <div className="text-sm font-mono uppercase tracking-wider text-white/90">
-                  Diagnostic Accuracy
-                </div>
-                <p className="text-xs text-white/60 font-sans">
-                  Field validated by research centers
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <div className="text-5xl sm:text-7xl font-extrabold font-mono text-emerald-400">
-                  &lt;18m
-                </div>
-                <div className="text-sm font-mono uppercase tracking-wider text-white/90">
-                  DA Dispatch SLA
-                </div>
-                <p className="text-xs text-white/60 font-sans">
-                  Pest & rust outbreak response time
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <div className="text-5xl sm:text-7xl font-extrabold font-mono text-amber-300">
-                  100%
-                </div>
-                <div className="text-sm font-mono uppercase tracking-wider text-white/90">
-                  Offline Fallback
-                </div>
-                <p className="text-xs text-white/60 font-sans">
-                  Functional on 2G voice & SMS
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="py-24 bg-gradient-to-r from-primary via-primary-hover to-[#1C3318] text-white relative overflow-hidden">
-          <div className="max-w-4xl mx-auto px-4 text-center space-y-6 relative z-10">
-            <h2 className="text-3xl sm:text-5xl font-extrabold font-mono uppercase tracking-tight">
-              Modernize Agricultural Governance Today
-            </h2>
-            <p className="text-base sm:text-lg text-white/85 max-w-2xl mx-auto font-sans leading-relaxed">
-              Deploy the unified field extension platform for smallholders, development agents, and municipal agriculture bureaus.
-            </p>
-            <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+            {/* Action Buttons */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.25 }}
+              className="mt-10 flex flex-wrap items-center justify-center gap-4"
+            >
               {isAuthenticated ? (
                 <Link href={dashboardPath}>
-                  <Button variant="accent" size="lg" className="font-mono text-sm px-8 shadow-2xl">
-                    Launch Authorized Workspace →
+                  <Button
+                    size="lg"
+                    className="rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold px-7 py-3.5 shadow-xl shadow-emerald-500/25 flex items-center gap-2 cursor-pointer transition-all"
+                  >
+                    Open Workspace ({role || 'Operator'})
                   </Button>
                 </Link>
               ) : (
-                <>
-                  <Link href="/signUp">
-                    <Button variant="accent" size="lg" className="font-mono text-sm px-8 shadow-2xl">
-                      Enroll Operator Station →
-                    </Button>
-                  </Link>
-                  <Link href="/signIn">
-                    <Button variant="secondary" size="lg" className="font-mono text-sm px-8">
-                      Operator Sign In
-                    </Button>
-                  </Link>
-                </>
+                <Link href="/signUp">
+                  <Button
+                    size="lg"
+                    className="rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold px-7 py-3.5 shadow-xl shadow-emerald-500/25 flex items-center gap-2 cursor-pointer transition-all"
+                  >
+                    Open Agronomist Portal
+                  </Button>
+                </Link>
               )}
+
+              <a href="#empirical-trial">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="rounded-xl bg-white/10 hover:bg-white/15 text-white border-white/25 px-6 py-3.5 backdrop-blur-md flex items-center gap-2 cursor-pointer transition-all"
+                >
+                  Request Field Deployment
+                </Button>
+              </a>
+
+              <a
+                href="#capabilities"
+                className="text-emerald-300 hover:text-emerald-200 text-sm font-medium px-4 py-3.5 inline-flex items-center gap-1.5 transition-colors"
+              >
+                Our Capabilities <ArrowRight className="w-4 h-4" />
+              </a>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* =========================================================================
+            SECTION 2: THE 34 VS. 12 QUINTAL REALITY (Empirical Side-by-Side Trial)
+            ========================================================================= */}
+        <section id="empirical-trial" className="py-20 md:py-28 bg-[#F8FAF7]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Clean Section Header (No watermark tags) */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+              <div className="max-w-3xl space-y-3">
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-slate-900 leading-tight">
+                  The 34 vs. 12 Quintal Reality: Timing Over Fortune
+                </h2>
+                <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
+                  Two adjacent 1-hectare plots in Lume Woreda with identical soil profile and certified seed stock.
+                  The documented yield divergence was strictly determined by micro-window intervention timing.
+                </p>
+              </div>
+
+              {/* Location Badge */}
+              <div className="flex items-center gap-2 bg-white px-3.5 py-2 rounded-xl border border-slate-200/90 shadow-2xs self-start md:self-auto">
+                <MapPin className="w-4 h-4 text-emerald-700" />
+                <span className="text-xs font-medium text-slate-700">Lume Woreda, Oromia</span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold">
+                  Verified
+                </span>
+              </div>
+            </div>
+
+            {/* Comparison Grid with Center Metric Bridge */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+              {/* LEFT CARD: AgriIntel Autonomous Protocol (Green Highlighted Winner) */}
+              <div className="lg:col-span-5 bg-white rounded-2xl border-2 border-emerald-500/40 p-6 md:p-8 shadow-sm flex flex-col justify-between relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-full pointer-events-none -z-0" />
+
+                <div className="relative z-10">
+                  <div className="flex items-start justify-between gap-4 pb-6 border-b border-slate-100">
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900">
+                        AgriIntel Autonomous Protocol
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-1">
+                        28-day window adherence: 100% compliant
+                      </p>
+                    </div>
+
+                    <div className="text-right flex-shrink-0">
+                      <div className="text-4xl sm:text-5xl font-extrabold text-emerald-600 tracking-tight font-mono">
+                        34.2
+                      </div>
+                      <div className="text-[11px] font-mono text-slate-500 uppercase mt-0.5">
+                        Quintal / Hectare
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Chronological Steps */}
+                  <div className="mt-6 space-y-4">
+                    <div className="flex items-start gap-3 text-xs">
+                      <span className="font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-md text-[11px] flex-shrink-0">
+                        01. Day 14
+                      </span>
+                      <div>
+                        <span className="font-semibold text-slate-900 block">Basal DAP Micro-Dosing</span>
+                        <span className="text-slate-600">Delivered 36 hours prior to recorded root soak cycle</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3 text-xs">
+                      <span className="font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-md text-[11px] flex-shrink-0">
+                        02. Day 28
+                      </span>
+                      <div>
+                        <span className="font-semibold text-slate-900 block">Pre-Rust Prophylactic Spray</span>
+                        <span className="text-slate-600">Triggered 48 hours before spore condensation peak</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3 text-xs">
+                      <span className="font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-md text-[11px] flex-shrink-0">
+                        03. Day 45
+                      </span>
+                      <div>
+                        <span className="font-semibold text-slate-900 block">Precision Urea Top-Dressing</span>
+                        <span className="text-slate-600">Timed with forecasted convective storm moisture</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3 text-xs">
+                      <span className="font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-md text-[11px] flex-shrink-0">
+                        04. Day 72
+                      </span>
+                      <div>
+                        <span className="font-semibold text-slate-900 block">Aphid Vector Biological Control</span>
+                        <span className="text-slate-600">Intervened at threshold index 3.2 before colony bloom</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3 text-xs">
+                      <span className="font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-md text-[11px] flex-shrink-0">
+                        05. Day 110
+                      </span>
+                      <div>
+                        <span className="font-semibold text-slate-900 block">Physiological Maturity Harvest</span>
+                        <span className="text-slate-600">Harvested at 13.5% grain moisture before unseasonal rains</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card Footer */}
+                <div className="mt-8 pt-5 border-t border-slate-100 flex items-center justify-between text-xs">
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Calculated Net Return</span>
+                    <span className="font-bold text-slate-900 font-mono text-base">325,000 ETB</span>
+                  </div>
+                  <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-medium text-[11px]">
+                    Protocol Compliant Surplus
+                  </span>
+                </div>
+              </div>
+
+              {/* CENTER BRIDGE: +220% Yield Delta Multiplier */}
+              <div className="lg:col-span-2 flex flex-col items-center justify-center p-6 bg-white rounded-2xl border border-slate-200/90 text-center shadow-2xs">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400 font-semibold mb-1">
+                  Yield Advantage
+                </span>
+
+                <div className="text-4xl lg:text-5xl font-black text-emerald-600 font-mono tracking-tight my-2">
+                  +220%
+                </div>
+
+                <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold border border-emerald-200 mb-4">
+                  <TrendingUp className="w-3 h-3" />
+                  Yield Multiplier
+                </div>
+
+                <div className="w-full border-t border-slate-100 my-2" />
+
+                <div className="text-xl font-bold font-mono text-slate-900 mt-2">
+                  +182,300 ETB
+                </div>
+                <div className="text-[11px] text-slate-500 leading-tight mt-1">
+                  Net value gain per single hectare
+                </div>
+
+                <div className="mt-5 text-[10px] font-mono text-slate-400 bg-slate-50 p-2.5 rounded-lg border border-slate-100 leading-normal">
+                  Identical Soil • Identical Seeds • Timing Advantage
+                </div>
+              </div>
+
+              {/* RIGHT CARD: Traditional Farmer Intuition (Control Plot) */}
+              <div className="lg:col-span-5 bg-white rounded-2xl border border-amber-200/90 p-6 md:p-8 shadow-sm flex flex-col justify-between relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50/50 rounded-bl-full pointer-events-none -z-0" />
+
+                <div className="relative z-10">
+                  <div className="flex items-start justify-between gap-4 pb-6 border-b border-slate-100">
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900">
+                        Traditional Farmer Intuition
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Calendar-based intervention (Traditional practice)
+                      </p>
+                    </div>
+
+                    <div className="text-right flex-shrink-0">
+                      <div className="text-4xl sm:text-5xl font-extrabold text-slate-400 tracking-tight font-mono">
+                        12.0
+                      </div>
+                      <div className="text-[11px] font-mono text-slate-500 uppercase mt-0.5">
+                        Quintal / Hectare
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Chronological Missteps */}
+                  <div className="mt-6 space-y-4">
+                    <div className="flex items-start gap-3 text-xs">
+                      <span className="font-mono font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-1 rounded-md text-[11px] flex-shrink-0">
+                        01. Day 22
+                      </span>
+                      <div>
+                        <span className="font-semibold text-slate-900 block">Delayed Fertilizer Application</span>
+                        <span className="text-slate-600">Applied 8 days late during dry spell; 40% volatilization</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3 text-xs">
+                      <span className="font-mono font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-1 rounded-md text-[11px] flex-shrink-0">
+                        02. Day 39
+                      </span>
+                      <div>
+                        <span className="font-semibold text-slate-900 block">Reactive Rust Fungicide</span>
+                        <span className="text-slate-600">Applied post-symptom manifestation; irreversible canopy damage</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3 text-xs">
+                      <span className="font-mono font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-1 rounded-md text-[11px] flex-shrink-0">
+                        03. Day 58
+                      </span>
+                      <div>
+                        <span className="font-semibold text-slate-900 block">Broadcast Urea Application</span>
+                        <span className="text-slate-600">Heavy storm washed surface runoff; 60% nitrogen lost</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3 text-xs">
+                      <span className="font-mono font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-1 rounded-md text-[11px] flex-shrink-0">
+                        04. Day 84
+                      </span>
+                      <div>
+                        <span className="font-semibold text-slate-900 block">Late Insecticide Spray</span>
+                        <span className="text-slate-600">Post-infestation intervention; severe head blighting occurred</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3 text-xs">
+                      <span className="font-mono font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-1 rounded-md text-[11px] flex-shrink-0">
+                        05. Day 118
+                      </span>
+                      <div>
+                        <span className="font-semibold text-slate-900 block">Rain-Interrupted Harvest</span>
+                        <span className="text-slate-600">Wet harvest caused 18% field shattering and fungal discoloration</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card Footer */}
+                <div className="mt-8 pt-5 border-t border-slate-100 flex items-center justify-between text-xs">
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Calculated Net Return</span>
+                    <span className="font-bold text-slate-900 font-mono text-base">94,000 ETB</span>
+                  </div>
+                  <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-800 font-medium text-[11px]">
+                    Control Plot Baseline
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* =========================================================================
+            SECTION 3: EMPIRICAL PROOF (Photo of Farmers in Field)
+            ========================================================================= */}
+        <section className="py-12 bg-[#F8FAF7]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-white rounded-3xl border border-slate-200/90 overflow-hidden shadow-sm p-6 sm:p-8 lg:p-10">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+                {/* Photo Column */}
+                <div className="lg:col-span-7 relative">
+                  <div className="relative aspect-[16/10] rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
+                    <Image
+                      src="/images/field-farmers.jpg"
+                      alt="Ethiopian farmers inspecting grain in highland farmland"
+                      fill
+                      sizes="(max-width: 1024px) 100vw, 60vw"
+                      className="object-cover object-center"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                    <div className="absolute bottom-4 left-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/60 backdrop-blur-md text-white text-xs font-mono">
+                      <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Field Trial 4: Lume Woreda, Central Highlands</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Editorial Column */}
+                <div className="lg:col-span-5 space-y-4">
+                  <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 leading-snug">
+                    Empirical Agronomy Measured on Real Farmland
+                  </h3>
+                  <p className="text-sm text-slate-600 leading-relaxed">
+                    Every recommendation in AgriIntel is calibrated against real agronomic trials across Ethiopian
+                    micro-climates. We don&apos;t rely on generic satellite estimations; our physics-informed models
+                    fuse localized telemetry with extension agent ground truth.
+                  </p>
+
+                  <div className="pt-3 flex flex-wrap gap-4 text-xs font-semibold">
+                    <a
+                      href="#empirical-trial"
+                      className="inline-flex items-center gap-1 text-emerald-700 hover:text-emerald-800 transition-colors"
+                    >
+                      ↗ View Multi-Trial Validation
+                    </a>
+                    <a
+                      href="#capabilities"
+                      className="inline-flex items-center gap-1 text-slate-600 hover:text-slate-900 transition-colors"
+                    >
+                      ↗ Read Scientific Whitepaper
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* =========================================================================
+            SECTION 4: FOUR ARCHITECTURAL PILLARS ("Engineered for High-Stakes Agriculture")
+            ========================================================================= */}
+        <section id="capabilities" className="py-20 md:py-28 bg-[#FFFFFF]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14">
+              {/* Left Column: Heading, Subtitle & Crop Inspection Image */}
+              <div className="lg:col-span-5 space-y-6">
+                <div>
+                  <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 leading-tight">
+                    Engineered for High-Stakes Agriculture
+                  </h2>
+                  <p className="mt-3 text-sm text-slate-600 leading-relaxed">
+                    Designed specifically for the infrastructural realities and agronomic nuances of the Ethiopian agricultural landscape, from micro-plots to regional grain corridors.
+                  </p>
+                </div>
+
+                {/* Farmer inspecting crop photo */}
+                <div className="relative aspect-[16/11] rounded-2xl overflow-hidden border border-slate-200/90 shadow-sm mt-4">
+                  <Image
+                    src="/images/crop-inspection.jpg"
+                    alt="Farmer inspecting teff grain ears closely"
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 40vw"
+                    className="object-cover object-center"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                  <div className="absolute bottom-3 left-3 text-white text-[11px] font-mono px-2.5 py-1 rounded bg-black/60 backdrop-blur-sm">
+                    In-situ Teff Variety Verification
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: 4 Clean Feature Rows */}
+              <div className="lg:col-span-7 flex flex-col justify-center space-y-4">
+                {/* Feature 1: Voice & Dialectal Locales */}
+                <div className="bg-[#FAFBF9] hover:bg-emerald-50/40 transition-colors p-6 rounded-2xl border border-slate-200/80 group">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                      <h4 className="font-bold text-slate-900 text-base">
+                        Voice & Dialectal Locales
+                      </h4>
+                    </div>
+                    <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-medium self-start sm:self-auto">
+                      Afan Oromo / Amharic / Tigrinya
+                    </span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                    Delivers agronomic directives via natural voice in local languages, ensuring smallholders without digital literacy can receive and act on time-critical recommendations.
+                  </p>
+                  <a
+                    href="#voice-dispatch"
+                    className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-800 transition-colors"
+                  >
+                    Explore Voice Architecture <ArrowRight className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+
+                {/* Feature 2: Multimodal Pest & Blight AI */}
+                <div className="bg-[#FAFBF9] hover:bg-emerald-50/40 transition-colors p-6 rounded-2xl border border-slate-200/80 group">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                      <h4 className="font-bold text-slate-900 text-base">
+                        Multimodal Pest & Blight AI
+                      </h4>
+                    </div>
+                    <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-medium self-start sm:self-auto">
+                      Edge Mobile & Cloud
+                    </span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                    Instant on-device and cloud diagnosis for over 48 endemic cereal diseases and invasive pests, operating seamlessly even during intermittent rural cellular connectivity.
+                  </p>
+                  <Link
+                    href="/signIn"
+                    className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-800 transition-colors"
+                  >
+                    Test Diagnostic Model <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+
+                {/* Feature 3: 7-Day Agro-Weather Timing Windows */}
+                <div className="bg-[#FAFBF9] hover:bg-emerald-50/40 transition-colors p-6 rounded-2xl border border-slate-200/80 group">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                      <h4 className="font-bold text-slate-900 text-base">
+                        7-Day Agro-Weather Timing Windows
+                      </h4>
+                    </div>
+                    <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-medium self-start sm:self-auto">
+                      Hyper-Local ECMWF + Radar
+                    </span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                    Predictive micro-climate forecast engines calculate exact 6-hour windows for fertilizer absorption, spray efficacy, and harvest drying.
+                  </p>
+                  <a
+                    href="#empirical-trial"
+                    className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-800 transition-colors"
+                  >
+                    View Weather Timing Pipeline <ArrowRight className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+
+                {/* Feature 4: Verified Input Marketplace & Registry */}
+                <div className="bg-[#FAFBF9] hover:bg-emerald-50/40 transition-colors p-6 rounded-2xl border border-slate-200/80 group">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                      <h4 className="font-bold text-slate-900 text-base">
+                        Verified Input Marketplace & Registry
+                      </h4>
+                    </div>
+                    <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-medium self-start sm:self-auto">
+                      National Seed & Chemical
+                    </span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                    Direct integration with regional cooperative unions and agro-dealers ensures access to verified, certified seeds and genuine crop protection inputs.
+                  </p>
+                  <Link
+                    href="/signIn"
+                    className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-800 transition-colors"
+                  >
+                    Browse Input Verification System <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* =========================================================================
+            SECTION 5: DARK SECTION - VOICE BOX & KEBELE DIRECT DISPATCH
+            ========================================================================= */}
+        <section
+          id="voice-dispatch"
+          className="relative bg-[#061209] text-white py-24 md:py-32 overflow-hidden border-t border-b border-emerald-950/70"
+        >
+          {/* Ambient lighting */}
+          <div className="absolute top-1/2 left-1/3 -translate-y-1/2 w-[600px] h-[400px] bg-emerald-500/10 blur-[140px] pointer-events-none" />
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            {/* Clean Header (No watermark tags) */}
+            <div className="max-w-3xl mb-14 space-y-3">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white leading-tight">
+                Voice Box & Kebele Direct Dispatch
+              </h2>
+              <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
+                For regions and smallholders without reliable smartphones or internet access, AgriIntel delivers
+                automated voice broadcasts and direct alerts to local Kebele Development Agents (DAs).
+              </p>
+            </div>
+
+            {/* Split Content: Farmer with Phone on Left, 3 Dispatches on Right */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-stretch">
+              {/* Photo Column */}
+              <div className="lg:col-span-5 relative flex flex-col">
+                <div className="relative aspect-[4/3] lg:aspect-auto lg:h-full rounded-2xl overflow-hidden border border-emerald-500/20 shadow-2xl">
+                  <Image
+                    src="/images/voice-box-farmer.jpg"
+                    alt="Farmer using basic mobile phone in terraced Ethiopian highland field"
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 40vw"
+                    className="object-cover object-center"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+
+                  <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-xs">
+                    <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-950/80 backdrop-blur-md text-emerald-300 border border-emerald-500/30 font-mono">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                      Voice Dispatch Station #104 — Arsi Foothills
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Real-Time Dispatch Log Cards */}
+              <div className="lg:col-span-7 flex flex-col justify-between space-y-4">
+                {/* Dispatch 1: Voice Call Broadcast */}
+                <div className="bg-white/5 border border-white/10 hover:border-emerald-500/40 transition-colors p-5 rounded-2xl backdrop-blur-sm">
+                  <div className="flex items-center justify-between gap-3 mb-2">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-950/90 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                        <PhoneCall className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-white text-sm">
+                          06:15 AM — Automated Voice Call
+                        </h4>
+                        <span className="text-[11px] font-mono text-slate-400">
+                          Dialect: Afan Oromo
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-500/30">
+                      ✓ Completed (98.2% Answer Rate)
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-300 leading-relaxed pl-10">
+                    &ldquo;Delivered in Afan Oromo to 412 registered wheat farmers: &lsquo;High stripe rust risk detected.
+                    Postpone morning nitrogen spray until wind speed drops below 6 km/h.&rsquo;&rdquo;
+                  </p>
+                </div>
+
+                {/* Dispatch 2: Kebele DA Alert */}
+                <div className="bg-white/5 border border-white/10 hover:border-amber-500/40 transition-colors p-5 rounded-2xl backdrop-blur-sm">
+                  <div className="flex items-center justify-between gap-3 mb-2">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-amber-950/90 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                        <ShieldCheck className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-white text-sm">
+                          08:30 AM — Kebele Extension DA Alert
+                        </h4>
+                        <span className="text-[11px] font-mono text-slate-400">
+                          Priority: Immediate Field Action
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-950 text-amber-400 border border-amber-500/30">
+                      ⚡ Actioned by DA Bekele &amp; Team
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-300 leading-relaxed pl-10">
+                    &ldquo;Priority dispatch to 6 assigned Development Agents: &lsquo;Soil moisture saturation at 84% in Lower Valley.
+                    Direct furrow drainage protocol activated across 42 teff hectares.&rsquo;&rdquo;
+                  </p>
+                </div>
+
+                {/* Dispatch 3: SMS Fallback Broadcast */}
+                <div className="bg-white/5 border border-white/10 hover:border-teal-500/40 transition-colors p-5 rounded-2xl backdrop-blur-sm">
+                  <div className="flex items-center justify-between gap-3 mb-2">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-teal-950/90 border border-teal-500/30 flex items-center justify-center text-teal-400">
+                        <MessageSquareText className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-white text-sm">
+                          11:00 AM — Structured USSD/SMS Broadcast
+                        </h4>
+                        <span className="text-[11px] font-mono text-slate-400">
+                          Channel: Ethio Telecom
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-teal-950 text-teal-400 border border-teal-500/30">
+                      ✓ Delivered via SMS Gateway
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-300 leading-relaxed pl-10">
+                    &ldquo;Offline fallback sent to 1,280 smallholders with market price alerts for Adama grain depot
+                    and optimal 4-day harvest drying windows.&rdquo;
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Live Status Ribbon */}
+            <div className="mt-12 p-3.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between text-xs font-mono text-slate-400">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-slate-300 font-medium">Active Dispatch Channels:</span>
+                <span>Ethio Telecom Voice Gateway • Kebele DA Offline Mesh • National Weather Service Sync</span>
+              </div>
+              <span className="hidden md:inline text-emerald-400">
+                Network Latency: 42ms
+              </span>
+            </div>
+          </div>
+        </section>
+
+        {/* =========================================================================
+            SECTION 6: THREE BENCHMARK IMPACT CARDS
+            ========================================================================= */}
+        <section id="impact" className="py-16 md:py-24 bg-[#F8FAF7] border-b border-slate-200/80">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Box 1 */}
+              <div className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200/90 shadow-2xs relative overflow-hidden">
+                <div className="w-8 h-1 bg-emerald-600 rounded-full mb-4" />
+                <div className="text-xs font-mono font-bold uppercase tracking-wider text-emerald-800 mb-2">
+                  98.4% DIAGNOSTIC ACCURACY
+                </div>
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                  Benchmarked against Ethiopian Agricultural Authority agronomist evaluations across 12,000 field specimens.
+                </p>
+              </div>
+
+              {/* Box 2 */}
+              <div className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200/90 shadow-2xs relative overflow-hidden">
+                <div className="w-8 h-1 bg-emerald-600 rounded-full mb-4" />
+                <div className="text-xs font-mono font-bold uppercase tracking-wider text-emerald-800 mb-2">
+                  220% AVERAGE YIELD INCREASE
+                </div>
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                  Documented across 48 monitored Highland wheat and teff pilot plots in East Shewa agricultural corridor.
+                </p>
+              </div>
+
+              {/* Box 3 */}
+              <div className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200/90 shadow-2xs relative overflow-hidden">
+                <div className="w-8 h-1 bg-emerald-600 rounded-full mb-4" />
+                <div className="text-xs font-mono font-bold uppercase tracking-wider text-emerald-800 mb-2">
+                  NO EXPENSIVE HARDWARE REQUIRED
+                </div>
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                  Zero sensor installation costs. Operates using existing satellite feeds, micro-weather radar, and basic mobile phones.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* =========================================================================
+            SECTION 7: ACCELERATE HARVEST OUTCOMES (Call To Action Box)
+            ========================================================================= */}
+        <section className="py-20 md:py-28 bg-[#FFFFFF]">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-gradient-to-b from-white to-emerald-50/30 rounded-3xl border border-emerald-500/30 p-8 sm:p-12 text-center shadow-sm relative overflow-hidden">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-slate-900 leading-tight">
+                Ready to accelerate <br />
+                harvest outcomes?
+              </h2>
+
+              <p className="mt-4 text-sm sm:text-base text-slate-600 max-w-xl mx-auto leading-relaxed">
+                Schedule a field demonstration or connect your cooperative union to the national agronomic intelligence network.
+              </p>
+
+              {/* Interactive Submit Form */}
+              <div className="mt-8 max-w-md mx-auto">
+                {ctaSubmitted ? (
+                  <div className="p-4 rounded-xl bg-emerald-100/90 border border-emerald-300 text-emerald-900 text-sm font-medium flex items-center justify-center gap-2">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-700" />
+                    Pilot request recorded. Our agronomy team will contact your station within 24 hours.
+                  </div>
+                ) : (
+                  <form onSubmit={handleCtaSubmit} className="flex flex-col sm:flex-row items-center gap-2.5">
+                    <input
+                      type="text"
+                      required
+                      value={emailOrPhone}
+                      onChange={(e) => setEmailOrPhone(e.target.value)}
+                      placeholder="Enter your email or phone number"
+                      className="w-full px-4 py-3.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent text-sm bg-white text-slate-900 placeholder:text-slate-400 shadow-2xs"
+                    />
+                    <Button
+                      type="submit"
+                      size="lg"
+                      className="w-full sm:w-auto rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white font-semibold px-6 py-3.5 flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap shadow-sm"
+                    >
+                      Connect <ArrowRight className="w-4 h-4" />
+                    </Button>
+                  </form>
+                )}
+              </div>
+
+              {/* Security & Setup Bullet Notes */}
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-500 font-mono">
+                <span>• Enterprise Grade &amp; Cooperative Compliant</span>
+                <span>• Kebele Level Setup in Under 48h</span>
+              </div>
             </div>
           </div>
         </section>
       </main>
 
+      {/* Global Footer */}
       <Footer />
     </div>
   )
