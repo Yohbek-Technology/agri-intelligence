@@ -7,10 +7,17 @@
   --color-surface-elevated: #FFFFFF;
   --color-surface-glass: rgba(255, 255, 255, 0.82);
 
-  --color-primary: #274422;
+  /* --color-primary: #274422;
   --color-primary-hover: #1C3318;
   --color-primary-subtle: #3D6636;
-  --color-primary-light: #EBF3EA;
+  --color-primary-light: #EBF3EA; */
+
+  /* Bright lime green alternative — swap these in if you want a modern/vibrant look:*/
+  --color-primary: #6EE22A;
+  --color-primary-hover: #58C41E;
+  --color-primary-subtle: #85E945;
+  --color-primary-light: #F0FDE6;
+ 
 
   --color-accent: #C78326;
   --color-accent-hover: #AB6E1B;
@@ -62,9 +69,10 @@ input, button, select, textarea {
   -webkit-backdrop-filter: blur(14px);
 }
 
-.ambient-glow-primary {
+/* Bright lime green alternative: rgba(110, 226, 42, 0.25) */
+/* .ambient-glow-primary {
   box-shadow: 0 0 35px -8px rgba(39, 68, 34, 0.18);
-}
+} */
 
 .ambient-glow-accent {
   box-shadow: 0 0 35px -8px rgba(199, 131, 38, 0.22);

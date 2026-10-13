@@ -111,12 +111,17 @@ export default function SignInPage() {
         </Button>
       </form>
 
-      {/* Field conditions widget */}
+      {/* Field conditions widget — sample/placeholder data, not a live feed */}
       <div className="bg-[var(--color-surface-subtle)] border border-[var(--color-border)] rounded-2xl p-4">
-        <div className="flex items-center gap-2 mb-1.5">
-          <span>🌤</span>
-          <span className="text-xs font-mono font-bold text-text-muted uppercase tracking-wider">
-            Adama Region
+        <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center gap-2">
+            <span>🌤</span>
+            <span className="text-xs font-mono font-bold text-text-muted uppercase tracking-wider">
+              Adama Region
+            </span>
+          </div>
+          <span className="text-[10px] font-mono text-text-faint bg-[var(--color-border)] px-1.5 py-0.5 rounded-full uppercase tracking-wide">
+            Sample
           </span>
         </div>
         <p className="text-sm text-text-primary">

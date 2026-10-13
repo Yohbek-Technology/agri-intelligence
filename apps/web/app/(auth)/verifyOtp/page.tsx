@@ -124,7 +124,18 @@ function VerifyOtpContent() {
       {error && <Notice type="error" message={error} />}
       {resendStatus && <Notice type="info" message={resendStatus} />}
 
-      {/* OTP digit inputs */}
+      {/*
+        OTP digit inputs — intentional divergence from the shared Input component.
+        These are raw <input> elements rather than <Input /> because:
+          1. useOtpVerification exposes setInputRef(el, idx) which needs a direct
+             HTMLInputElement ref — not the forwarded ref from the Input wrapper.
+          2. OTP boxes need a square aspect-ratio layout inside a flex row;
+             the Input wrapper's `w-full space-y-1.5` outer div prevents this.
+          3. No label, error, or hint slots are needed for individual digit cells.
+        If the shared Input gains an `otp` variant that removes the wrapper div,
+        migrate here. Token usage (border-primary, bg-primary-light, etc.) mirrors
+        the shared component so color/theme changes still apply.
+      */}
       <div className="flex items-center justify-between gap-2 sm:gap-3">
         {digits.map((digit, idx) => (
           <input
