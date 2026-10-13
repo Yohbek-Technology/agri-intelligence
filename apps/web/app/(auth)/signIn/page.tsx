@@ -1,13 +1,12 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
+import { PhoneSignInSchema } from '@repo/shared'
 import { useSignInForm } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Notice } from '@/components/ui/notice'
-import { BrandLogo } from '@/components/ui/brandLogo'
 
 export default function SignInPage() {
   const {
@@ -21,98 +20,120 @@ export default function SignInPage() {
     handleSubmit,
   } = useSignInForm()
 
+  const [liveErrors, setLiveErrors] = useState<Record<string, string>>({})
+
+  const onPhoneChange = (value: string) => {
+    setField('phoneNumber', value)
+    const r = PhoneSignInSchema.shape.phoneNumber.safeParse(value)
+    setLiveErrors((prev) => ({
+      ...prev,
+      phoneNumber: r.success ? '' : (r.error.issues[0]?.message ?? ''),
+    }))
+  }
+
+  const onPasswordChange = (value: string) => {
+    setField('password', value)
+    const r = PhoneSignInSchema.shape.password.safeParse(value)
+    setLiveErrors((prev) => ({
+      ...prev,
+      password: r.success ? '' : (r.error.issues[0]?.message ?? ''),
+    }))
+  }
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35 }}
-      className="w-full max-w-md mx-auto"
-    >
-      <div className="bg-white border border-border/80 shadow-2xl rounded-3xl p-6 sm:p-8 backdrop-blur-xl">
-        <div className="text-center mb-6">
-          <div className="flex justify-center mb-4">
-            <BrandLogo size="lg" showSubtitle={false} />
-          </div>
-          <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight font-mono uppercase">
-            Platform Gateway
-          </h1>
-          <p className="text-xs sm:text-sm text-text-muted mt-1">
-            Access your agricultural operations desk
-          </p>
-        </div>
-
-        {generalError && (
-          <div className="mb-5">
-            <Notice type="error" message={generalError} />
-          </div>
-        )}
-
-        {isLockedOut && (
-          <div className="mb-5 p-3.5 rounded-2xl bg-danger-light border border-danger text-danger text-xs font-mono font-medium">
-            Account temporarily locked due to 5 failed attempts. Retry in {lockoutMinutesRemaining} min.
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            label="Phone Number"
-            type="tel"
-            placeholder="+251911000000"
-            value={formData.phoneNumber}
-            onChange={(e) => setField('phoneNumber', e.target.value)}
-            error={fieldErrors.phoneNumber}
-            disabled={isLoading || isLockedOut}
-            hint="Format: +251 9... or 09..."
-          />
-
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <label className="block text-xs font-semibold text-text-primary uppercase tracking-wider font-mono">
-                Password
-              </label>
-              <Link
-                href="/forgotPassword"
-                className="text-xs font-mono text-accent hover:text-accent-hover font-semibold transition-colors"
-              >
-                Forgot password?
-              </Link>
-            </div>
-            <Input
-              type="password"
-              placeholder="••••••••••••"
-              value={formData.password}
-              onChange={(e) => setField('password', e.target.value)}
-              error={fieldErrors.password}
-              disabled={isLoading || isLockedOut}
-            />
-          </div>
-
-          <div className="pt-2">
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              fullWidth
-              isLoading={isLoading}
-              disabled={isLockedOut}
-            >
-              Sign In to Station
-            </Button>
-          </div>
-        </form>
-
-        <div className="mt-6 pt-5 border-t border-border-subtle text-center">
-          <p className="text-xs text-text-muted">
-            New operator or farmer?{' '}
-            <Link
-              href="/signUp"
-              className="font-bold text-primary hover:text-primary-hover font-mono transition-colors"
-            >
-              Register Account →
-            </Link>
-          </p>
-        </div>
+    <div className="max-w-md w-full mx-auto space-y-6">
+      {/* Heading */}
+      <div>
+        <h1 className="text-2xl font-bold text-text-primary">Welcome Back</h1>
+        <p className="text-sm text-text-muted mt-1">Monitor your crops. Extend your reach.</p>
       </div>
-    </motion.div>
+
+      {/* Lockout banner */}
+      {isLockedOut && (
+        <div className="flex items-center gap-2 bg-danger-light border-l-4 border-danger text-danger text-xs font-mono p-3 rounded-lg">
+          <span>⚠️</span>
+          <span>
+            Account temporarily locked after 5 failed attempts. Retry in {lockoutMinutesRemaining} min.
+          </span>
+        </div>
+      )}
+
+      {/* General error */}
+      {generalError && !isLockedOut && <Notice type="error" message={generalError} />}
+
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Input
+          label="Phone Number"
+          type="tel"
+          placeholder="+251911000000"
+          value={formData.phoneNumber}
+          onChange={(e) => onPhoneChange(e.target.value)}
+          error={liveErrors.phoneNumber || fieldErrors.phoneNumber}
+          success={!!(formData.phoneNumber && !liveErrors.phoneNumber && !fieldErrors.phoneNumber)}
+          disabled={isLoading || isLockedOut}
+          hint={!liveErrors.phoneNumber && !fieldErrors.phoneNumber ? 'Format: +251 9... or 09...' : undefined}
+        />
+
+        {/* Password with inline forgot link */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <label className="block text-xs font-semibold text-text-primary uppercase tracking-wider font-mono">
+              Password
+            </label>
+            <Link
+              href="/forgotPassword"
+              className="text-xs font-mono text-accent hover:text-accent-hover font-semibold transition-colors"
+            >
+              Forgot password?
+            </Link>
+          </div>
+          <Input
+            type="password"
+            placeholder="••••••••••••"
+            value={formData.password}
+            onChange={(e) => onPasswordChange(e.target.value)}
+            error={liveErrors.password || fieldErrors.password}
+            success={!!(formData.password && !liveErrors.password && !fieldErrors.password)}
+            disabled={isLoading || isLockedOut}
+          />
+        </div>
+
+        <Button
+          type="submit"
+          variant="primary"
+          size="lg"
+          fullWidth
+          isLoading={isLoading}
+          disabled={isLockedOut}
+        >
+          Sign In →
+        </Button>
+      </form>
+
+      {/* Field conditions widget */}
+      <div className="bg-[var(--color-surface-subtle)] border border-[var(--color-border)] rounded-2xl p-4">
+        <div className="flex items-center gap-2 mb-1.5">
+          <span>🌤</span>
+          <span className="text-xs font-mono font-bold text-text-muted uppercase tracking-wider">
+            Adama Region
+          </span>
+        </div>
+        <p className="text-sm text-text-primary">
+          Optimal spray window: Tomorrow 07:00–13:00
+        </p>
+      </div>
+
+      {/* Sign-up link */}
+      <p className="text-xs text-text-muted text-center">
+        New here?{' '}
+        <Link
+          href="/signUp"
+          className="font-bold text-primary hover:text-primary-hover font-mono transition-colors"
+        >
+          Register Account →
+        </Link>
+      </p>
+    </div>
   )
 }

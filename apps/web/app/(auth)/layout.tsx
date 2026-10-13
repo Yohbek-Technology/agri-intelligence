@@ -1,34 +1,109 @@
-import React from 'react'
+'use client'
+
+import React, { useState, useEffect } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
+import { motion, AnimatePresence } from 'framer-motion'
 import { BrandLogo } from '../../components/ui/brandLogo'
 
-export default function AuthLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+const STATS = [
+  { icon: '👨‍🌾', value: '412', label: 'Farmers Connected' },
+  { icon: '🎯', value: '98.4%', label: 'Precision Rate' },
+  { icon: '🌾', value: '34.2 Qt/Ha', label: 'Avg Yield' },
+]
+
+export default function AuthLayout({ children }: { children: React.ReactNode }) {
+  const [statIndex, setStatIndex] = useState(0)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setStatIndex((prev) => (prev + 1) % STATS.length)
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [])
+
+  const current = STATS[statIndex]
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-surface-subtle to-background flex flex-col justify-between p-4 sm:p-6 relative overflow-hidden">
-      <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-accent/10 blur-3xl pointer-events-none" />
+    <div className="flex min-h-screen">
+      {/* ── Left decorative panel (hidden on mobile) ── */}
+      <div className="hidden lg:flex lg:w-2/5 relative overflow-hidden">
+        {/* Background image */}
+        <Image
+          src="/images/hero-bg.jpg"
+          alt="Agricultural field"
+          fill
+          style={{ objectFit: 'cover' }}
+          priority
+        />
 
-      <header className="w-full max-w-5xl mx-auto flex items-center justify-between py-2">
-        <BrandLogo size="md" />
-        <Link
-          href="/"
-          className="text-xs font-mono font-semibold text-text-muted hover:text-text-primary px-3 py-1.5 rounded-xl border border-border bg-surface shadow-sm transition-all"
+        {/* Dark green overlay */}
+        <div className="absolute inset-0 bg-[#0D1F0B]/75" />
+
+        {/* Decorative SVG field lines */}
+        <svg
+          className="absolute inset-0 w-full h-full opacity-10 pointer-events-none"
+          xmlns="http://www.w3.org/2000/svg"
+          preserveAspectRatio="none"
         >
-          ← Return to Public Portal
-        </Link>
-      </header>
+          <path d="M0 200 Q200 100 400 200 T800 200" stroke="#6EE22A" strokeWidth="1" fill="none" />
+          <path d="M0 350 Q200 250 400 350 T800 350" stroke="#6EE22A" strokeWidth="1" fill="none" />
+          <path d="M0 500 Q200 400 400 500 T800 500" stroke="#6EE22A" strokeWidth="1" fill="none" />
+        </svg>
 
-      <main className="flex-1 flex items-center justify-center py-6 sm:py-10 relative z-10">
-        {children}
-      </main>
+        {/* Panel content */}
+        <div className="absolute inset-0 flex flex-col justify-between p-10 z-10">
+          {/* Top: brand logo */}
+          <BrandLogo size="lg" inverted />
 
-      <footer className="w-full max-w-5xl mx-auto py-2 text-center text-[11px] font-mono text-text-muted">
-        Autonomous Agricultural Intelligence & Extension System // Adama Jurisdiction
-      </footer>
+          {/* Middle: rotating stat */}
+          <div className="flex-1 flex items-center justify-center">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={statIndex}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.4 }}
+                className="text-center"
+              >
+                <div className="text-5xl mb-4">{current.icon}</div>
+                <div className="text-5xl font-bold text-white font-mono mb-2">{current.value}</div>
+                <div className="text-white/70 text-sm font-mono uppercase tracking-widest">{current.label}</div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* Bottom: tagline */}
+          <p className="text-white/50 text-xs font-mono">
+            Adama Agricultural Zone — Ethiopia
+          </p>
+        </div>
+      </div>
+
+      {/* ── Right content panel ── */}
+      <div className="w-full lg:w-3/5 flex flex-col min-h-screen bg-[var(--color-surface)]">
+        {/* Mobile top bar */}
+        <div className="flex lg:hidden items-center justify-between px-5 py-4 border-b border-[var(--color-border)]">
+          <BrandLogo size="sm" />
+          <Link
+            href="/"
+            className="text-xs font-mono font-semibold text-text-muted hover:text-text-primary transition-colors"
+          >
+            ← Portal
+          </Link>
+        </div>
+
+        {/* Main content */}
+        <main className="flex-1 flex items-center justify-center px-6 py-10 overflow-y-auto">
+          {children}
+        </main>
+
+        {/* Right panel footer */}
+        <footer className="py-4 text-center text-[10px] font-mono text-text-faint">
+          © {new Date().getFullYear()} AgriIntel Ethiopia. All rights reserved.
+        </footer>
+      </div>
     </div>
   )
 }

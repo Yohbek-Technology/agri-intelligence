@@ -1,13 +1,14 @@
 'use client'
 
-import React, { Suspense } from 'react'
+import React, { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
+import { PasswordResetRequestSchema, PasswordResetConfirmSchema } from '@repo/shared'
 import { usePasswordReset } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Notice } from '@/components/ui/notice'
-import { BrandLogo } from '@/components/ui/brandLogo'
+import { PasswordStrength } from '@/components/ui/passwordStrength'
 
 function ResetPasswordContent() {
   const {
@@ -26,109 +27,187 @@ function ResetPasswordContent() {
     handleConfirmSubmit,
   } = usePasswordReset()
 
+  const [liveErrors, setLiveErrors] = useState<Record<string, string>>({})
+
+  const onPhoneChange = (v: string) => {
+    setPhoneNumber(v)
+    const r = PasswordResetRequestSchema.shape.phoneNumber.safeParse(v)
+    setLiveErrors((p) => ({ ...p, phoneNumber: r.success ? '' : (r.error.issues[0]?.message ?? '') }))
+  }
+
+  const onCodeChange = (v: string) => {
+    setCode(v)
+    const valid = v.length === 6 && /^[0-9]{6}$/.test(v)
+    setLiveErrors((p) => ({
+      ...p,
+      code: valid ? '' : v.length > 0 ? 'Must be exactly 6 digits' : '',
+    }))
+  }
+
+  const onNewPasswordChange = (v: string) => {
+    setNewPassword(v)
+    const r = PasswordResetConfirmSchema.shape.newPassword.safeParse(v)
+    setLiveErrors((p) => {
+      const next: Record<string, string> = {
+        ...p,
+        newPassword: r.success ? '' : (r.error.issues[0]?.message ?? ''),
+      }
+      if (confirmPassword) {
+        next.confirmPassword = v === confirmPassword ? '' : 'Passwords do not match'
+      }
+      return next
+    })
+  }
+
+  const onConfirmPasswordChange = (v: string) => {
+    setConfirmPassword(v)
+    setLiveErrors((p) => ({
+      ...p,
+      confirmPassword: v === newPassword ? '' : v.length > 0 ? 'Passwords do not match' : '',
+    }))
+  }
+
+  if (successMessage) {
+    return (
+      <div className="max-w-md w-full mx-auto">
+        <motion.div
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+          className="flex flex-col items-center justify-center gap-4 py-12"
+        >
+          <div className="w-20 h-20 rounded-full bg-[var(--color-success-light)] border-2 border-[var(--color-success)] flex items-center justify-center">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+              <motion.path
+                d="M10 20 L17 28 L30 13"
+                stroke="var(--color-success)"
+                strokeWidth="3"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold text-text-primary">Password Updated</h2>
+          <p className="text-sm text-text-muted text-center">{successMessage}</p>
+          <Link
+            href="/signIn"
+            className="text-xs font-mono font-bold text-primary hover:text-primary-hover transition-colors"
+          >
+            Go to Sign In →
+          </Link>
+        </motion.div>
+      </div>
+    )
+  }
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35 }}
-      className="w-full max-w-md mx-auto"
-    >
-      <div className="bg-white border border-border/80 shadow-2xl rounded-3xl p-6 sm:p-8 backdrop-blur-xl">
-        <div className="text-center mb-6">
-          <div className="flex justify-center mb-4">
-            <BrandLogo size="lg" showSubtitle={false} />
-          </div>
-          <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight font-mono uppercase">
-            Reset Password
-          </h1>
-          <p className="text-xs sm:text-sm text-text-muted mt-1">
-            Submit SMS recovery code and establish new password
-          </p>
-        </div>
+    <div className="max-w-md w-full mx-auto space-y-6">
+      {/* Heading */}
+      <div>
+        <h1 className="text-2xl font-bold text-text-primary">Set New Password</h1>
+        <p className="text-sm text-text-muted mt-1">
+          Enter your recovery code and choose a strong new password.
+        </p>
+      </div>
 
-        {generalError && (
-          <div className="mb-5">
-            <Notice type="error" message={generalError} />
-          </div>
-        )}
+      {/* General error */}
+      {generalError && <Notice type="error" message={generalError} />}
 
-        {successMessage && (
-          <div className="mb-5">
-            <Notice type="success" message={successMessage} />
-          </div>
-        )}
+      {/* Form */}
+      <form onSubmit={handleConfirmSubmit} className="space-y-4">
+        <Input
+          label="Phone Number"
+          type="tel"
+          placeholder="+251911000000"
+          value={phoneNumber}
+          onChange={(e) => onPhoneChange(e.target.value)}
+          error={liveErrors.phoneNumber || fieldErrors.phoneNumber}
+          success={!!(phoneNumber && !liveErrors.phoneNumber && !fieldErrors.phoneNumber)}
+          disabled={isLoading}
+        />
 
-        <form onSubmit={handleConfirmSubmit} className="space-y-4">
-          <Input
-            label="Phone Number"
-            type="tel"
-            placeholder="+251911000000"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-            error={fieldErrors.phoneNumber}
-            disabled={isLoading}
-          />
+        <Input
+          label="6-Digit Recovery Code"
+          type="text"
+          inputMode="numeric"
+          maxLength={6}
+          placeholder="123456"
+          value={code}
+          onChange={(e) => onCodeChange(e.target.value)}
+          error={liveErrors.code || fieldErrors.code}
+          success={!!(code && !liveErrors.code && !fieldErrors.code)}
+          disabled={isLoading}
+          hint={!liveErrors.code && !fieldErrors.code ? 'Check your SMS inbox' : undefined}
+        />
 
-          <Input
-            label="6-Digit SMS Recovery Code"
-            type="text"
-            inputMode="numeric"
-            maxLength={6}
-            placeholder="123456"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            error={fieldErrors.code}
-            disabled={isLoading}
-            hint="Check your SMS inbox"
-          />
-
+        <div className="space-y-2">
           <Input
             label="New Password"
             type="password"
             placeholder="Min 10 characters (upper, lower, number)"
             value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            error={fieldErrors.newPassword}
+            onChange={(e) => onNewPasswordChange(e.target.value)}
+            error={liveErrors.newPassword || fieldErrors.newPassword}
+            success={!!(newPassword && !liveErrors.newPassword && !fieldErrors.newPassword)}
             disabled={isLoading}
           />
-
-          <Input
-            label="Confirm New Password"
-            type="password"
-            placeholder="Repeat new password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            error={fieldErrors.confirmPassword}
-            disabled={isLoading}
-          />
-
-          <Button
-            type="submit"
-            variant="primary"
-            size="lg"
-            fullWidth
-            isLoading={isLoading}
-          >
-            Confirm & Revoke Other Sessions
-          </Button>
-        </form>
-
-        <div className="mt-6 pt-5 border-t border-border-subtle text-center">
-          <Link
-            href="/signIn"
-            className="text-xs font-mono font-bold text-text-muted hover:text-text-primary transition-colors"
-          >
-            ← Return to Sign In
-          </Link>
+          <PasswordStrength password={newPassword} />
         </div>
-      </div>
-    </motion.div>
+
+        <Input
+          label="Confirm New Password"
+          type="password"
+          placeholder="Repeat new password"
+          value={confirmPassword}
+          onChange={(e) => onConfirmPasswordChange(e.target.value)}
+          error={liveErrors.confirmPassword || fieldErrors.confirmPassword}
+          success={
+            !!(
+              confirmPassword &&
+              !liveErrors.confirmPassword &&
+              !fieldErrors.confirmPassword
+            )
+          }
+          disabled={isLoading}
+        />
+
+        <Button
+          type="submit"
+          variant="primary"
+          size="lg"
+          fullWidth
+          isLoading={isLoading}
+        >
+          Reset &amp; Revoke Sessions →
+        </Button>
+      </form>
+
+      {/* Back link */}
+      <p className="text-xs text-text-muted text-center">
+        <Link
+          href="/signIn"
+          className="font-mono font-bold text-text-muted hover:text-text-primary transition-colors"
+        >
+          ← Return to Sign In
+        </Link>
+      </p>
+    </div>
   )
 }
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<div className="min-h-[300px] flex items-center justify-center font-mono text-xs text-text-muted">Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-[300px] flex items-center justify-center font-mono text-xs text-text-muted">
+          Loading...
+        </div>
+      }
+    >
       <ResetPasswordContent />
     </Suspense>
   )
