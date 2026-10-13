@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import Link from 'next/link'
 import { PhoneSignUpSchema, type AppLanguage } from '@repo/shared'
 import { useSignUpForm } from '@/hooks/useAuth'
@@ -24,11 +24,54 @@ export default function SignUpPage() {
   } = useSignUpForm()
 
   const [liveErrors, setLiveErrors] = useState<Record<string, string>>({})
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null)
+  const [usernameChecking, setUsernameChecking] = useState(false)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const onNameChange = (v: string) => {
     setField('name', v)
     const r = PhoneSignUpSchema.shape.name.safeParse(v)
     setLiveErrors((p) => ({ ...p, name: r.success ? '' : (r.error.issues[0]?.message ?? '') }))
+  }
+
+  const onUsernameChange = (v: string) => {
+    const lower = v.toLowerCase()
+    setField('username', lower)
+    setUsernameAvailable(null)
+    const r = PhoneSignUpSchema.shape.username.safeParse(lower)
+    if (!r.success) {
+      setLiveErrors((p) => ({ ...p, username: r.error.issues[0]?.message ?? '' }))
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+      return
+    }
+    setLiveErrors((p) => ({ ...p, username: '' }))
+
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    if (!lower) return
+
+    debounceRef.current = setTimeout(async () => {
+      setUsernameChecking(true)
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000'}/api/auth/is-username-available`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: lower }),
+          }
+        )
+        const data = await res.json() as { available?: boolean }
+        const available = data?.available ?? false
+        setUsernameAvailable(available)
+        if (!available) {
+          setLiveErrors((p) => ({ ...p, username: 'Username already taken' }))
+        }
+      } catch {
+        setUsernameAvailable(null)
+      } finally {
+        setUsernameChecking(false)
+      }
+    }, 400)
   }
 
   const onPhoneChange = (v: string) => {
@@ -91,6 +134,28 @@ export default function SignUpPage() {
         />
 
         <Input
+          label="Username"
+          type="text"
+          placeholder="your_username"
+          value={formData.username}
+          onChange={(e) => onUsernameChange(e.target.value)}
+          error={liveErrors.username || fieldErrors.username}
+          success={!!(formData.username && usernameAvailable === true && !liveErrors.username)}
+          hint={
+            usernameChecking
+              ? 'Checking availability...'
+              : usernameAvailable === true && !liveErrors.username
+              ? '✓ Available'
+              : 'Lowercase letters, numbers, and underscores only'
+          }
+          disabled={isLoading}
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          style={{ textTransform: 'lowercase' }}
+        />
+
+        <Input
           label="Phone Number"
           type="tel"
           placeholder="+251911000000"
@@ -134,6 +199,7 @@ export default function SignUpPage() {
           size="lg"
           fullWidth
           isLoading={isLoading}
+          disabled={usernameAvailable !== true || usernameChecking}
         >
           Continue to SMS Verification →
         </Button>

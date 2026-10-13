@@ -46,11 +46,11 @@ export function Navbar({ isAuthenticated, dashboardPath, role }: NavbarProps) {
         style={{ scaleX: scrollYProgress }} 
       />
 
-      <header className="fixed top-0 inset-x-0 z-50 pt-3 px-3 sm:px-6 pointer-events-none">
-        <nav className="pointer-events-auto max-w-7xl mx-auto bg-white/92 backdrop-blur-xl border border-[var(--color-border)] rounded-full px-4 sm:px-6 py-2.5 shadow-lg transition-all duration-300 hover:border-[var(--color-primary)]">
+      <header className="fixed top-0 inset-x-0 z-50 pt-0.5 px-3 sm:px-5 pointer-events-none">
+        <nav className="pointer-events-auto max-w-7xl mx-auto bg-white/92 backdrop-blur-xl border border-[var(--color-border)] rounded-full px-4 sm:px-5 py-0 shadow-md transition-all duration-300 hover:border-[var(--color-primary)]">
           <div className="flex items-center justify-between gap-4">
             {/* Brand Logo */}
-            <BrandLogo size="md" showSubtitle={false} />
+            <BrandLogo size="xs" showSubtitle={false} className="py-0" />
 
             {/* Desktop Single-Word Navigation Items */}
             <div className="hidden lg:flex items-center gap-7 text-xs font-semibold text-[var(--color-text-muted)]">
@@ -89,7 +89,7 @@ export function Navbar({ isAuthenticated, dashboardPath, role }: NavbarProps) {
             {/* Right Controls: Currency, Language Dropdown, Sign In, Sign Up */}
             <div className="hidden sm:flex items-center gap-3">
               {/* Currency Badge */}
-              <span className="px-2.5 py-1.5 rounded-full bg-[var(--color-surface-subtle)] border border-[var(--color-border)] text-[11px] font-mono font-medium text-[var(--color-text-primary)] select-none">
+              <span className="px-2.5 py-1 rounded-full bg-[var(--color-surface-subtle)] border border-[var(--color-border)] text-[11px] font-mono font-medium text-[var(--color-text-primary)] select-none">
                 ETB
               </span>
 
@@ -98,7 +98,7 @@ export function Navbar({ isAuthenticated, dashboardPath, role }: NavbarProps) {
                 <button
                   type="button"
                   onClick={() => setLangDropdownOpen(!langDropdownOpen)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--color-surface-subtle)] hover:bg-[var(--color-primary-light)] border border-[var(--color-border)] text-[11px] font-medium text-[var(--color-text-primary)] transition-colors cursor-pointer select-none"
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--color-surface-subtle)] hover:bg-[var(--color-primary-light)] border border-[var(--color-border)] text-[11px] font-medium text-[var(--color-text-primary)] transition-colors cursor-pointer select-none"
                   aria-label="Select language"
                 >
                   <Globe className="w-3.5 h-3.5 text-[var(--color-text-muted)]" />
@@ -143,7 +143,7 @@ export function Navbar({ isAuthenticated, dashboardPath, role }: NavbarProps) {
                 <Link href={dashboardPath}>
                   <Button 
                     size="sm" 
-                    className="rounded-full font-medium text-xs bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white whitespace-nowrap cursor-pointer shadow-sm px-4"
+                    className="rounded-full font-medium text-xs bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[#151A14] whitespace-nowrap cursor-pointer shadow-sm px-4 h-8 min-h-0"
                   >
                     Workspace ({role || 'Operator'}) →
                   </Button>
@@ -154,7 +154,7 @@ export function Navbar({ isAuthenticated, dashboardPath, role }: NavbarProps) {
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="rounded-full text-xs font-semibold text-[var(--color-text-primary)] hover:text-[var(--color-primary)] hover:bg-[var(--color-surface-subtle)] whitespace-nowrap cursor-pointer px-4"
+                      className="rounded-full text-xs font-semibold text-[var(--color-text-primary)] hover:text-[var(--color-primary)] hover:bg-[var(--color-surface-subtle)] whitespace-nowrap cursor-pointer px-4 h-8 min-h-0"
                     >
                       Sign In
                     </Button>
@@ -162,7 +162,7 @@ export function Navbar({ isAuthenticated, dashboardPath, role }: NavbarProps) {
                   <Link href="/signUp">
                     <Button 
                       size="sm" 
-                      className="rounded-full font-semibold text-xs bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white px-5 whitespace-nowrap cursor-pointer shadow-sm"
+                      className="rounded-full font-semibold text-xs bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[#151A14] px-5 whitespace-nowrap cursor-pointer shadow-sm h-8 min-h-0"
                     >
                       Sign Up
                     </Button>

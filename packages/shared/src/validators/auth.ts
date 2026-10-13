@@ -15,6 +15,10 @@ export const PhoneSignUpSchema = z.object({
     .regex(PASSWORD_COMPLEXITY_REGEX, 'Password must contain uppercase, lowercase, and a number'),
   name: z.string().min(2, 'Full name must be at least 2 characters').max(120),
   preferredLanguage: z.enum(['am', 'om', 'ti', 'en']).default('am'),
+  username: z.string()
+    .min(3, 'Username must be at least 3 characters')
+    .max(30, 'Username must be 30 characters or less')
+    .regex(/^[a-zA-Z0-9_]+$/, 'Only letters, numbers, and underscores allowed'),
 })
 
 export const PhoneSignInSchema = z.object({
@@ -43,6 +47,7 @@ export const PhoneOtpVerifySchema = z.object({
   password: z.string().optional(),
   name: z.string().optional(),
   preferredLanguage: z.enum(['am', 'om', 'ti', 'en']).optional(),
+  username: z.string().optional(),
 })
 
 export const PasswordResetRequestSchema = z.object({
@@ -96,3 +101,12 @@ export const UserProfileUpdateSchema = z.object({
 export const LanguageSelectSchema = z.object({
   language: z.enum(['am', 'om', 'ti', 'en']),
 })
+
+export const UsernameSignInSchema = z.object({
+  username: z.string()
+    .min(3, 'Username must be at least 3 characters')
+    .max(30, 'Username must be 30 characters or less')
+    .regex(/^[a-z0-9_]+$/, 'Username must be lowercase — no uppercase letters allowed'),
+  password: z.string().min(1, 'Password is required'),
+})
+export type UsernameSignIn = z.infer<typeof UsernameSignInSchema>

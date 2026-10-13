@@ -9,6 +9,7 @@ export const users = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     name: varchar('name', { length: 255 }).notNull(),
+    username: varchar('username', { length: 50 }).unique(),
     email: varchar('email', { length: 255 }).notNull().unique(),
     emailVerified: boolean('email_verified').default(false).notNull(),
     image_url: varchar('image_url', { length: 500 }),

@@ -9,6 +9,7 @@ export {
   AdminTwoFactorVerifySchema,
   UserProfileUpdateSchema,
   LanguageSelectSchema,
+  UsernameSignInSchema,
 } from './validators/auth.js'
 
 export type {
@@ -30,6 +31,8 @@ export type {
   TwoFactorChallenge,
   OfficeConfig,
 } from './types/auth.js'
+
+export type { UsernameSignIn } from './validators/auth.js'
 
 export type {
   AITier,

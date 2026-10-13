@@ -7,9 +7,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { BrandLogo } from '../../components/ui/brandLogo'
 
 const STATS = [
-  { icon: '👨‍🌾', value: '412', label: 'Farmers Connected' },
+  { icon: '👨‍🌾', value: '12,400+', label: 'Farmers Enrolled' },
   { icon: '🎯', value: '98.4%', label: 'Precision Rate' },
-  { icon: '🌾', value: '34.2 Qt/Ha', label: 'Avg Yield' },
+  { icon: '🌾', value: '34.2 Qt/Ha', label: 'Avg Yield Gain' },
 ]
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
@@ -25,9 +25,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   const current = STATS[statIndex]
 
   return (
-    <div className="flex min-h-screen">
+    <div className="h-screen overflow-hidden flex">
       {/* ── Left decorative panel (hidden on mobile) ── */}
-      <div className="hidden lg:flex lg:w-2/5 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-2/5 relative overflow-hidden h-screen sticky top-0">
         {/* Background image */}
         <Image
           src="/images/hero-bg.jpg"
@@ -76,13 +76,13 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
           {/* Bottom: tagline */}
           <p className="text-white/50 text-xs font-mono">
-            Adama Agricultural Zone — Ethiopia
+            National Agricultural Management System
           </p>
         </div>
       </div>
 
       {/* ── Right content panel ── */}
-      <div className="w-full lg:w-3/5 flex flex-col min-h-screen bg-[var(--color-surface)]">
+      <div className="w-full lg:w-3/5 flex flex-col h-screen overflow-y-auto bg-[var(--color-surface)]">
         {/* Mobile top bar */}
         <div className="flex lg:hidden items-center justify-between px-5 py-4 border-b border-[var(--color-border)]">
           <BrandLogo size="sm" />
@@ -95,7 +95,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </div>
 
         {/* Main content */}
-        <main className="flex-1 flex items-center justify-center px-6 py-10 overflow-y-auto">
+        <main className="flex-1 flex items-center justify-center px-6 py-10">
           {children}
         </main>
 

@@ -5,11 +5,13 @@ import {
   PasswordResetRequestSchema,
   PasswordResetConfirmSchema,
   PhoneUtils,
+  UsernameSignInSchema,
   type PhoneSignIn,
   type PhoneOtpRequest,
   type PhoneOtpVerify,
   type PasswordResetRequest,
   type PasswordResetConfirm,
+  type UsernameSignIn,
 } from '@repo/shared'
 import { authClient } from '@/lib/authClient'
 import { mapAuthError } from '@/lib/errorMapper'
@@ -39,6 +41,23 @@ export const authService = {
         return { success: false, error: mapAuthError(res.error) }
       }
 
+      return { success: true, data: res.data }
+    } catch (err) {
+      return { success: false, error: mapAuthError(err) }
+    }
+  },
+
+  async signInWithUsername(input: UsernameSignIn): Promise<ServiceResult> {
+    const parseResult = UsernameSignInSchema.safeParse(input)
+    if (!parseResult.success) {
+      return { success: false, error: parseResult.error.issues[0]?.message }
+    }
+    try {
+      const res = await authClient.signIn.username({
+        username: parseResult.data.username.toLowerCase(),
+        password: parseResult.data.password,
+      })
+      if (res.error) return { success: false, error: mapAuthError(res.error) }
       return { success: true, data: res.data }
     } catch (err) {
       return { success: false, error: mapAuthError(err) }
@@ -77,6 +96,9 @@ export const authService = {
     const normalizedPhone = PhoneUtils.normalize(parseResult.data.phoneNumber)
 
     try {
+      // Do NOT pass username in the verify payload — the username plugin's
+      // createUser hook intercepts it and throws a uniqueness conflict.
+      // We update the username separately after verification succeeds.
       const verifyPayload = {
         phoneNumber: normalizedPhone,
         code: parseResult.data.code,
@@ -89,6 +111,18 @@ export const authService = {
 
       if (res.error) {
         return { success: false, error: mapAuthError(res.error) }
+      }
+
+      // Now set the username separately after the user is created & session established
+      if (parseResult.data.username) {
+        const updateRes = await authClient.updateUser({
+          username: parseResult.data.username.toLowerCase(),
+        } as Parameters<typeof authClient.updateUser>[0])
+        if (updateRes.error) {
+          // Username update failed — still return success so user gets in,
+          // but surface the username error as a soft warning
+          return { success: true, data: res.data, error: mapAuthError(updateRes.error) }
+        }
       }
 
       return { success: true, data: res.data }
@@ -106,15 +140,20 @@ export const authService = {
     const normalizedPhone = PhoneUtils.normalize(parseResult.data.phoneNumber)
 
     try {
-      const res = await authClient.phoneNumber.requestPasswordReset({
-        phoneNumber: normalizedPhone,
-      })
-
-      if (res.error) {
-        return { success: false, error: mapAuthError(res.error) }
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000'}/api/auth/phone-number/request-password-reset`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ phoneNumber: normalizedPhone }),
+        }
+      )
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        return { success: false, error: mapAuthError(data) }
       }
-
-      return { success: true, data: res.data }
+      return { success: true, data }
     } catch (err) {
       return { success: false, error: mapAuthError(err) }
     }
@@ -129,19 +168,24 @@ export const authService = {
     const normalizedPhone = PhoneUtils.normalize(parseResult.data.phoneNumber)
 
     try {
-      const resetPayload = {
-        phoneNumber: normalizedPhone,
-        otp: parseResult.data.code,
-        newPassword: parseResult.data.newPassword,
-      } as unknown as Parameters<typeof authClient.phoneNumber.resetPassword>[0]
-
-      const res = await authClient.phoneNumber.resetPassword(resetPayload)
-
-      if (res.error) {
-        return { success: false, error: mapAuthError(res.error) }
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000'}/api/auth/phone-number/reset-password`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            phoneNumber: normalizedPhone,
+            otp: parseResult.data.code,
+            newPassword: parseResult.data.newPassword,
+          }),
+        }
+      )
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        return { success: false, error: mapAuthError(data) }
       }
-
-      return { success: true, data: res.data }
+      return { success: true, data }
     } catch (err) {
       return { success: false, error: mapAuthError(err) }
     }

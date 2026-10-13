@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
-  PhoneSignInSchema,
+  UsernameSignInSchema,
   PhoneSignUpSchema,
   PhoneOtpRequestSchema,
   PhoneOtpVerifySchema,
@@ -12,7 +12,7 @@ import {
   PhoneUtils,
   type UserRole,
   type AppLanguage,
-  type PhoneSignIn,
+  type UsernameSignIn,
   type PhoneSignUp,
   type PhoneOtpVerify,
   type AuthUser,
@@ -70,11 +70,11 @@ export function useSignInForm() {
   const router = useRouter()
   const { refetch } = useAuth()
 
-  const [formData, setFormData] = useState<PhoneSignIn>({
-    phoneNumber: '',
+  const [formData, setFormData] = useState<UsernameSignIn>({
+    username: '',
     password: '',
   })
-  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof PhoneSignIn, string>>>({})
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof UsernameSignIn, string>>>({})
   const [generalError, setGeneralError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [failedAttempts, setFailedAttempts] = useState<number>(0)
@@ -95,7 +95,7 @@ export function useSignInForm() {
   }, [lockoutSecondsRemaining])
 
   const setField = useCallback(
-    (field: keyof PhoneSignIn, value: string) => {
+    (field: keyof UsernameSignIn, value: string) => {
       setFormData((prev) => ({ ...prev, [field]: value }))
       setFieldErrors((prev) => ({ ...prev, [field]: undefined }))
       setGeneralError(null)
@@ -113,11 +113,11 @@ export function useSignInForm() {
         return
       }
 
-      const parseResult = PhoneSignInSchema.safeParse(formData)
+      const parseResult = UsernameSignInSchema.safeParse(formData)
       if (!parseResult.success) {
-        const errors: Partial<Record<keyof PhoneSignIn, string>> = {}
+        const errors: Partial<Record<keyof UsernameSignIn, string>> = {}
         for (const issue of parseResult.error.issues) {
-          const path = issue.path[0] as keyof PhoneSignIn
+          const path = issue.path[0] as keyof UsernameSignIn
           if (path && !errors[path]) {
             errors[path] = issue.message
           }
@@ -129,7 +129,7 @@ export function useSignInForm() {
       setIsLoading(true)
       setGeneralError(null)
 
-      const result = await authService.signIn(parseResult.data)
+      const result = await authService.signInWithUsername(parseResult.data)
       setIsLoading(false)
 
       if (!result.success) {
@@ -179,6 +179,7 @@ export function useSignUpForm() {
     password: '',
     name: '',
     preferredLanguage: 'am',
+    username: '',
   })
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof PhoneSignUp, string>>>({})
   const [generalError, setGeneralError] = useState<string | null>(null)
@@ -353,6 +354,7 @@ export function useOtpVerification() {
       password: registrationDraft?.password || '',
       name: registrationDraft?.name || '',
       preferredLanguage: registrationDraft?.preferredLanguage || 'am',
+      username: registrationDraft?.username || undefined,
     }
 
     const validation = PhoneOtpVerifySchema.safeParse(payload)

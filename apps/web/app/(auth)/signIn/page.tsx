@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
-import { PhoneSignInSchema } from '@repo/shared'
+import { UsernameSignInSchema } from '@repo/shared'
 import { useSignInForm } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -22,18 +22,22 @@ export default function SignInPage() {
 
   const [liveErrors, setLiveErrors] = useState<Record<string, string>>({})
 
-  const onPhoneChange = (value: string) => {
-    setField('phoneNumber', value)
-    const r = PhoneSignInSchema.shape.phoneNumber.safeParse(value)
+  const onUsernameChange = (value: string) => {
+    setField('username', value)
+    if (value && value !== value.toLowerCase()) {
+      setLiveErrors((prev) => ({ ...prev, username: 'Username must be lowercase' }))
+      return
+    }
+    const r = UsernameSignInSchema.shape.username.safeParse(value)
     setLiveErrors((prev) => ({
       ...prev,
-      phoneNumber: r.success ? '' : (r.error.issues[0]?.message ?? ''),
+      username: r.success ? '' : (r.error.issues[0]?.message ?? ''),
     }))
   }
 
   const onPasswordChange = (value: string) => {
     setField('password', value)
-    const r = PhoneSignInSchema.shape.password.safeParse(value)
+    const r = UsernameSignInSchema.shape.password.safeParse(value)
     setLiveErrors((prev) => ({
       ...prev,
       password: r.success ? '' : (r.error.issues[0]?.message ?? ''),
@@ -64,15 +68,15 @@ export default function SignInPage() {
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
-          label="Phone Number"
-          type="tel"
-          placeholder="+251911000000"
-          value={formData.phoneNumber}
-          onChange={(e) => onPhoneChange(e.target.value)}
-          error={liveErrors.phoneNumber || fieldErrors.phoneNumber}
-          success={!!(formData.phoneNumber && !liveErrors.phoneNumber && !fieldErrors.phoneNumber)}
+          label="Username"
+          type="text"
+          placeholder="your_username"
+          value={formData.username}
+          onChange={(e) => onUsernameChange(e.target.value)}
+          error={liveErrors.username || fieldErrors.username}
+          success={!!(formData.username && !liveErrors.username && !fieldErrors.username)}
           disabled={isLoading || isLockedOut}
-          hint={!liveErrors.phoneNumber && !fieldErrors.phoneNumber ? 'Format: +251 9... or 09...' : undefined}
+          hint={!liveErrors.username && !fieldErrors.username ? 'Letters, numbers, and underscores only' : undefined}
         />
 
         {/* Password with inline forgot link */}
@@ -117,7 +121,7 @@ export default function SignInPage() {
           <div className="flex items-center gap-2">
             <span>🌤</span>
             <span className="text-xs font-mono font-bold text-text-muted uppercase tracking-wider">
-              Adama Region
+              Field Advisory
             </span>
           </div>
           <span className="text-[10px] font-mono text-text-faint bg-[var(--color-border)] px-1.5 py-0.5 rounded-full uppercase tracking-wide">
