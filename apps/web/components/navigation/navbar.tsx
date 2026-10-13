@@ -46,8 +46,8 @@ export function Navbar({ isAuthenticated, dashboardPath, role }: NavbarProps) {
         style={{ scaleX: scrollYProgress }} 
       />
 
-      <header className="sticky top-0 z-50 pt-2 px-3 sm:px-6 pointer-events-none">
-        <nav className="pointer-events-auto max-w-7xl mx-auto bg-white/90 backdrop-blur-xl border border-[var(--color-border)] rounded-full px-4 sm:px-6 py-2.5 shadow-lg transition-all duration-300 hover:border-[var(--color-primary)]">
+      <header className="fixed top-0 inset-x-0 z-50 pt-3 px-3 sm:px-6 pointer-events-none">
+        <nav className="pointer-events-auto max-w-7xl mx-auto bg-white/92 backdrop-blur-xl border border-[var(--color-border)] rounded-full px-4 sm:px-6 py-2.5 shadow-lg transition-all duration-300 hover:border-[var(--color-primary)]">
           <div className="flex items-center justify-between gap-4">
             {/* Brand Logo */}
             <BrandLogo size="md" showSubtitle={false} />
