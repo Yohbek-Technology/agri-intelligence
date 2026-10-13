@@ -46,8 +46,8 @@ export function Navbar({ isAuthenticated, dashboardPath, role }: NavbarProps) {
         style={{ scaleX: scrollYProgress }} 
       />
 
-      <header className="fixed top-0 inset-x-0 z-50 pt-0.5 px-3 sm:px-5 pointer-events-none">
-        <nav className="pointer-events-auto max-w-7xl mx-auto bg-white/92 backdrop-blur-xl border border-[var(--color-border)] rounded-full px-4 sm:px-5 py-0 shadow-md transition-all duration-300 hover:border-[var(--color-primary)]">
+      <header className="fixed top-0 inset-x-0 z-50 pt-2 px-3 sm:px-5 pointer-events-none">
+        <nav className="pointer-events-auto max-w-7xl mx-auto bg-white/92 backdrop-blur-xl border border-[var(--color-border)] rounded-full px-4 sm:px-5 py-2.5 shadow-md transition-all duration-300 hover:border-[var(--color-primary)]">
           <div className="flex items-center justify-between gap-4">
             {/* Brand Logo */}
             <BrandLogo size="xs" showSubtitle={false} className="py-0" />
@@ -162,7 +162,7 @@ export function Navbar({ isAuthenticated, dashboardPath, role }: NavbarProps) {
                   <Link href="/signUp">
                     <Button 
                       size="sm" 
-                      className="rounded-full font-semibold text-xs bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[#151A14] px-5 whitespace-nowrap cursor-pointer shadow-sm h-8 min-h-0"
+                      className="rounded-full font-semibold text-xs bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white px-5 whitespace-nowrap cursor-pointer shadow-sm h-8 min-h-0"
                     >
                       Sign Up
                     </Button>

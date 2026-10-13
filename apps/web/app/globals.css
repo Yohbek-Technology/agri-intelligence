@@ -1,44 +1,45 @@
 @import "tailwindcss";
 
 :root {
+  /* Surfaces */
   --color-background: #FAF8F4;
   --color-surface: #FFFFFF;
   --color-surface-subtle: #F3EFE6;
   --color-surface-elevated: #FFFFFF;
   --color-surface-glass: rgba(255, 255, 255, 0.82);
 
-  /* --color-primary: #274422;
+  /* Primary — dark forest green, consistent across all browsers */
+  --color-primary: #274422;
   --color-primary-hover: #1C3318;
   --color-primary-subtle: #3D6636;
-  --color-primary-light: #EBF3EA; */
+  --color-primary-light: #EBF3EA;
 
-  /* Bright lime green alternative — swap these in if you want a modern/vibrant look:*/
-  --color-primary: #6EE22A;
-  --color-primary-hover: #58C41E;
-  --color-primary-subtle: #85E945;
-  --color-primary-light: #F0FDE6;
- 
-
+  /* Accent — golden amber */
   --color-accent: #C78326;
   --color-accent-hover: #AB6E1B;
   --color-accent-subtle: #DE9B3E;
   --color-accent-light: #FDF4E5;
 
+  /* Danger */
   --color-danger: #9E3520;
   --color-danger-subtle: #842A17;
   --color-danger-light: #FBECE8;
 
+  /* Success */
   --color-success: #1E6F38;
   --color-success-light: #EAF7EE;
 
+  /* Text */
   --color-text-primary: #151A14;
   --color-text-muted: #566153;
   --color-text-faint: #899386;
 
+  /* Borders */
   --color-border: #DFD9CB;
   --color-border-strong: #242E22;
   --color-border-subtle: #EAE6DB;
 
+  /* Typography */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 }
@@ -69,10 +70,9 @@ input, button, select, textarea {
   -webkit-backdrop-filter: blur(14px);
 }
 
-/* Bright lime green alternative: rgba(110, 226, 42, 0.25) */
 .ambient-glow-primary {
   box-shadow: 0 0 35px -8px rgba(39, 68, 34, 0.18);
-} 
+}
 
 .ambient-glow-accent {
   box-shadow: 0 0 35px -8px rgba(199, 131, 38, 0.22);

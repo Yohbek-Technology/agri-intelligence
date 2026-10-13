@@ -3,7 +3,7 @@ import { AppProviders } from '../providers/appProviders'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'AgriIntelligence — Autonomous Agricultural Extension Operating System',
+  title: 'AgriIntel | Autonomous Agricultural Extension Operating System',
   description:
     'Autonomous Agricultural Intelligence and Extension Operating System for Highland Vertisol Agronomy, Adama Woreda Municipal Extension Branch.',
 }
