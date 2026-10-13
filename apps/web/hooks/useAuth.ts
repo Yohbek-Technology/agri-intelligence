@@ -368,6 +368,11 @@ export function useOtpVerification() {
     setIsVerifying(false)
 
     if (!result.success) {
+      // If phone is already registered, redirect back to signup with error in URL
+      if (result.error?.includes('PHONE_ALREADY_REGISTERED') || result.error?.toLowerCase().includes('already registered')) {
+        router.push('/signUp?error=phone_taken')
+        return
+      }
       setError(result.error || 'Verification failed. Please retry.')
       return
     }
@@ -516,6 +521,7 @@ export function usePasswordReset() {
         phoneNumber,
         code,
         newPassword,
+        confirmPassword,
       })
 
       if (!parseResult.success) {

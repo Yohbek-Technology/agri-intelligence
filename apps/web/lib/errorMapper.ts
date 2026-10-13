@@ -40,6 +40,10 @@ function normalizeErrorMessage(raw: string): string {
     return 'Incorrect 6-digit verification code. Please check your SMS inbox.'
   }
 
+  if (lower.includes('already registered') || lower.includes('phone_already_registered')) {
+    return 'This phone number is already registered. Please sign in instead.'
+  }
+
   if (lower.includes('already exists') || lower.includes('duplicate')) {
     return 'This phone number is already registered. Please sign in instead.'
   }

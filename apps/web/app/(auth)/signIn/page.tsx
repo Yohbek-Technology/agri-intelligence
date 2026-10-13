@@ -44,6 +44,16 @@ export default function SignInPage() {
     }))
   }
 
+  const canSubmit =
+    !isLoading &&
+    !isLockedOut &&
+    !!formData.username &&
+    !!formData.password &&
+    !liveErrors.username &&
+    !liveErrors.password &&
+    !fieldErrors.username &&
+    !fieldErrors.password
+
   return (
     <div className="max-w-md w-full mx-auto space-y-6">
       {/* Heading */}
@@ -109,7 +119,7 @@ export default function SignInPage() {
           size="lg"
           fullWidth
           isLoading={isLoading}
-          disabled={isLockedOut}
+          disabled={!canSubmit}
         >
           Sign In →
         </Button>

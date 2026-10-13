@@ -7,6 +7,7 @@ import { requestId } from 'hono/request-id'
 import { auth } from '@/config/auth.js'
 import { initSocket } from '@/config/socket.js'
 import { officeRouter } from '@/routes/office.js'
+import { authExtraRouter } from '@/routes/auth-extra.js'
 import { pool } from '@/config/db.js'
 
 const app = new Hono()
@@ -27,6 +28,7 @@ app.use(
 
 app.on(['POST', 'GET'], '/api/auth/*', (c) => auth.handler(c.req.raw))
 app.route('/api/v1/offices', officeRouter)
+app.route('/api/v1/auth', authExtraRouter)
 
 app.get('/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOString() }))
 app.get('/', (c) => c.text('Agricultural Intelligence API is operational'))

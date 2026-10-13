@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, Suspense } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { PhoneSignUpSchema, type AppLanguage } from '@repo/shared'
 import { useSignUpForm } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
@@ -12,7 +13,12 @@ import { PasswordStrength } from '@/components/ui/passwordStrength'
 
 const STEPS = ['Account', 'Verify SMS', 'Dashboard']
 
-export default function SignUpPage() {
+function SignUpContent() {
+  const searchParams = useSearchParams()
+  const phoneError = searchParams.get('error') === 'phone_taken'
+    ? 'This phone number is already registered. Please sign in instead.'
+    : null
+
   const {
     formData,
     fieldErrors,
@@ -45,10 +51,8 @@ export default function SignUpPage() {
       return
     }
     setLiveErrors((p) => ({ ...p, username: '' }))
-
     if (debounceRef.current) clearTimeout(debounceRef.current)
     if (!lower) return
-
     debounceRef.current = setTimeout(async () => {
       setUsernameChecking(true)
       try {
@@ -77,7 +81,22 @@ export default function SignUpPage() {
   const onPhoneChange = (v: string) => {
     setField('phoneNumber', v)
     const r = PhoneSignUpSchema.shape.phoneNumber.safeParse(v)
-    setLiveErrors((p) => ({ ...p, phoneNumber: r.success ? '' : (r.error.issues[0]?.message ?? '') }))
+    if (!r.success) {
+      setLiveErrors((p) => ({ ...p, phoneNumber: r.error.issues[0]?.message ?? '' }))
+      return
+    }
+    setLiveErrors((p) => ({ ...p, phoneNumber: '' }))
+    // Check if phone already registered
+    fetch(
+      `${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000'}/api/v1/auth/check-phone?phone=${encodeURIComponent(v)}`
+    )
+      .then((res) => res.json())
+      .then((data: { exists?: boolean }) => {
+        if (data.exists) {
+          setLiveErrors((p) => ({ ...p, phoneNumber: 'This phone number is already registered. Sign in instead.' }))
+        }
+      })
+      .catch(() => {})
   }
 
   const onPasswordChange = (v: string) => {
@@ -93,9 +112,26 @@ export default function SignUpPage() {
     { value: 'en', label: 'English' },
   ]
 
+  const canSubmit =
+    !isLoading &&
+    !usernameChecking &&
+    usernameAvailable === true &&
+    !!formData.name &&
+    !!formData.username &&
+    !!formData.phoneNumber &&
+    !!formData.password &&
+    !phoneError &&
+    !liveErrors.name &&
+    !liveErrors.username &&
+    !liveErrors.phoneNumber &&
+    !liveErrors.password &&
+    !fieldErrors.name &&
+    !fieldErrors.username &&
+    !fieldErrors.phoneNumber &&
+    !fieldErrors.password
+
   return (
     <div className="max-w-md w-full mx-auto space-y-6">
-      {/* Step indicator */}
       <div className="flex justify-center gap-2">
         {STEPS.map((step, i) => (
           <span
@@ -111,16 +147,15 @@ export default function SignUpPage() {
         ))}
       </div>
 
-      {/* Heading */}
       <div>
         <h1 className="text-2xl font-bold text-text-primary">Join AgriIntel</h1>
         <p className="text-sm text-text-muted mt-1">Start your precision farming journey.</p>
       </div>
 
-      {/* General error */}
+      {/* Phone already taken error — shown when redirected back from verifyOtp */}
+      {phoneError && <Notice type="error" message={phoneError} />}
       {generalError && <Notice type="error" message={generalError} />}
 
-      {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
           label="Full Name"
@@ -150,8 +185,6 @@ export default function SignUpPage() {
           }
           disabled={isLoading}
           autoCapitalize="none"
-          autoCorrect="off"
-          spellCheck={false}
           style={{ textTransform: 'lowercase' }}
         />
 
@@ -164,11 +197,7 @@ export default function SignUpPage() {
           error={liveErrors.phoneNumber || fieldErrors.phoneNumber}
           success={!!(formData.phoneNumber && !liveErrors.phoneNumber && !fieldErrors.phoneNumber)}
           disabled={isLoading}
-          hint={
-            !liveErrors.phoneNumber && !fieldErrors.phoneNumber
-              ? 'Format: +251 9... or 09...'
-              : undefined
-          }
+          hint={!liveErrors.phoneNumber && !fieldErrors.phoneNumber ? 'Format: +251 9... or 09...' : undefined}
         />
 
         <div className="space-y-2">
@@ -199,22 +228,26 @@ export default function SignUpPage() {
           size="lg"
           fullWidth
           isLoading={isLoading}
-          disabled={usernameAvailable !== true || usernameChecking}
+          disabled={!canSubmit}
         >
           Continue to SMS Verification →
         </Button>
       </form>
 
-      {/* Sign-in link */}
       <p className="text-xs text-text-muted text-center">
         Already registered?{' '}
-        <Link
-          href="/signIn"
-          className="font-bold text-primary hover:text-primary-hover font-mono transition-colors"
-        >
+        <Link href="/signIn" className="font-bold text-primary hover:text-primary-hover font-mono transition-colors">
           Sign In →
         </Link>
       </p>
     </div>
+  )
+}
+
+export default function SignUpPage() {
+  return (
+    <Suspense fallback={<div className="min-h-[300px] flex items-center justify-center font-mono text-xs text-text-muted">Loading...</div>}>
+      <SignUpContent />
+    </Suspense>
   )
 }

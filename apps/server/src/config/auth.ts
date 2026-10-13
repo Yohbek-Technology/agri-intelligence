@@ -71,6 +71,13 @@ export const auth = betterAuth({
           `[AgriIntelligence] Your verification code is: ${code}. Valid for 10 minutes. Do not share this code.`
         )
       },
+      sendPasswordResetOTP: ({ phoneNumber: phone, code }) => {
+        const normalized = normalizeEthiopianPhone(phone)
+        void sendSms(
+          normalized,
+          `[AgriIntelligence] Your password reset code is: ${code}. Valid for 10 minutes. Do not share this code.`
+        )
+      },
       phoneNumberValidator: (phone) =>
         ET_E164_REGEX.test(normalizeEthiopianPhone(phone)),
       signUpOnVerification: {
@@ -79,6 +86,15 @@ export const auth = betterAuth({
         getTempName: (phone) => normalizeEthiopianPhone(phone),
       },
       callbackOnVerification: async ({ user }, ctx?: any) => {
+        // Block re-registration: if this phone already has a credential account,
+        // a new signup attempt must be rejected before we overwrite anything.
+        const existingAcc = await ctx.context.internalAdapter.findCredentialAccount(user.id)
+        if (existingAcc) {
+          // Undo the phoneNumberVerified update better-auth just made,
+          // then throw so the verify endpoint returns an error to the client.
+          await ctx.context.internalAdapter.updateUser(user.id, { phone_number_verified: false })
+          throw new Error('PHONE_ALREADY_REGISTERED: This phone number is already registered.')
+        }
         if (ctx?.body?.password) {
           const hashedPassword = await ctx.context.password.hash(ctx.body.password)
           const existingAcc = await ctx.context.internalAdapter.findCredentialAccount(user.id)

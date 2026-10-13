@@ -67,6 +67,21 @@ function ResetPasswordContent() {
     }))
   }
 
+  const canSubmit =
+    !isLoading &&
+    !!phoneNumber &&
+    !!code &&
+    !!newPassword &&
+    !!confirmPassword &&
+    !liveErrors.phoneNumber &&
+    !liveErrors.code &&
+    !liveErrors.newPassword &&
+    !liveErrors.confirmPassword &&
+    !fieldErrors.phoneNumber &&
+    !fieldErrors.code &&
+    !fieldErrors.newPassword &&
+    !fieldErrors.confirmPassword
+
   if (successMessage) {
     return (
       <div className="max-w-md w-full mx-auto">
@@ -181,6 +196,7 @@ function ResetPasswordContent() {
           size="lg"
           fullWidth
           isLoading={isLoading}
+          disabled={!canSubmit}
         >
           Reset &amp; Revoke Sessions →
         </Button>
