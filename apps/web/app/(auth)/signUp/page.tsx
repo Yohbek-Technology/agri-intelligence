@@ -132,21 +132,6 @@ function SignUpContent() {
 
   return (
     <div className="max-w-md w-full mx-auto space-y-6">
-      <div className="flex justify-center gap-2">
-        {STEPS.map((step, i) => (
-          <span
-            key={step}
-            className={
-              i === 0
-                ? 'bg-primary text-[#151A14] font-mono text-xs px-3 py-1 rounded-full font-bold'
-                : 'bg-[var(--color-surface-subtle)] text-text-muted font-mono text-xs px-3 py-1 rounded-full'
-            }
-          >
-            {i + 1}. {step}
-          </span>
-        ))}
-      </div>
-
       <div>
         <h1 className="text-2xl font-bold text-text-primary">Join AgriIntel</h1>
         <p className="text-sm text-text-muted mt-1">Start your precision farming journey.</p>
