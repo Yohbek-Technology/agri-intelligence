@@ -201,7 +201,7 @@ export const auth = betterAuth({
       sameSite: 'lax',
     },
     ipAddress: {
-      ipAddressHeader: 'x-forwarded-for',
+      ipAddressHeaders: ['x-forwarded-for', 'x-real-ip'],
       trustedProxies: ['127.0.0.1', '::1'],
     },
   },
