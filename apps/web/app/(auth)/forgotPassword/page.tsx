@@ -4,6 +4,7 @@ import React, { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { LockKeyhole } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { PasswordResetRequestSchema, PhoneUtils } from '@repo/shared'
 import { authService } from '@/services/authService'
 import { Button } from '@/components/ui/button'
@@ -11,6 +12,7 @@ import { Input } from '@/components/ui/input'
 import { Notice } from '@/components/ui/notice'
 
 function ForgotPasswordContent() {
+  const t = useTranslations('ForgotPassword')
   const router = useRouter()
   const [phoneNumber, setPhoneNumber] = useState('')
   const [liveError, setLiveError] = useState('')
@@ -25,21 +27,14 @@ function ForgotPasswordContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const parseResult = PasswordResetRequestSchema.safeParse({ phoneNumber })
-    if (!parseResult.success) {
-      setLiveError(parseResult.error.issues[0]?.message ?? 'Invalid phone number.')
-      return
-    }
+    const parsed = PasswordResetRequestSchema.safeParse({ phoneNumber })
+    if (!parsed.success) { setLiveError(parsed.error.issues[0]?.message ?? 'Invalid phone number.'); return }
     setIsLoading(true)
     setGeneralError(null)
-    const result = await authService.requestPasswordReset(parseResult.data)
+    const result = await authService.requestPasswordReset(parsed.data)
     setIsLoading(false)
-    if (!result.success) {
-      setGeneralError(result.error || 'Failed to send recovery code. Ensure the number is registered.')
-      return
-    }
-    // Redirect to reset page with phone pre-filled
-    router.push(`/resetPassword?phone=${encodeURIComponent(PhoneUtils.normalize(parseResult.data.phoneNumber))}`)
+    if (!result.success) { setGeneralError(result.error || 'Failed to send recovery code.'); return }
+    router.push(`/resetPassword?phone=${encodeURIComponent(PhoneUtils.normalize(parsed.data.phoneNumber))}`)
   }
 
   return (
@@ -51,17 +46,15 @@ function ForgotPasswordContent() {
       </div>
 
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-text-primary">Account Recovery</h1>
-        <p className="text-sm text-text-muted mt-1">
-          We&apos;ll send a 6-digit code to your registered line.
-        </p>
+        <h1 className="text-2xl font-bold text-text-primary">{t('title')}</h1>
+        <p className="text-sm text-text-muted mt-1">{t('subtitle')}</p>
       </div>
 
       {generalError && <Notice type="error" message={generalError} />}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
-          label="Registered Phone Number"
+          label={t('phoneLabel')}
           type="tel"
           placeholder="+251911000000"
           value={phoneNumber}
@@ -69,29 +62,22 @@ function ForgotPasswordContent() {
           error={liveError}
           success={!!(phoneNumber && !liveError)}
           disabled={isLoading}
-          hint={!liveError ? 'Format: +251 9... or 09...' : undefined}
+          hint={!liveError ? t('phoneHint') : undefined}
         />
 
         <div className="flex items-center gap-2 text-xs font-mono text-text-muted bg-[var(--color-accent-light)] border border-[var(--color-accent)]/30 rounded-xl px-3 py-2">
           <span>⏱</span>
-          <span>OTP expires in 10 minutes. Keep your phone nearby.</span>
+          <span>{t('otpNote')}</span>
         </div>
 
-        <Button
-          type="submit"
-          variant="primary"
-          size="lg"
-          fullWidth
-          isLoading={isLoading}
-          disabled={!!liveError || !phoneNumber}
-        >
-          Send Recovery Code →
+        <Button type="submit" variant="primary" size="lg" fullWidth isLoading={isLoading} disabled={!!liveError || !phoneNumber}>
+          {t('submit')}
         </Button>
       </form>
 
       <p className="text-xs text-text-muted text-center">
         <Link href="/signIn" className="font-mono font-bold text-text-muted hover:text-text-primary transition-colors">
-          ← Return to Sign In
+          {t('backToSignIn')}
         </Link>
       </p>
     </div>

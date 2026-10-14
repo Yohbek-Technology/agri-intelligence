@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { useTranslations } from 'next-intl'
 import type { UserRole } from '@repo/shared'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -13,20 +14,17 @@ export interface DashboardNavbarProps {
   onSignOut: () => void
 }
 
-export function DashboardNavbar({
-  userName,
-  phoneNumber,
-  role,
-  onSignOut,
-}: DashboardNavbarProps) {
+export function DashboardNavbar({ userName, phoneNumber, role, onSignOut }: DashboardNavbarProps) {
+  const t = useTranslations('DashboardNavbar')
+
   const roleLabels: Record<string, { label: string; badge: string; color: 'primary' | 'accent' | 'danger' | 'success' }> = {
-    farmer: { label: 'Smallholder Farmer', badge: 'OPERATOR: FARMER', color: 'primary' },
-    da: { label: 'Development Agent', badge: 'FIELD AGENT: DA', color: 'accent' },
-    officer: { label: 'City Agriculture Officer', badge: 'DESK: MUNICIPAL OFFICER', color: 'success' },
-    system_admin: { label: 'System Administrator', badge: 'SYSADMIN: FULL CLEARANCE', color: 'danger' },
+    farmer:       { label: t('farmerLabel'),  badge: t('farmerBadge'),  color: 'primary' },
+    da:           { label: t('daLabel'),      badge: t('daBadge'),      color: 'accent' },
+    officer:      { label: t('officerLabel'), badge: t('officerBadge'), color: 'success' },
+    system_admin: { label: t('adminLabel'),   badge: t('adminBadge'),   color: 'danger' },
   }
 
-  const roleMeta = roleLabels[role] || { label: 'Operator', badge: 'OPERATOR', color: 'primary' }
+  const roleMeta = roleLabels[role] ?? { label: t('activeOperator'), badge: t('defaultBadge'), color: 'primary' as const }
 
   return (
     <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-border/80 shadow-xs">
@@ -38,7 +36,7 @@ export function DashboardNavbar({
         <div className="flex items-center gap-4">
           <div className="hidden sm:flex flex-col text-right">
             <span className="text-sm font-semibold text-text-primary leading-tight">
-              {userName || 'Active Operator'}
+              {userName || t('activeOperator')}
             </span>
             <span className="text-xs font-mono text-text-muted">
               {phoneNumber || '+251 9...'}
@@ -49,13 +47,8 @@ export function DashboardNavbar({
             {roleMeta.badge}
           </Badge>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onSignOut}
-            className="text-xs font-mono rounded-xl"
-          >
-            Sign Out ⎋
+          <Button variant="outline" size="sm" onClick={onSignOut} className="text-xs font-mono rounded-xl">
+            {t('signOut')}
           </Button>
         </div>
       </div>
