@@ -10,13 +10,16 @@ if (!DATABASE_URL) {
 
 export const pool = new Pool({
   connectionString: DATABASE_URL,
-  max: 10,
-  idleTimeoutMillis: 30_000,
+  ssl: { rejectUnauthorized: false },
+  max: 5,
+  min: 0,
+  idleTimeoutMillis: 20_000,
   connectionTimeoutMillis: 10_000,
+  allowExitOnIdle: true,
 })
 
 pool.on('error', (err) => {
   console.error('[db] Idle client error:', err.message)
 })
 
-export const db = drizzle({ client: pool, schema } as any )
+export const db = drizzle({ client: pool, schema } as any)

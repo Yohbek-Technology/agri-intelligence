@@ -67,7 +67,7 @@ export function Navbar({ isAuthenticated, dashboardPath, role }: NavbarProps) {
                 <Link href={dashboardPath}>
                   <Button
                     size="sm"
-                    className="rounded-full font-medium text-xs bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[#151A14] whitespace-nowrap cursor-pointer shadow-sm px-4 h-8 min-h-0"
+                    className="rounded-full font-medium text-xs bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white whitespace-nowrap cursor-pointer shadow-sm px-4 h-8 min-h-0"
                   >
                     {t('workspace')} ({role || t('operator')}) →
                   </Button>

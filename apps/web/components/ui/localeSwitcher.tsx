@@ -7,42 +7,55 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { setLocaleAction } from '@/i18n/actions/locale'
 
 const LANGUAGES = [
-  { code: 'en', native: 'English' },
-  { code: 'am', native: 'አማርኛ' },
-  { code: 'om', native: 'Oromoo' },
-] as const
+  { code: 'en' as const, native: 'English' },
+  { code: 'am' as const, native: 'አማርኛ' },
+  { code: 'om' as const, native: 'Oromoo' },
+]
 
 export function LocaleSwitcher() {
   const locale = useLocale()
   const t = useTranslations('Navbar')
   const [open, setOpen] = useState(false)
+  const [openUpward, setOpenUpward] = useState(false)
   const [, startTransition] = useTransition()
   const ref = useRef<HTMLDivElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
 
   const current = LANGUAGES.find((l) => l.code === locale) ?? LANGUAGES[0]
 
   useEffect(() => {
     function handleOutside(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false)
-      }
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
     }
     document.addEventListener('mousedown', handleOutside)
     return () => document.removeEventListener('mousedown', handleOutside)
   }, [])
 
+  function handleToggle() {
+    if (!open && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect()
+      const spaceBelow = window.innerHeight - rect.bottom
+      // dropdown height approx 160px — open upward if not enough space below
+      setOpenUpward(spaceBelow < 180)
+    }
+    setOpen((p) => !p)
+  }
+
   function switchLocale(code: string) {
     setOpen(false)
-    startTransition(() => {
-      setLocaleAction(code)
-    })
+    startTransition(() => { setLocaleAction(code) })
   }
+
+  const dropdownClass = openUpward
+    ? 'bottom-full mb-2'
+    : 'top-full mt-2'
 
   return (
     <div className="relative" ref={ref}>
       <button
+        ref={buttonRef}
         type="button"
-        onClick={() => setOpen(!open)}
+        onClick={handleToggle}
         className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--color-surface-subtle)] hover:bg-[var(--color-primary-light)] border border-[var(--color-border)] text-[11px] font-medium text-[var(--color-text-primary)] transition-colors cursor-pointer select-none"
         aria-label={t('selectLanguage')}
       >
@@ -56,11 +69,11 @@ export function LocaleSwitcher() {
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 6 }}
-            transition={{ duration: 0.15 }}
-            className="absolute right-0 mt-2 w-44 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] shadow-xl py-2 z-50 text-xs"
+            initial={{ opacity: 0, y: openUpward ? 6 : -6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: openUpward ? 6 : -6, scale: 0.97 }}
+            transition={{ duration: 0.13 }}
+            className={`absolute right-0 w-44 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] shadow-xl py-2 z-[999] text-xs ${dropdownClass}`}
           >
             <div className="px-3 py-1 text-[10px] font-mono text-[var(--color-text-faint)] uppercase tracking-wider border-b border-[var(--color-border)]">
               {t('selectLanguage')}
@@ -69,13 +82,13 @@ export function LocaleSwitcher() {
               <button
                 key={lang.code}
                 onClick={() => switchLocale(lang.code)}
-                className={`w-full text-left px-3 py-2 flex items-center justify-between hover:bg-[var(--color-primary-light)] transition-colors cursor-pointer ${
+                className={`w-full text-left px-3 py-2.5 flex items-center justify-between hover:bg-[var(--color-primary-light)] transition-colors cursor-pointer ${
                   current.code === lang.code
                     ? 'text-[var(--color-primary)] font-bold bg-[var(--color-primary-light)]'
                     : 'text-[var(--color-text-primary)]'
                 }`}
               >
-                <span>{lang.native}</span>
+                <span className="text-sm">{lang.native}</span>
                 <span className="font-mono text-[10px] text-[var(--color-text-faint)] uppercase">
                   {lang.code}
                 </span>

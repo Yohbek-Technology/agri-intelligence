@@ -263,7 +263,7 @@ export default function HomePage() {
                       size="lg"
                       className="rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white font-semibold px-8 py-3.5 shadow-xl shadow-black/30 flex items-center gap-2 cursor-pointer transition-all duration-300 hover:scale-[1.02]"
                     >
-                      {t('openWorkspace')} ({role || 'Operator'}) <ArrowUpRight className="w-4 h-4" />
+                      {t('openWorkspace')} ({role || 'Operator'})
                     </Button>
                   </Link>
                 ) : (
@@ -294,27 +294,6 @@ export default function HomePage() {
                   {t('ourCapabilities')} <ArrowRight className="w-4 h-4" />
                 </a>
               </motion.div>
-
-              {/* Credibility Trust Bar */}
-              {/* <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.8, delay: 0.4 }}
-                className="mt-12 pt-6 border-t border-white/20 flex flex-wrap items-center justify-center gap-6 sm:gap-10 text-xs text-white/95 font-medium drop-shadow-sm"
-              >
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#A3E635]" />
-                  <span>98.4% Woreda-Level Precision</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#A3E635]" />
-                  <span>Low-Latency Kebele Dispatches</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#A3E635]" />
-                  <span>No Hardware Required for Smallholders</span>
-                </div>
-              </motion.div> */}
             </div>
           </div>
         </section>

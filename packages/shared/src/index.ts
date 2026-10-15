@@ -48,4 +48,10 @@ export type {
   SmsBulkResult,
 } from './types/sms.js'
 
+export type {
+  BadgeVariant,
+  NavItem,
+  NavSection,
+} from './types/dashboard.js'
+
 export { PhoneUtils } from './lib/phone.js'

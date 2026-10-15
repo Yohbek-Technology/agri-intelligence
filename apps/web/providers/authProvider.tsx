@@ -1,8 +1,8 @@
 'use client'
 
-import React, { createContext, useContext, useCallback } from 'react'
+import React, { createContext, useContext, useCallback, useEffect, useRef, useState } from 'react'
 import type { UserRole, AuthUser, AuthSession } from '@repo/shared'
-import { authClient, useSession } from '@/lib/authClient'
+import { authClient } from '@/lib/authClient'
 
 export interface AuthContextValue {
   user: AuthUser | null
@@ -25,32 +25,47 @@ const AuthContext = createContext<AuthContextValue>({
 })
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { data, isPending, refetch } = useSession()
+  const [data, setData] = useState<{ user: AuthUser; session: AuthSession } | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const fetchingRef = useRef(false)
 
-  const user = (data?.user as unknown as AuthUser) ?? null
-  const session = (data?.session as unknown as AuthSession) ?? null
-  const role = user?.role ?? null
-  const isAuthenticated = Boolean(user && session)
+  const fetchSession = useCallback(async () => {
+    if (fetchingRef.current) return
+    fetchingRef.current = true
+    try {
+      const result = await authClient.getSession()
+      setData(result.data as unknown as { user: AuthUser; session: AuthSession } | null)
+    } catch {
+      setData(null)
+    } finally {
+      setIsLoading(false)
+      fetchingRef.current = false
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchSession()
+    // Only fetch once on mount — no window focus polling
+  }, [fetchSession])
 
   const handleSignOut = useCallback(async () => {
     await authClient.signOut()
-    await refetch()
-  }, [refetch])
+    setData(null)
+  }, [])
 
-  const handleRefetch = useCallback(async () => {
-    await refetch()
-  }, [refetch])
+  const user = data?.user ?? null
+  const session = data?.session ?? null
 
   return (
     <AuthContext.Provider
       value={{
         user,
         session,
-        role,
-        isAuthenticated,
-        isLoading: isPending,
+        role: user?.role ?? null,
+        isAuthenticated: Boolean(user && session),
+        isLoading,
         signOut: handleSignOut,
-        refetch: handleRefetch,
+        refetch: fetchSession,
       }}
     >
       {children}

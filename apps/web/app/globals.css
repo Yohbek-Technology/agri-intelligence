@@ -1,52 +1,53 @@
 @import "tailwindcss";
 
-:root {
-  /* Surfaces */
-  --color-background: #FAF8F4;
-  --color-surface: #FFFFFF;
-  --color-surface-subtle: #F3EFE6;
-  --color-surface-elevated: #FFFFFF;
-  --color-surface-glass: rgba(255, 255, 255, 0.82);
+@theme {
+  --color-background:        #FAF8F4;
+  --color-surface:           #FFFFFF;
+  --color-surface-subtle:    #F3EFE6;
+  --color-surface-elevated:  #FFFFFF;
 
-  /* Primary — dark forest green, consistent across all browsers */
-  --color-primary: #274422;
-  --color-primary-hover: #1C3318;
-  --color-primary-subtle: #3D6636;
-  --color-primary-light: #EBF3EA;
+  --color-primary:           #274422;
+  --color-primary-hover:     #1C3318;
+  --color-primary-subtle:    #3D6636;
+  --color-primary-light:     #EBF3EA;
 
-  /* Accent — golden amber */
-  --color-accent: #C78326;
-  --color-accent-hover: #AB6E1B;
-  --color-accent-subtle: #DE9B3E;
-  --color-accent-light: #FDF4E5;
+  --color-accent:            #C78326;
+  --color-accent-hover:      #AB6E1B;
+  --color-accent-subtle:     #DE9B3E;
+  --color-accent-light:      #FDF4E5;
 
-  /* Danger */
-  --color-danger: #9E3520;
-  --color-danger-subtle: #842A17;
-  --color-danger-light: #FBECE8;
+  --color-danger:            #9E3520;
+  --color-danger-subtle:     #842A17;
+  --color-danger-light:      #FBECE8;
 
-  /* Success */
-  --color-success: #1E6F38;
-  --color-success-light: #EAF7EE;
+  --color-success:           #1E6F38;
+  --color-success-light:     #EAF7EE;
 
-  /* Text */
-  --color-text-primary: #151A14;
-  --color-text-muted: #566153;
-  --color-text-faint: #899386;
+  --color-text-primary:      #151A14;
+  --color-text-muted:        #566153;
+  --color-text-faint:        #899386;
 
-  /* Borders */
-  --color-border: #DFD9CB;
-  --color-border-strong: #242E22;
-  --color-border-subtle: #EAE6DB;
+  --color-border:            #DFD9CB;
+  --color-border-strong:     #242E22;
+  --color-border-subtle:     #EAE6DB;
 
-  /* Typography */
+  --color-shell:             #274422;
+  --color-shell-hover:       rgba(255,255,255,0.06);
+  --color-shell-active:      rgba(255,255,255,0.11);
+  --color-shell-border:      rgba(255,255,255,0.09);
+  --color-on-shell:          rgba(255,255,255,0.68);
+  --color-on-shell-strong:   rgba(255,255,255,0.95);
+  --color-on-shell-faint:    rgba(255,255,255,0.28);
+  --color-on-shell-muted:    rgba(255,255,255,0.45);
+  --color-on-shell-accent:   #7EC972;
+
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
 body {
-  background-color: var(--color-background);
-  color: var(--color-text-primary);
+  background-color: theme(colors.background);
+  color: theme(colors.text-primary);
   font-family: var(--font-sans);
   min-height: 100vh;
   margin: 0;
@@ -56,8 +57,8 @@ body {
 }
 
 ::selection {
-  background-color: var(--color-primary);
-  color: #FFFFFF;
+  background-color: theme(colors.primary);
+  color: #fff;
 }
 
 input, button, select, textarea {
@@ -65,15 +66,15 @@ input, button, select, textarea {
 }
 
 .glass-panel {
-  background: var(--color-surface-glass);
+  background: rgba(255,255,255,0.82);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 }
 
 .ambient-glow-primary {
-  box-shadow: 0 0 35px -8px rgba(39, 68, 34, 0.18);
+  box-shadow: 0 0 35px -8px rgba(39,68,34,0.18);
 }
 
 .ambient-glow-accent {
-  box-shadow: 0 0 35px -8px rgba(199, 131, 38, 0.22);
+  box-shadow: 0 0 35px -8px rgba(199,131,38,0.22);
 }
