@@ -12,7 +12,11 @@ const LANGUAGES = [
   { code: 'om' as const, native: 'Oromoo' },
 ]
 
-export function LocaleSwitcher() {
+interface LocaleSwitcherProps {
+  forceUpward?: boolean
+}
+
+export function LocaleSwitcher({ forceUpward = false }: LocaleSwitcherProps) {
   const locale = useLocale()
   const t = useTranslations('Navbar')
   const [open, setOpen] = useState(false)
@@ -32,11 +36,13 @@ export function LocaleSwitcher() {
   }, [])
 
   function handleToggle() {
-    if (!open && buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect()
-      const spaceBelow = window.innerHeight - rect.bottom
-      // dropdown height approx 160px — open upward if not enough space below
-      setOpenUpward(spaceBelow < 180)
+    if (!open) {
+      if (forceUpward) {
+        setOpenUpward(true)
+      } else if (buttonRef.current) {
+        const rect = buttonRef.current.getBoundingClientRect()
+        setOpenUpward(window.innerHeight - rect.bottom < 180)
+      }
     }
     setOpen((p) => !p)
   }
@@ -46,9 +52,7 @@ export function LocaleSwitcher() {
     startTransition(() => { setLocaleAction(code) })
   }
 
-  const dropdownClass = openUpward
-    ? 'bottom-full mb-2'
-    : 'top-full mt-2'
+  const upward = forceUpward || openUpward
 
   return (
     <div className="relative" ref={ref}>
@@ -69,11 +73,13 @@ export function LocaleSwitcher() {
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: openUpward ? 6 : -6, scale: 0.97 }}
+            initial={{ opacity: 0, y: upward ? 6 : -6, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: openUpward ? 6 : -6, scale: 0.97 }}
+            exit={{ opacity: 0, y: upward ? 6 : -6, scale: 0.97 }}
             transition={{ duration: 0.13 }}
-            className={`absolute right-0 w-44 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] shadow-xl py-2 z-[999] text-xs ${dropdownClass}`}
+            className={`absolute right-0 w-44 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] shadow-xl py-2 z-[999] text-xs ${
+              upward ? 'bottom-full mb-2' : 'top-full mt-2'
+            }`}
           >
             <div className="px-3 py-1 text-[10px] font-mono text-[var(--color-text-faint)] uppercase tracking-wider border-b border-[var(--color-border)]">
               {t('selectLanguage')}
