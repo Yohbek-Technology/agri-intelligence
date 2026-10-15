@@ -95,10 +95,10 @@ function Section({
                 className={`flex items-center gap-3 mx-2 px-2.5 py-1.5 rounded-lg cursor-pointer select-none
                   transition-colors duration-100 border-l-2
                   ${active
-                    ? 'bg-shell-active border-on-shell-accent text-on-shell-strong'
+                    ? 'bg-shell-active border-officer-accent text-on-shell-strong'
                     : 'bg-transparent border-transparent text-on-shell hover:bg-shell-hover'
                   } ${sidebarCollapsed ? 'justify-center' : ''}`}>
-                <span className={`shrink-0 flex items-center justify-center ${active ? 'text-on-shell-accent' : 'text-on-shell-faint'}`}>
+                <span className={`shrink-0 flex items-center justify-center ${active ? 'text-officer-accent' : 'text-on-shell-faint'}`}>
                   {item.icon}
                 </span>
                 {!sidebarCollapsed && (
