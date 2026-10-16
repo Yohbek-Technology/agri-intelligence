@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion, AnimatePresence, type Variants } from 'framer-motion'
+import { useTranslations } from 'next-intl'
 import {
   ArrowUpRight,
   ArrowRight,
@@ -67,12 +68,11 @@ function AnimatedCharacterTitle({
   as?: 'h1' | 'h2' | 'h3'
 }) {
   const words = text.split(' ')
-
   const MotionHeading = Component === 'h1' ? motion.h1 : Component === 'h3' ? motion.h3 : motion.h2
 
   return (
     <MotionHeading
-      className={`flex flex-wrap ${className}`}
+      className={`flex flex-wrap gap-x-[0.26em] ${className}`}
       variants={containerVariants}
       initial="hidden"
       whileInView="visible"
@@ -81,17 +81,13 @@ function AnimatedCharacterTitle({
       {words.map((word, wordIndex) => {
         const isHighlight = highlightWords.some(hw => word.toLowerCase().includes(hw.toLowerCase()))
         return (
-          <span key={wordIndex} className={`inline-flex whitespace-nowrap mr-[0.26em] ${isHighlight ? highlightClass : ''}`}>
-            {Array.from(word).map((char, charIndex) => (
-              <motion.span
-                key={charIndex}
-                variants={letterVariants}
-                className="inline-block"
-              >
-                {char}
-              </motion.span>
-            ))}
-          </span>
+          <motion.span
+            key={wordIndex}
+            variants={letterVariants}
+            className={`inline-block whitespace-nowrap ${isHighlight ? highlightClass : ''}`}
+          >
+            {word}
+          </motion.span>
         )
       })}
     </MotionHeading>
@@ -107,6 +103,7 @@ const cardMotion = (delay = 0) => ({
 
 export default function HomePage() {
   const { isAuthenticated, dashboardPath, role } = useAuthSession()
+  const t = useTranslations('HomePage')
   const [emailOrPhone, setEmailOrPhone] = useState('')
   const [ctaSubmitted, setCtaSubmitted] = useState(false)
 
@@ -125,73 +122,72 @@ export default function HomePage() {
     {
       id: 'voice',
       number: '01',
-      navTitle: 'Voice & Locales',
-      headline: 'Voice & Dialectal Locales',
-      summary: 'Delivers agronomic directives via natural voice in local languages, ensuring smallholders without digital literacy can receive and act on time-critical recommendations.',
-      tags: ['Afan Oromo', 'Amharic', 'Tigrinya', 'USSD Fallback', 'Ethio Telecom SIP'],
+      navTitle: t('pillar1NavTitle'),
+      headline: t('pillar1Headline'),
+      summary: t('pillar1Summary'),
+      tags: ['Afan Oromo', 'Amharic', 'USSD Fallback', 'Ethio Telecom SIP'],
       icon: Volume2,
-      previewTitle: 'AUDIO DISPATCH SIMULATION',
-      actionText: 'Explore Voice Architecture →',
+      previewTitle: t('pillar1PreviewTitle'),
+      actionText: t('pillar1ActionText'),
       details: {
-        dialTime: '06:15 AM (Pre-dawn Broadcast)',
-        target: '412 Registered Wheat Growers (Lume)',
-        messageSample: '“Yeroo ammaa kana dhukkubni wajjoo (stripe rust) baay’ee waan jiruuf, dafanii qoricha farra fangasii biifaa.”',
-        confidenceRate: '98.2% Call Pickup & Listen-Through',
+        dialTime: t('pillar1DialTime'),
+        target: t('pillar1Target'),
+        messageSample: '\u201cYeroo ammaa kana dhukkubni wajjoo (stripe rust) baay\u2019ee waan jiruuf, dafanii qoricha farra fangasii biifaa.\u201d',
+        confidenceRate: t('pillar1ConfidenceRate'),
       }
     },
     {
       id: 'ai',
       number: '02',
-      navTitle: 'Diagnostic AI',
-      headline: 'Multimodal Pest & Blight AI',
-      summary: 'Instant on-device and cloud diagnosis for over 48 endemic cereal diseases and invasive pests, operating seamlessly even during intermittent rural cellular connectivity.',
+      navTitle: t('pillar2NavTitle'),
+      headline: t('pillar2Headline'),
+      summary: t('pillar2Summary'),
       tags: ['Edge TFLite', 'Stripe Rust', 'Stem Borer', 'Offline SQLite', '98.4% Confidence'],
       icon: Scan,
-      previewTitle: 'COMPUTER VISION DIAGNOSTIC TELEMETRY',
-      actionText: 'Test Diagnostic Model →',
+      previewTitle: t('pillar2PreviewTitle'),
+      actionText: t('pillar2ActionText'),
       details: {
-        specimen: 'Kingbird Durum Wheat Leaf',
-        condition: 'Puccinia striiformis (Yellow Rust)',
-        severity: 'Stage 3 / Immediate Fungicide Window',
-        prescription: 'Emergency Triazole spray within 48h before canopy spore saturation.',
+        specimen: t('pillar2Specimen'),
+        condition: t('pillar2Condition'),
+        severity: t('pillar2Severity'),
+        prescription: t('pillar2Prescription'),
       }
     },
     {
       id: 'weather',
       number: '03',
-      navTitle: 'Weather Timing',
-      headline: '7-Day Agro-Weather Timing Windows',
-      summary: 'Predictive micro-climate forecast engines calculate exact 6-hour windows for fertilizer absorption, spray efficacy, and harvest drying.',
-      tags: ['ECMWF 0.1° Mesh', 'Soil Saturation 84%', 'Wind Shear <6km/h', 'Radar Sync'],
+      navTitle: t('pillar3NavTitle'),
+      headline: t('pillar3Headline'),
+      summary: t('pillar3Summary'),
+      tags: ['ECMWF 0.1\u00b0 Mesh', 'Soil Saturation 84%', 'Wind Shear <6km/h', 'Radar Sync'],
       icon: CloudSun,
-      previewTitle: 'MICRO-WINDOW CALCULATION ENGINE',
-      actionText: 'View Weather Timing Pipeline →',
+      previewTitle: t('pillar3PreviewTitle'),
+      actionText: t('pillar3ActionText'),
       details: {
-        windowType: 'Optimal Urea Top-Dressing',
-        calculatedWindow: 'Tomorrow 07:00 – 13:00 (6-Hour Window)',
-        precipitationForecast: '14mm Convective Rain at 15:30',
-        absorptionAdvantage: '+40% Nitrogen Uptake vs Dry Broadcasting',
+        windowType: t('pillar3WindowType'),
+        calculatedWindow: t('pillar3Window'),
+        precipitationForecast: t('pillar3Rain'),
+        absorptionAdvantage: t('pillar3Advantage'),
       }
     },
     {
       id: 'inputs',
       number: '04',
-      navTitle: 'Verified Inputs',
-      headline: 'Verified Input Marketplace & Registry',
-      summary: 'Direct integration with regional cooperative unions and agro-dealers ensures access to verified, certified seeds and genuine crop protection inputs.',
+      navTitle: t('pillar4NavTitle'),
+      headline: t('pillar4Headline'),
+      summary: t('pillar4Summary'),
       tags: ['Cooperative Union', 'Certified Quncho Teff', 'NPS Boron', 'Batch QR Verified'],
       icon: PackageCheck,
-      previewTitle: 'COOPERATIVE SUPPLY CHAIN AUDIT',
-      actionText: 'Browse Input Verification System →',
+      previewTitle: t('pillar4PreviewTitle'),
+      actionText: t('pillar4ActionText'),
       details: {
-        verifiedBatch: 'Magna Teff (Quncho Lot #2026-ETB-08)',
-        certificationAuthority: 'Ethiopian Agricultural Authority',
-        depotHub: 'East Shewa Farmers Cooperative Hub',
-        purityScore: '99.8% Germination Purity Certified',
+        verifiedBatch: t('pillar4Batch'),
+        certificationAuthority: t('pillar4Authority'),
+        depotHub: t('pillar4Depot'),
+        purityScore: t('pillar4Purity'),
       }
     }
   ]
-
   const currentPillar = pillars[activePillar]!
 
   return (
@@ -238,7 +234,7 @@ export default function HomePage() {
               {/* Character-by-character animated headline */}
               <AnimatedCharacterTitle
                 as="h1"
-                text="Agronomic Intelligence. Yields Proven by Timing."
+                text={t('heroTitle')}
                 highlightWords={['Timing.']}
                 highlightClass="text-[#A3E635] drop-shadow-[0_0_35px_rgba(163,230,53,0.7)]"
                 className="text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight text-white leading-[1.08] max-w-4xl mx-auto justify-center text-center drop-shadow-[0_4px_24px_rgba(0,0,0,0.85)]"
@@ -251,8 +247,7 @@ export default function HomePage() {
                 transition={{ duration: 0.7, delay: 0.2, ease: 'easeOut' as const }}
                 className="mt-6 text-base sm:text-lg text-white font-normal max-w-2xl mx-auto leading-relaxed drop-shadow-[0_2px_12px_rgba(0,0,0,0.85)]"
               >
-                Precision agronomy intelligence platform engineered for Ethiopian highlands farming,
-                delivering automated crop timing alerts and kebele-level resource coordination.
+                {t('heroSubtitle')}
               </motion.p>
 
               {/* Action Buttons */}
@@ -268,7 +263,7 @@ export default function HomePage() {
                       size="lg"
                       className="rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white font-semibold px-8 py-3.5 shadow-xl shadow-black/30 flex items-center gap-2 cursor-pointer transition-all duration-300 hover:scale-[1.02]"
                     >
-                      Open Workspace ({role || 'Operator'}) <ArrowUpRight className="w-4 h-4" />
+                      {t('openWorkspace')} ({role || 'Operator'})
                     </Button>
                   </Link>
                 ) : (
@@ -277,7 +272,7 @@ export default function HomePage() {
                       size="lg"
                       className="rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white font-semibold px-8 py-3.5 shadow-xl shadow-black/30 flex items-center gap-2 cursor-pointer transition-all duration-300 hover:scale-[1.02]"
                     >
-                      Open Agronomist Portal
+                      {t('openPortal')}
                     </Button>
                   </Link>
                 )}
@@ -288,7 +283,7 @@ export default function HomePage() {
                     size="lg"
                     className="rounded-full bg-white/20 hover:bg-white/30 text-white border-white/40 px-7 py-3.5 backdrop-blur-md flex items-center gap-2 cursor-pointer transition-all duration-300 hover:scale-[1.02]"
                   >
-                    Request Field Deployment
+                    {t('requestDeployment')}
                   </Button>
                 </a>
 
@@ -296,30 +291,9 @@ export default function HomePage() {
                   href="#capabilities"
                   className="text-white hover:text-[#A3E635] text-sm font-semibold px-4 py-3.5 inline-flex items-center gap-1.5 transition-colors drop-shadow-md"
                 >
-                  Our Capabilities <ArrowRight className="w-4 h-4" />
+                  {t('ourCapabilities')} <ArrowRight className="w-4 h-4" />
                 </a>
               </motion.div>
-
-              {/* Credibility Trust Bar */}
-              {/* <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.8, delay: 0.4 }}
-                className="mt-12 pt-6 border-t border-white/20 flex flex-wrap items-center justify-center gap-6 sm:gap-10 text-xs text-white/95 font-medium drop-shadow-sm"
-              >
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#A3E635]" />
-                  <span>98.4% Woreda-Level Precision</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#A3E635]" />
-                  <span>Low-Latency Kebele Dispatches</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#A3E635]" />
-                  <span>No Hardware Required for Smallholders</span>
-                </div>
-              </motion.div> */}
             </div>
           </div>
         </section>
@@ -333,22 +307,21 @@ export default function HomePage() {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
               <div className="max-w-3xl space-y-3">
                 <AnimatedCharacterTitle
-                  text="The 34 vs. 12 Quintal Reality Timing Over Fortune"
+                  text={t('section2Title')}
                   highlightWords={['Timing']}
                   className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[var(--color-text-primary)] leading-tight"
                 />
                 <p className="text-sm sm:text-base text-[var(--color-text-muted)] leading-relaxed">
-                  Two adjacent 1-hectare plots in Lume Woreda with identical soil profile and certified seed stock.
-                  The documented yield divergence was strictly determined by micro-window intervention timing.
+                  {t('section2Subtitle')}
                 </p>
               </div>
 
               {/* Location Badge */}
               <div className="flex items-center gap-2 bg-[var(--color-surface)] px-4 py-2 rounded-full border border-[var(--color-border)] shadow-xs self-start md:self-auto">
                 <MapPin className="w-4 h-4 text-[var(--color-primary)]" />
-                <span className="text-xs font-semibold text-[var(--color-text-primary)]">Lume Woreda, Oromia</span>
+                <span className="text-xs font-semibold text-[var(--color-text-primary)]">{t('lumeWoreda')}</span>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[var(--color-primary-light)] text-[var(--color-primary)] font-bold">
-                  Verified
+                  {t('verified')}
                 </span>
               </div>
             </div>
@@ -366,10 +339,10 @@ export default function HomePage() {
                   <div className="flex items-start justify-between gap-4 pb-6 border-b border-[var(--color-border-subtle)]">
                     <div>
                       <h3 className="text-lg font-bold text-[var(--color-text-primary)]">
-                        AgriIntel Autonomous Protocol
+                        {t('protocolTitle')}
                       </h3>
                       <p className="text-xs text-[var(--color-text-muted)] mt-1">
-                        28-day window adherence: 100% compliant
+                        {t('protocolCompliance')}
                       </p>
                     </div>
 
@@ -387,51 +360,51 @@ export default function HomePage() {
                   <div className="mt-6 space-y-4">
                     <div className="flex items-start gap-3 text-xs">
                       <span className="font-mono font-bold text-[var(--color-primary)] bg-[var(--color-primary-light)] border border-[var(--color-primary)]/20 px-2 py-1 rounded-md text-[11px] flex-shrink-0">
-                        01. Day 14
+                        {t('step01')}
                       </span>
                       <div>
-                        <span className="font-semibold text-[var(--color-text-primary)] block">Basal DAP Micro-Dosing</span>
-                        <span className="text-[var(--color-text-muted)]">Delivered 36 hours prior to recorded root soak cycle</span>
+                        <span className="font-semibold text-[var(--color-text-primary)] block">{t('step01Title')}</span>
+                        <span className="text-[var(--color-text-muted)]">{t('step01Desc')}</span>
                       </div>
                     </div>
 
                     <div className="flex items-start gap-3 text-xs">
                       <span className="font-mono font-bold text-[var(--color-primary)] bg-[var(--color-primary-light)] border border-[var(--color-primary)]/20 px-2 py-1 rounded-md text-[11px] flex-shrink-0">
-                        02. Day 28
+                        {t('step02')}
                       </span>
                       <div>
-                        <span className="font-semibold text-[var(--color-text-primary)] block">Pre-Rust Prophylactic Spray</span>
-                        <span className="text-[var(--color-text-muted)]">Triggered 48 hours before spore condensation peak</span>
+                        <span className="font-semibold text-[var(--color-text-primary)] block">{t('step02Title')}</span>
+                        <span className="text-[var(--color-text-muted)]">{t('step02Desc')}</span>
                       </div>
                     </div>
 
                     <div className="flex items-start gap-3 text-xs">
                       <span className="font-mono font-bold text-[var(--color-primary)] bg-[var(--color-primary-light)] border border-[var(--color-primary)]/20 px-2 py-1 rounded-md text-[11px] flex-shrink-0">
-                        03. Day 45
+                        {t('step03')}
                       </span>
                       <div>
-                        <span className="font-semibold text-[var(--color-text-primary)] block">Precision Urea Top-Dressing</span>
-                        <span className="text-[var(--color-text-muted)]">Timed with forecasted convective storm moisture</span>
+                        <span className="font-semibold text-[var(--color-text-primary)] block">{t('step03Title')}</span>
+                        <span className="text-[var(--color-text-muted)]">{t('step03Desc')}</span>
                       </div>
                     </div>
 
                     <div className="flex items-start gap-3 text-xs">
                       <span className="font-mono font-bold text-[var(--color-primary)] bg-[var(--color-primary-light)] border border-[var(--color-primary)]/20 px-2 py-1 rounded-md text-[11px] flex-shrink-0">
-                        04. Day 72
+                        {t('step04')}
                       </span>
                       <div>
-                        <span className="font-semibold text-[var(--color-text-primary)] block">Aphid Vector Biological Control</span>
-                        <span className="text-[var(--color-text-muted)]">Intervened at threshold index 3.2 before colony bloom</span>
+                        <span className="font-semibold text-[var(--color-text-primary)] block">{t('step04Title')}</span>
+                        <span className="text-[var(--color-text-muted)]">{t('step04Desc')}</span>
                       </div>
                     </div>
 
                     <div className="flex items-start gap-3 text-xs">
                       <span className="font-mono font-bold text-[var(--color-primary)] bg-[var(--color-primary-light)] border border-[var(--color-primary)]/20 px-2 py-1 rounded-md text-[11px] flex-shrink-0">
-                        05. Day 110
+                        {t('step05')}
                       </span>
                       <div>
-                        <span className="font-semibold text-[var(--color-text-primary)] block">Physiological Maturity Harvest</span>
-                        <span className="text-[var(--color-text-muted)]">Harvested at 13.5% grain moisture before unseasonal rains</span>
+                        <span className="font-semibold text-[var(--color-text-primary)] block">{t('step05Title')}</span>
+                        <span className="text-[var(--color-text-muted)]">{t('step05Desc')}</span>
                       </div>
                     </div>
                   </div>
@@ -440,11 +413,11 @@ export default function HomePage() {
                 {/* Card Footer */}
                 <div className="mt-8 pt-5 border-t border-[var(--color-border-subtle)] flex items-center justify-between text-xs">
                   <div>
-                    <span className="text-[var(--color-text-faint)] block text-[11px]">Calculated Net Return</span>
+                    <span className="text-[var(--color-text-faint)] block text-[11px]">{t('calculatedNetReturn')}</span>
                     <span className="font-bold text-[var(--color-text-primary)] font-mono text-base">325,000 ETB</span>
                   </div>
                   <span className="px-3 py-1 rounded-full bg-[var(--color-primary-light)] text-[var(--color-primary)] font-semibold text-[11px]">
-                    Protocol Compliant Surplus
+                    {t('protocolSurplus')}
                   </span>
                 </div>
               </motion.div>
@@ -455,7 +428,7 @@ export default function HomePage() {
                 className="lg:col-span-2 flex flex-col items-center justify-center p-6 bg-[var(--color-surface)] rounded-3xl border border-[var(--color-border)] text-center shadow-sm"
               >
                 <span className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-text-faint)] font-bold mb-1">
-                  Yield Advantage
+                  {t('yieldAdvantage')}
                 </span>
 
                 <div className="text-4xl lg:text-5xl font-black text-[var(--color-primary)] font-mono tracking-tight my-2">
@@ -464,7 +437,7 @@ export default function HomePage() {
 
                 <div className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full bg-[var(--color-primary-light)] text-[var(--color-primary)] text-[11px] font-bold border border-[var(--color-primary)]/20 mb-4">
                   <TrendingUp className="w-3 h-3" />
-                  Yield Multiplier
+                  {t('yieldMultiplier')}
                 </div>
 
                 <div className="w-full border-t border-[var(--color-border-subtle)] my-2" />
@@ -473,11 +446,11 @@ export default function HomePage() {
                   +182,300 ETB
                 </div>
                 <div className="text-[11px] text-[var(--color-text-muted)] leading-tight mt-1">
-                  Net value gain per single hectare
+                  {t('netValueGain')}
                 </div>
 
                 <div className="mt-5 text-[10px] font-mono text-[var(--color-text-muted)] bg-[var(--color-surface-subtle)] p-2.5 rounded-xl border border-[var(--color-border)] leading-normal">
-                  Identical Soil • Identical Seeds • Timing Advantage
+                  {t('identicalConditions')}
                 </div>
               </motion.div>
 
@@ -492,10 +465,10 @@ export default function HomePage() {
                   <div className="flex items-start justify-between gap-4 pb-6 border-b border-[var(--color-border-subtle)]">
                     <div>
                       <h3 className="text-lg font-bold text-[var(--color-text-primary)]">
-                        Traditional Farmer Intuition
+                        {t('traditionalTitle')}
                       </h3>
                       <p className="text-xs text-[var(--color-text-muted)] mt-1">
-                        Calendar-based intervention (Traditional practice)
+                        {t('traditionalSubtitle')}
                       </p>
                     </div>
 
@@ -513,51 +486,51 @@ export default function HomePage() {
                   <div className="mt-6 space-y-4">
                     <div className="flex items-start gap-3 text-xs">
                       <span className="font-mono font-bold text-[var(--color-accent)] bg-[var(--color-accent-light)] border border-[var(--color-accent)]/30 px-2 py-1 rounded-md text-[11px] flex-shrink-0">
-                        01. Day 22
+                        {t('ctrl01')}
                       </span>
                       <div>
-                        <span className="font-semibold text-[var(--color-text-primary)] block">Delayed Fertilizer Application</span>
-                        <span className="text-[var(--color-text-muted)]">Applied 8 days late during dry spell; 40% volatilization</span>
+                        <span className="font-semibold text-[var(--color-text-primary)] block">{t('ctrl01Title')}</span>
+                        <span className="text-[var(--color-text-muted)]">{t('ctrl01Desc')}</span>
                       </div>
                     </div>
 
                     <div className="flex items-start gap-3 text-xs">
                       <span className="font-mono font-bold text-[var(--color-accent)] bg-[var(--color-accent-light)] border border-[var(--color-accent)]/30 px-2 py-1 rounded-md text-[11px] flex-shrink-0">
-                        02. Day 39
+                        {t('ctrl02')}
                       </span>
                       <div>
-                        <span className="font-semibold text-[var(--color-text-primary)] block">Reactive Rust Fungicide</span>
-                        <span className="text-[var(--color-text-muted)]">Applied post-symptom manifestation; irreversible canopy damage</span>
+                        <span className="font-semibold text-[var(--color-text-primary)] block">{t('ctrl02Title')}</span>
+                        <span className="text-[var(--color-text-muted)]">{t('ctrl02Desc')}</span>
                       </div>
                     </div>
 
                     <div className="flex items-start gap-3 text-xs">
                       <span className="font-mono font-bold text-[var(--color-accent)] bg-[var(--color-accent-light)] border border-[var(--color-accent)]/30 px-2 py-1 rounded-md text-[11px] flex-shrink-0">
-                        03. Day 58
+                        {t('ctrl03')}
                       </span>
                       <div>
-                        <span className="font-semibold text-[var(--color-text-primary)] block">Broadcast Urea Application</span>
-                        <span className="text-[var(--color-text-muted)]">Heavy storm washed surface runoff; 60% nitrogen lost</span>
+                        <span className="font-semibold text-[var(--color-text-primary)] block">{t('ctrl03Title')}</span>
+                        <span className="text-[var(--color-text-muted)]">{t('ctrl03Desc')}</span>
                       </div>
                     </div>
 
                     <div className="flex items-start gap-3 text-xs">
                       <span className="font-mono font-bold text-[var(--color-accent)] bg-[var(--color-accent-light)] border border-[var(--color-accent)]/30 px-2 py-1 rounded-md text-[11px] flex-shrink-0">
-                        04. Day 84
+                        {t('ctrl04')}
                       </span>
                       <div>
-                        <span className="font-semibold text-[var(--color-text-primary)] block">Late Insecticide Spray</span>
-                        <span className="text-[var(--color-text-muted)]">Post-infestation intervention; severe head blighting occurred</span>
+                        <span className="font-semibold text-[var(--color-text-primary)] block">{t('ctrl04Title')}</span>
+                        <span className="text-[var(--color-text-muted)]">{t('ctrl04Desc')}</span>
                       </div>
                     </div>
 
                     <div className="flex items-start gap-3 text-xs">
                       <span className="font-mono font-bold text-[var(--color-accent)] bg-[var(--color-accent-light)] border border-[var(--color-accent)]/30 px-2 py-1 rounded-md text-[11px] flex-shrink-0">
-                        05. Day 118
+                        {t('ctrl05')}
                       </span>
                       <div>
-                        <span className="font-semibold text-[var(--color-text-primary)] block">Rain-Interrupted Harvest</span>
-                        <span className="text-[var(--color-text-muted)]">Wet harvest caused 18% field shattering and fungal discoloration</span>
+                        <span className="font-semibold text-[var(--color-text-primary)] block">{t('ctrl05Title')}</span>
+                        <span className="text-[var(--color-text-muted)]">{t('ctrl05Desc')}</span>
                       </div>
                     </div>
                   </div>
@@ -566,11 +539,11 @@ export default function HomePage() {
                 {/* Card Footer */}
                 <div className="mt-8 pt-5 border-t border-[var(--color-border-subtle)] flex items-center justify-between text-xs">
                   <div>
-                    <span className="text-[var(--color-text-faint)] block text-[11px]">Calculated Net Return</span>
+                    <span className="text-[var(--color-text-faint)] block text-[11px]">{t('calculatedNetReturn')}</span>
                     <span className="font-bold text-[var(--color-text-primary)] font-mono text-base">94,000 ETB</span>
                   </div>
                   <span className="px-3 py-1 rounded-full bg-[var(--color-accent-light)] text-[var(--color-accent)] font-semibold text-[11px]">
-                    Control Plot Baseline
+                    {t('controlBaseline')}
                   </span>
                 </div>
               </motion.div>
@@ -603,7 +576,7 @@ export default function HomePage() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                     <div className="absolute bottom-4 left-4 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/60 backdrop-blur-md text-white text-xs font-mono">
                       <MapPin className="w-3.5 h-3.5 text-[#A3E635]" />
-                      <span>Field Trial 4: Lume Woreda, Central Highlands</span>
+                      <span>{t('fieldTrialLabel')}</span>
                     </div>
                   </div>
                 </div>
@@ -612,14 +585,12 @@ export default function HomePage() {
                 <div className="lg:col-span-5 space-y-4">
                   <AnimatedCharacterTitle
                     as="h3"
-                    text="Empirical Agronomy Measured on Real Farmland"
+                    text={t('section3Title')}
                     highlightWords={['Empirical']}
                     className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--color-text-primary)] leading-snug"
                   />
                   <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">
-                    Every recommendation in AgriIntel is calibrated against real agronomic trials across Ethiopian
-                    micro-climates. We don&apos;t rely on generic satellite estimations; our physics-informed models
-                    fuse localized telemetry with extension agent ground truth.
+                    {t('section3Subtitle')}
                   </p>
 
                   <div className="pt-3 flex flex-wrap gap-4 text-xs font-semibold">
@@ -627,13 +598,13 @@ export default function HomePage() {
                       href="#empirical-trial"
                       className="inline-flex items-center gap-1 text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] transition-colors"
                     >
-                      ↗ View Multi-Trial Validation
+                      {t('viewValidation')}
                     </a>
                     <a
                       href="#capabilities"
                       className="inline-flex items-center gap-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
                     >
-                      ↗ Read Scientific Whitepaper
+                      {t('readWhitepaper')}
                     </a>
                   </div>
                 </div>
@@ -652,19 +623,19 @@ export default function HomePage() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-12">
               <div className="lg:col-span-7 space-y-3">
                 <AnimatedCharacterTitle
-                  text="Engineered for High-Stakes Agriculture"
+                  text={t('section4Title')}
                   highlightWords={['Engineered', 'High-Stakes']}
                   className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[var(--color-text-primary)] leading-tight"
                 />
                 <p className="text-sm sm:text-base text-[var(--color-text-muted)] leading-relaxed max-w-2xl">
-                  Designed specifically for the infrastructural realities and agronomic nuances of the Ethiopian agricultural landscape, from micro-plots to regional grain corridors.
+                  {t('section4Subtitle')}
                 </p>
               </div>
 
               {/* Vertical / Step indicator on top right */}
               <div className="lg:col-span-5 flex items-center lg:justify-end gap-2 text-xs font-mono text-[var(--color-text-muted)]">
                 <span className="w-2 h-2 rounded-full bg-[var(--color-primary)] animate-pulse" />
-                <span className="uppercase font-semibold tracking-wider">SYSTEM PIPELINE</span>
+                <span className="uppercase font-semibold tracking-wider">{t('systemPipeline')}</span>
                 <span className="font-bold text-[var(--color-primary)]">
                   {currentPillar.number} / 04
                 </span>
@@ -688,7 +659,7 @@ export default function HomePage() {
                     </div>
                     <div>
                       <span className="text-[11px] font-mono uppercase tracking-wider text-[var(--color-text-faint)] font-bold block">
-                        ARCHITECTURE MODULE
+                        {t('architectureModule')}
                       </span>
                       <h3 className="text-2xl font-bold text-[var(--color-text-primary)]">
                         {currentPillar.headline}
@@ -733,7 +704,7 @@ export default function HomePage() {
                         <span className="w-2 h-2 rounded-full bg-[var(--color-primary)] animate-ping" />
                         {currentPillar.previewTitle}
                       </span>
-                      <span className="uppercase">ACTIVE PROTOCOL</span>
+                      <span className="uppercase">{t('activeProtocol')}</span>
                     </div>
 
                     {/* Dynamic Simulated Preview Component based on active pillar */}
@@ -780,8 +751,8 @@ export default function HomePage() {
                             </div>
 
                             <div className="flex items-center justify-between text-xs text-[var(--color-text-muted)] font-mono px-1">
-                              <span>Pickup Rate: {currentPillar.details.confidenceRate}</span>
-                              <span>Target: {currentPillar.details.target}</span>
+                              <span>{t('pickupRate')} {currentPillar.details.confidenceRate}</span>
+                              <span>{t('target')} {currentPillar.details.target}</span>
                             </div>
                           </div>
                         )}
@@ -792,7 +763,7 @@ export default function HomePage() {
                               <div className="flex items-center justify-between">
                                 <span className="text-xs font-bold text-[var(--color-text-primary)]">{currentPillar.details.specimen}</span>
                                 <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-800 text-[10px] font-mono font-bold">
-                                  Critical Alert
+                                  {t('criticalAlert')}
                                 </span>
                               </div>
                               <div className="bg-red-50 p-3 rounded-lg border border-red-200 text-xs text-red-900 space-y-1">
@@ -812,7 +783,7 @@ export default function HomePage() {
                               <div className="flex items-center justify-between">
                                 <span className="text-xs font-bold text-[var(--color-text-primary)]">{currentPillar.details.windowType}</span>
                                 <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-mono font-bold">
-                                  Window Confirmed
+                                  {t('windowConfirmed')}
                                 </span>
                               </div>
                               <div className="bg-[var(--color-primary-light)] p-3 rounded-lg border border-[var(--color-primary)]/30 text-xs text-[var(--color-primary)] space-y-1">
@@ -820,7 +791,7 @@ export default function HomePage() {
                                 <div className="text-[11px]">{currentPillar.details.precipitationForecast}</div>
                               </div>
                               <p className="text-xs text-[var(--color-text-muted)] font-mono">
-                                Impact: {currentPillar.details.absorptionAdvantage}
+                                {t('impact')} {currentPillar.details.absorptionAdvantage}
                               </p>
                             </div>
                           </div>
@@ -832,7 +803,7 @@ export default function HomePage() {
                               <div className="flex items-center justify-between">
                                 <span className="text-xs font-bold text-[var(--color-text-primary)]">{currentPillar.details.verifiedBatch}</span>
                                 <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-mono font-bold">
-                                  QR Authenticated
+                                  {t('qrAuthenticated')}
                                 </span>
                               </div>
                               <div className="bg-[var(--color-surface-subtle)] p-3 rounded-lg border border-[var(--color-border)] text-xs space-y-1">
@@ -840,7 +811,7 @@ export default function HomePage() {
                                 <div className="text-[11px] text-[var(--color-text-muted)] font-mono">{currentPillar.details.purityScore}</div>
                               </div>
                               <p className="text-xs text-[var(--color-text-muted)]">
-                                Audit Authority: {currentPillar.details.certificationAuthority}
+                                {t('auditAuthority')} {currentPillar.details.certificationAuthority}
                               </p>
                             </div>
                           </div>
@@ -898,14 +869,13 @@ export default function HomePage() {
             {/* Animated Section Header */}
             <div className="max-w-3xl mb-14 space-y-3">
               <AnimatedCharacterTitle
-                text="Voice Box & Kebele Direct Dispatch"
+                text={t('section5Title')}
                 highlightWords={['Voice', 'Kebele']}
                 highlightClass="text-[#A3E635]"
                 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white leading-tight"
               />
               <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
-                For regions and smallholders without reliable smartphones or internet access, AgriIntel delivers
-                automated voice broadcasts and direct alerts to local Kebele Development Agents (DAs).
+                {t('section5Subtitle')}
               </p>
             </div>
 
@@ -929,7 +899,7 @@ export default function HomePage() {
                   <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-xs">
                     <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/70 backdrop-blur-md text-[#A3E635] border border-white/20 font-mono">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#A3E635] animate-ping" />
-                      Voice Dispatch Station #104 — Arsi Foothills
+                      {t('voiceStationLabel')}
                     </span>
                   </div>
                 </div>
@@ -949,20 +919,19 @@ export default function HomePage() {
                       </div>
                       <div>
                         <h4 className="font-semibold text-white text-sm">
-                          06:15 AM — Automated Voice Call
+                          {t('dispatch1Time')}
                         </h4>
                         <span className="text-[11px] font-mono text-slate-400">
-                          Dialect: Afan Oromo
+                          {t('dispatch1Dialect')}
                         </span>
                       </div>
                     </div>
                     <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-500/30">
-                      ✓ Completed (98.2% Answer Rate)
+                      {t('dispatch1Status')}
                     </span>
                   </div>
                   <p className="text-xs text-slate-300 leading-relaxed pl-10">
-                    &ldquo;Delivered in Afan Oromo to 412 registered wheat farmers: &lsquo;High stripe rust risk detected.
-                    Postpone morning nitrogen spray until wind speed drops below 6 km/h.&rsquo;&rdquo;
+                    {t('dispatch1Text')}
                   </p>
                 </motion.div>
 
@@ -978,20 +947,19 @@ export default function HomePage() {
                       </div>
                       <div>
                         <h4 className="font-semibold text-white text-sm">
-                          08:30 AM — Kebele Extension DA Alert
+                          {t('dispatch2Time')}
                         </h4>
                         <span className="text-[11px] font-mono text-slate-400">
-                          Priority: Immediate Field Action
+                          {t('dispatch2Priority')}
                         </span>
                       </div>
                     </div>
                     <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-amber-950 text-amber-400 border border-amber-500/30">
-                      ⚡ Actioned by DA Bekele &amp; Team
+                      {t('dispatch2Status')}
                     </span>
                   </div>
                   <p className="text-xs text-slate-300 leading-relaxed pl-10">
-                    &ldquo;Priority dispatch to 6 assigned Development Agents: &lsquo;Soil moisture saturation at 84% in Lower Valley.
-                    Direct furrow drainage protocol activated across 42 teff hectares.&rsquo;&rdquo;
+                    {t('dispatch2Text')}
                   </p>
                 </motion.div>
 
@@ -1007,20 +975,19 @@ export default function HomePage() {
                       </div>
                       <div>
                         <h4 className="font-semibold text-white text-sm">
-                          11:00 AM — Structured USSD/SMS Broadcast
+                          {t('dispatch3Time')}
                         </h4>
                         <span className="text-[11px] font-mono text-slate-400">
-                          Channel: Ethio Telecom
+                          {t('dispatch3Channel')}
                         </span>
                       </div>
                     </div>
                     <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-teal-950 text-teal-400 border border-teal-500/30">
-                      ✓ Delivered via SMS Gateway
+                      {t('dispatch3Status')}
                     </span>
                   </div>
                   <p className="text-xs text-slate-300 leading-relaxed pl-10">
-                    &ldquo;Offline fallback sent to 1,280 smallholders with market price alerts for Adama grain depot
-                    and optimal 4-day harvest drying windows.&rdquo;
+                    {t('dispatch3Text')}
                   </p>
                 </motion.div>
               </div>
@@ -1033,11 +1000,11 @@ export default function HomePage() {
             >
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#A3E635] animate-pulse" />
-                <span className="text-slate-300 font-medium">Active Dispatch Channels:</span>
-                <span>Ethio Telecom Voice Gateway • Kebele DA Offline Mesh • National Weather Service Sync</span>
+                <span className="text-slate-300 font-medium">{t('activeChannels')}</span>
+                <span>{t('channelList')}</span>
               </div>
               <span className="hidden md:inline text-[#A3E635]">
-                Network Latency: 42ms
+                {t('networkLatency')}
               </span>
             </motion.div>
           </div>
@@ -1051,7 +1018,7 @@ export default function HomePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="mb-10 text-center max-w-2xl mx-auto">
               <AnimatedCharacterTitle
-                text="Validated Scientific Benchmarks"
+                text={t('section6Title')}
                 highlightWords={['Validated']}
                 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--color-text-primary)] justify-center text-center"
               />
@@ -1065,10 +1032,10 @@ export default function HomePage() {
               >
                 <div className="w-10 h-1.5 bg-[var(--color-primary)] rounded-full mb-5" />
                 <div className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--color-primary)] mb-2">
-                  98.4% DIAGNOSTIC ACCURACY
+                  {t('benchmark1Title')}
                 </div>
                 <p className="text-xs sm:text-sm text-[var(--color-text-muted)] leading-relaxed">
-                  Benchmarked against Ethiopian Agricultural Authority agronomist evaluations across 12,000 field specimens.
+                  {t('benchmark1Desc')}
                 </p>
               </motion.div>
 
@@ -1079,10 +1046,10 @@ export default function HomePage() {
               >
                 <div className="w-10 h-1.5 bg-[var(--color-primary)] rounded-full mb-5" />
                 <div className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--color-primary)] mb-2">
-                  220% AVERAGE YIELD INCREASE
+                  {t('benchmark2Title')}
                 </div>
                 <p className="text-xs sm:text-sm text-[var(--color-text-muted)] leading-relaxed">
-                  Documented across 48 monitored Highland wheat and teff pilot plots in East Shewa agricultural corridor.
+                  {t('benchmark2Desc')}
                 </p>
               </motion.div>
 
@@ -1093,10 +1060,10 @@ export default function HomePage() {
               >
                 <div className="w-10 h-1.5 bg-[var(--color-primary)] rounded-full mb-5" />
                 <div className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--color-primary)] mb-2">
-                  NO EXPENSIVE HARDWARE REQUIRED
+                  {t('benchmark3Title')}
                 </div>
                 <p className="text-xs sm:text-sm text-[var(--color-text-muted)] leading-relaxed">
-                  Zero sensor installation costs. Operates using existing satellite feeds, micro-weather radar, and basic mobile phones.
+                  {t('benchmark3Desc')}
                 </p>
               </motion.div>
             </div>
@@ -1114,13 +1081,13 @@ export default function HomePage() {
               className="bg-gradient-to-b from-[var(--color-surface)] to-[var(--color-primary-light)]/40 rounded-3xl border border-[var(--color-border)] p-8 sm:p-14 text-center shadow-lg relative overflow-hidden"
             >
               <AnimatedCharacterTitle
-                text="Ready to accelerate harvest outcomes?"
+                text={t('ctaTitle')}
                 highlightWords={['outcomes?']}
                 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[var(--color-text-primary)] leading-tight justify-center text-center"
               />
 
               <p className="mt-4 text-sm sm:text-base text-[var(--color-text-muted)] max-w-xl mx-auto leading-relaxed">
-                Schedule a field demonstration or connect your cooperative union to the national agronomic intelligence network.
+                {t('ctaSubtitle')}
               </p>
 
               {/* Interactive Submit Form */}
@@ -1128,7 +1095,7 @@ export default function HomePage() {
                 {ctaSubmitted ? (
                   <div className="p-4 rounded-full bg-[var(--color-primary-light)] border border-[var(--color-primary)]/30 text-[var(--color-primary)] text-sm font-semibold flex items-center justify-center gap-2">
                     <CheckCircle2 className="w-5 h-5 text-[var(--color-primary)]" />
-                    Pilot request recorded. Our agronomy team will contact your station within 24 hours.
+                    {t('ctaSuccess')}
                   </div>
                 ) : (
                   <form onSubmit={handleCtaSubmit} className="flex flex-col sm:flex-row items-center gap-2.5">
@@ -1137,7 +1104,7 @@ export default function HomePage() {
                       required
                       value={emailOrPhone}
                       onChange={(e) => setEmailOrPhone(e.target.value)}
-                      placeholder="Enter your email or phone number"
+                      placeholder={t('ctaPlaceholder')}
                       className="w-full px-5 py-3.5 rounded-full border border-[var(--color-border)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent text-sm bg-[var(--color-surface)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-faint)] shadow-xs"
                     />
                     <Button
@@ -1145,7 +1112,7 @@ export default function HomePage() {
                       size="lg"
                       className="w-full sm:w-auto rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white font-semibold px-7 py-3.5 flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap shadow-sm transition-all duration-300 hover:scale-[1.02]"
                     >
-                      Connect
+                      {t('ctaButton')}
                     </Button>
                   </form>
                 )}
@@ -1153,8 +1120,8 @@ export default function HomePage() {
 
               {/* Security & Setup Bullet Notes */}
               <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-xs text-[var(--color-text-muted)] font-mono">
-                <span>• Enterprise Grade &amp; Cooperative Compliant</span>
-                <span>• Kebele Level Setup in Under 48h</span>
+                <span>{t('ctaNote1')}</span>
+                <span>{t('ctaNote2')}</span>
               </div>
             </motion.div>
           </div>

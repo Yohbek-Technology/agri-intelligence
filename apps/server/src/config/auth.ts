@@ -200,6 +200,10 @@ export const auth = betterAuth({
       secure: IS_PRODUCTION,
       sameSite: 'lax',
     },
+    ipAddress: {
+      ipAddressHeaders: ['x-forwarded-for', 'x-real-ip'],
+      trustedProxies: ['127.0.0.1', '::1'],
+    },
   },
 
   rateLimit: {

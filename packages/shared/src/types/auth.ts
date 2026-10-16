@@ -24,7 +24,7 @@ export type UserProfileUpdate    = z.infer<typeof UserProfileUpdateSchema>
 export type LanguageSelect       = z.infer<typeof LanguageSelectSchema>
 
 export type UserRole    = 'farmer' | 'da' | 'officer' | 'system_admin'
-export type AppLanguage = 'am' | 'om' | 'ti' | 'en'
+export type AppLanguage = 'en' | 'am' | 'om'
 
 export interface AuthUser {
   id: string
