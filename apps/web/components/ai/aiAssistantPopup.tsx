@@ -23,18 +23,15 @@ const AI_RESPONSES: Record<string, string> = {
 const VOICE_SAMPLES = [
   {
     language: 'Afan Oromo',
-    transcript: '"Yeroo ammaa kana dhukkubni wajjoo (stripe rust) baay\'ee waan jiruuf, dafanii qoricha farra fangasii biifaa."',
-    english: 'High stripe rust alert. Apply triazole fungicide within 48h before spore bloom.',
+    transcript: '“Yeroo ammaa kana dhukkubni wajjoo (stripe rust) baay’ee waan jiruuf, dafanii qoricha farra fangasii biifaa.”',
   },
   {
-    language: 'Amharic (አማርኛ)',
-    transcript: '"የስንዴ ቢጫ ዋግ በሽታ ስጋት ስላለ በ48 ሰዓታት ውስጥ የፈንገስ መከላከያ መድሃኒት ይርጩ።"',
-    english: 'Wheat yellow rust risk detected. Spray prophylactic fungicide within 48 hours.',
+    language: 'Amharic',
+    transcript: '“የስንዴ ቢጫ ዋግ በሽታ ስጋት ስላለ በ48 ሰዓታት ውስጥ የፈንገስ መከላከያ መድሃኒት ይርጩ።”',
   },
   {
     language: 'English',
-    transcript: '"Lume Woreda convective rain forecasted at 15:30 tomorrow. Optimal nitrogen urea window opens at 07:00."',
-    english: 'Optimal nitrogen top-dressing window opens tomorrow at 07:00 AM.',
+    transcript: '“Optimal nitrogen top-dressing window opens tomorrow at 07:00 AM in Lume Woreda.”',
   },
 ]
 
@@ -105,26 +102,26 @@ export function AiAssistantPopup() {
 
   return (
     <>
-      {/* Floating Trigger Button */}
-      <div className="fixed bottom-6 right-6 z-50">
+      {/* Floating Trigger Button — compact size */}
+      <div className="fixed bottom-5 right-5 z-50">
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
           aria-label={t('triggerLabel')}
-          className="relative w-14 h-14 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer border-2 border-white/30 shadow-[0_4px_16px_rgba(0,0,0,0.15)] select-none"
+          className="relative w-11 h-11 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer border-2 border-white/30 shadow-md select-none"
         >
-          {isOpen ? <X className="w-6 h-6" /> : <Bot className="w-6 h-6" />}
+          {isOpen ? <X className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
         </button>
       </div>
 
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 15, scale: 0.96 }}
+            initial={{ opacity: 0, y: 10, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 15, scale: 0.96 }}
-            transition={{ duration: 0.22, ease: 'easeOut' }}
-            className="fixed bottom-24 right-6 z-50 w-[380px] sm:w-[420px] max-w-[calc(100vw-2rem)] h-[550px] max-h-[82vh] bg-white rounded-3xl border-[3px] border-slate-300 shadow-[0_4px_22px_-4px_rgba(0,0,0,0.08)] flex flex-col overflow-hidden text-slate-900"
+            exit={{ opacity: 0, y: 10, scale: 0.96 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            className="fixed bottom-[4.25rem] right-5 z-50 w-[360px] sm:w-[400px] max-w-[calc(100vw-2.5rem)] h-[520px] max-h-[80vh] bg-white rounded-2xl border-[3px] border-slate-300 shadow-[0_4px_22px_-4px_rgba(0,0,0,0.08)] flex flex-col overflow-hidden text-slate-900"
           >
             {/* Header */}
             <div className="px-5 py-3.5 border-b-2 border-slate-200 bg-white flex items-center justify-between">
