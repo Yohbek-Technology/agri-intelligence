@@ -16,5 +16,11 @@
   "packageManager": "pnpm@12.9.1",
   "engines": {
     "node": ">=24"
+  },
+  "overrides": {
+    "@babel/core": "^7.26.9",
+    "@babel/generator": "^7.26.9",
+    "@babel/traverse": "^7.26.9",
+    "@babel/types": "^7.26.9"
   }
 }

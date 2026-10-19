@@ -25,38 +25,6 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) =>
-            Platform.OS === 'ios' ? (
-              <SymbolView
-                name={{ ios: 'house.fill', android: 'home', web: 'home' }}
-                size={24}
-                tintColor={color}
-              />
-            ) : (
-              <Image
-                source={require('@/assets/images/tabIcons/home.png')}
-                style={[styles.tabIcon, { tintColor: color }]}
-              />
-            ),
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) =>
-            Platform.OS === 'ios' ? (
-              <SymbolView
-                name={{ ios: 'safari.fill', android: 'explore', web: 'explore' }}
-                size={24}
-                tintColor={color}
-              />
-            ) : (
-              <Image
-                source={require('@/assets/images/tabIcons/explore.png')}
-                style={[styles.tabIcon, { tintColor: color }]}
-              />
-            ),
         }}
       />
     </Tabs>
