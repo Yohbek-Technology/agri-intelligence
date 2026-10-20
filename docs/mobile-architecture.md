@@ -2,18 +2,20 @@
 
 **Project:** Autonomous Agricultural Intelligence & Extension System (Ethiopia)  
 **Target Client:** Farmer & Extension Agent (DA) Native Android Application (`apps/mobile`)  
-**Architecture Model:** Clean Architecture with Offline-First Reactive Data Layer  
+**Architecture Model:** Clean Architecture with Offline-First Reactive Data Layer & Stitch UI Reference  
+**Status:** Reconciled to Database Schema & API Surface Specification v1.3  
 **Date:** October 2026  
 
 ---
 
 ## 1. Architectural Principles & Design System
 
-The mobile application architecture is designed around four foundational pillars:
-1. **Offline-First Reactive Core:** All screen reads and user writes operate exclusively against an encrypted local SQLite database (WatermelonDB + SQLCipher). Network communication is handled asynchronously by a transactional delta-sync background queue.
+The mobile application architecture is designed around five foundational pillars:
+1. **Offline-First Reactive Core:** All screen reads and user writes operate exclusively against an encrypted local SQLite database (WatermelonDB + SQLCipher). Network communication is handled asynchronously by a transactional delta-sync background queue (`POST /v1/sync/push`, `GET /v1/sync/pull`).
 2. **Illiteracy-First Universal Accessibility:** The UI prioritizes visual color-coded cards, high-contrast iconography, large touch targets (minimum 48×48 dp, 56 dp for primary actions), and an automated voice pipeline (speech-to-text dictation, spoken screen explainers, and voice-intent routing in Amharic, Afaan Oromoo, Tigrinya, and English).
-3. **Clean Separation of Concerns:** Strict layer decoupling ensures that UI components depend only on view models / presenters, which interact with repository interfaces, completely isolating local database logic and remote network transports.
-4. **Tenant & Role Isolation:** Strict client admission restricts access to `farmer` and `da` roles, enforcing the 30-day sliding session token stored in the Android Keystore.
+3. **Stitch UI Design Fidelity:** The presentation layer directly mirrors the Stitch UI MVP designs, maintaining identical component hierarchies, visual cards, navigation flows, and color tokens tailored for Ethiopian agricultural contexts.
+4. **Strict API Contract Conformance:** All remote operations strictly comply with the documented Hono API Surface v1.3 (Bearer authentication via Android Keystore, required headers `X-Client-Type: android`, `X-Device-Id`, `X-App-Version`, `Accept-Language`, `Idempotency-Key`, standard success/error envelopes, and chunked media uploads).
+5. **Tenant & Role Isolation (MOB-3):** Strict client admission restricts access to `farmer` and `da` roles only. Officer and Admin sign-in attempts are rejected with `403 client_not_permitted` and redirected to the Web Portal.
 
 ---
 
@@ -41,11 +43,11 @@ apps/mobile/
 │   │   ├── env.ts                       # Validated API base URLs & config constants
 │   │   └── constants.ts                 # Timeouts, pagination limits, chunk sizes
 │   │
-│   ├── theme/                           # Design system & design tokens
-│   │   ├── colors.ts                    # HSL tailored agricultural palette
+│   ├── theme/                           # Design system & Stitch Design Tokens
+│   │   ├── colors.ts                    # HSL tailored palette (Koticha, Beda, Teff Gold, Greenery)
 │   │   ├── typography.ts                # 16sp+ text scales & Ge'ez font families
 │   │   ├── spacing.ts                   # 48dp / 56dp touch targets & layout margins
-│   │   └── tokens.ts                    # Consolidated tokens for NativeWind / styling
+│   │   └── tokens.ts                    # Consolidated design tokens (Radii, Shadows, TouchTargets)
 │   │
 │   ├── localization/                    # Multi-language string catalogs
 │   │   ├── index.ts                     # i18n initialization & locale switcher
@@ -86,13 +88,15 @@ apps/mobile/
 │   ├── services/                        # Native hardware & communication drivers
 │   │   ├── api/                         # Network client & HTTP transport
 │   │   │   ├── client.ts                # Axios/Fetch client with auth headers
-│   │   │   ├── endpoints.ts             # Strongly typed API endpoints
-│   │   │   └── interceptors.ts          # 401 handling, bearer injection, error map
+│   │   │   ├── endpoints.ts             # Strongly typed API endpoints from API Surface v1.3
+│   │   │   ├── interceptors.ts          # Bearer injection, 403 role guard, error envelope map
+│   │   │   ├── media-uploader.ts        # 256 KB chunked upload driver with SHA-256
+│   │   │   └── audio-streamer.ts        # Ephemeral streaming TTS audio player
 │   │   ├── storage/                     # Secure hardware storage
 │   │   │   ├── keychain-storage.ts      # React Native Keychain (Android Keystore)
 │   │   │   └── file-storage.ts          # Encrypted local audio/photo file store
 │   │   ├── voice/                       # Audio recording & Gemini speech pipeline
-│   │   │   ├── audio-recorder.ts        # Native microphone driver (Opus/AAC)
+│   │   │   ├── audio-recorder.ts        # Native microphone driver (Opus/AAC/M4A)
 │   │   │   ├── audio-player.ts          # Native audio player (streaming TTS)
 │   │   │   ├── intent-classifier.ts     # Lightweight client-side intent parser
 │   │   │   ├── voice-router.ts          # Screen routing & scroll execution
@@ -112,7 +116,7 @@ apps/mobile/
 │   │   ├── SyncContext.tsx              # Sync queue state, pending count, online
 │   │   └── VoiceContext.tsx             # Voice listening overlay & TTS playback state
 │   │
-│   ├── navigation/                      # React Navigation system
+│   ├── navigation/                      # Navigation system
 │   │   ├── RootNavigator.tsx            # Auth stack vs. Main shell switch
 │   │   ├── AuthNavigator.tsx            # Language -> SignIn -> OTP -> Setup
 │   │   ├── FarmerTabNavigator.tsx       # Bottom tabs for Farmer role
@@ -120,14 +124,15 @@ apps/mobile/
 │   │   ├── routes.ts                    # Strongly typed route constants
 │   │   └── types.ts                     # Navigation prop & screen param types
 │   │
-│   ├── components/                      # Shared UI components & design system
+│   ├── components/                      # Stitch UI Reusable Component Library
 │   │   ├── common/
 │   │   │   ├── AppHeader.tsx            # Header with DA active-farmer badge & sync chip
 │   │   │   ├── Button.tsx               # 48dp/56dp high-contrast touch button
 │   │   │   ├── VisualCard.tsx           # Illiteracy-first card with TTS play button
+│   │   │   ├── MetricCard.tsx           # Large typography KPI card (Yield, Area, Price)
+│   │   │   ├── StatusBadge.tsx          # Severity-colored pill (Verified, Stale, etc.)
 │   │   │   ├── AudioPlayerWidget.tsx    # Audio controls (play, pause, seek, speed)
-│   │   │   ├── LoadingIndicator.tsx     # Animated loading spinner with spoken state
-│   │   │   └── StatusChip.tsx           # Severity-colored pill (Verified, Stale, etc.)
+│   │   │   └── LoadingIndicator.tsx     # Animated loading spinner with spoken state
 │   │   ├── overlays/
 │   │   │   ├── VoiceAssistant.tsx       # Persistent 56dp floating voice assistant widget
 │   │   │   ├── ListeningOverlay.tsx     # Voice recording waveform & chime animation
@@ -137,9 +142,11 @@ apps/mobile/
 │   │       ├── PhoneInput.tsx           # +251 masked number input with voice dictation
 │   │       ├── LargeNumberPad.tsx       # Large touch keypad with spoken digits
 │   │       ├── DatePicker.tsx           # Dual-calendar (Ethiopian / Gregorian) picker
-│   │       └── UnitSelector.tsx         # Land unit toggle (Timad, Kert, Hectare)
+│   │       ├── UnitSelector.tsx         # Land unit toggle (Timad, Kert, Hectare)
+│   │       ├── SoilClassPicker.tsx      # Visual soil texture & drainage selector
+│   │       └── GPSCaptureButton.tsx     # GPS centroid trigger with accuracy meter
 │   │
-│   ├── screens/                         # 21 Standalone Mobile Screens
+│   ├── screens/                         # 21 Standalone Mobile Screens (Stitch Aligned)
 │   │   ├── auth/                        # Authentication & Onboarding
 │   │   │   ├── LanguageSelectionScreen.tsx
 │   │   │   ├── SignInScreen.tsx
@@ -194,48 +201,119 @@ apps/mobile/
 
 ---
 
-## 3. Layer Responsibilities & Architectural Flow
+## 3. Stitch UI Design System & Component Library Integration
+
+When the user provides the Stitch UI MVP designs, the presentation layer directly implements them through the following standardized structure:
+
+### 3.1 Design Tokens (`src/theme/`)
+* **Color Palette (`colors.ts`):** 
+  * Primary Green: `#16A34A` (Crop Foliage / Ethiopian Highlands)
+  * Accent Gold: `#C78326` (Ripe Teff / Grain)
+  * Vertisol Soil: `#27272A` (*Koticha* Black Clay)
+  * Nitisol Soil: `#991B1B` (*Beda* Red Volcanic Soil)
+  * Surface/Backgrounds: `#FAF8F4` (Warm Parchment), Card: `#FFFFFF`
+  * Status Colors: Success `#16A34A`, Warning `#D97706`, Danger `#DC2626`, Info `#0284C7`
+* **Typography (`typography.ts`):** Minimum body size 16sp, large mode up to 24sp. Ge'ez font families (`NotoSansEthiopic`) for Amharic/Tigrinya and Roboto for Latin scripts.
+* **Layout & Sizing (`spacing.ts`, `tokens.ts`):** Minimum touch target 48×48 dp, primary buttons 56 dp, persistent voice FAB 56×56 dp.
+
+### 3.2 Component Extraction Strategy
+* Every UI pattern visible in the Stitch designs is extracted into reusable atomic components:
+  1. **Visual Cards:** High-contrast cards with an integrated TTS speaker icon (`VisualCard.tsx`) allowing illiterate farmers to tap to listen.
+  2. **Metric Displays:** Dual-unit displays showing local units (*Timad*, *Kert*) alongside standardized hectares and quintals.
+  3. **Visual Pickers:** Grid-based visual selectors for soil classes, crop stages, and pest symptoms.
+  4. **Overlays:** Consistent bottom sheets (`VoiceAssistant`, `SoilPicker`, `CropHistoryEntry`) that do not disorient the user.
+
+---
+
+## 4. Network Transport & API Contract Conformance
+
+The API service layer enforces the documented Hono API conventions through automated interceptors:
+
+### 4.1 Request Interceptor Chain
+```typescript
+// src/services/api/interceptors.ts
+apiClient.interceptors.request.use(async (config) => {
+  // 1. Inject Android Client Identity
+  config.headers['X-Client-Type'] = 'android';
+  config.headers['X-Device-Id'] = await getDeviceId();
+  config.headers['X-App-Version'] = getAppVersion();
+  config.headers['Accept-Language'] = getActiveLanguage(); // 'am' | 'om' | 'ti' | 'en'
+
+  // 2. Inject Idempotency Key for Mutations
+  if (['post', 'put', 'patch', 'delete'].includes(config.method?.toLowerCase() || '')) {
+    config.headers['Idempotency-Key'] = Crypto.randomUUID();
+  }
+
+  // 3. Inject Keystore Bearer Token
+  const token = await secureStorage.getItem('auth_token');
+  if (token) {
+    config.headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  return config;
+});
+```
+
+### 4.2 Error Handling & Role Admission Guard
+```typescript
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 403 && error.response?.data?.error?.code === 'client_not_permitted') {
+      // MOB-3: Officer or Admin logged in on Android client
+      await secureStorage.clear();
+      navigationRef.navigate('SignIn', { 
+        notice: 'Agricultural Officers and Admins must use the Web Portal.' 
+      });
+    }
+    return Promise.reject(error);
+  }
+);
+```
+
+### 4.3 Chunked Media Uploader (`/v1/media/uploads`)
+* Uploads are divided into strict **256 KB (262,144 bytes)** chunks.
+* `POST /v1/media/uploads` initializes the transfer with SHA-256 and file size.
+* `PUT /v1/media/uploads/{id}` sends chunks with `Content-Range: bytes start-end/total`.
+* `POST /v1/media/uploads/{id}/complete` validates the full hash on the server.
+
+### 4.4 Ephemeral Streaming TTS Audio Player
+* The mobile app streams audio directly from `/v1/voice/tts`, `/v1/cycles/:id/yield-gap/audio`, and `/v1/plots/:id/weather/summary-audio`.
+* Audio is piped directly to the native audio buffer and is **never written to persistent flash storage**, adhering to privacy and storage constraints.
+
+---
+
+## 5. Architectural Flow & Synchronization
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                       Presentation Layer                    │
-│   Screens (21 Standalone Screens) + UI Overlays (Voice, AI) │
+│   Stitch UI Screens (21 Screens) + Overlays (Voice Assistant)│
 └──────────────────────────────┬──────────────────────────────┘
-                               │ Observes & Triggers Actions
+                                │ Observes & Dispatches Actions
 ┌──────────────────────────────▼──────────────────────────────┐
 │                    State & Context Layer                    │
 │   AuthContext, FarmerContext (DA), SyncContext, VoiceContext│
 └──────────────────────────────┬──────────────────────────────┘
-                               │ Reads/Writes
+                                │ Reads / Writes
 ┌──────────────────────────────▼──────────────────────────────┐
 │                  Offline-First Reactive Layer               │
 │   WatermelonDB (Encrypted SQLite via SQLCipher)             │
-│   - Reads render instantly (<= 300ms)                       │
+│   - Reads render instantly (<= 200ms)                       │
 │   - Writes append to Transactional SyncMutation Queue       │
 └──────────────────────────────┬──────────────────────────────┘
-                               │ Synchronizes Asynchronously
+                                │ Synchronizes Asynchronously
 ┌──────────────────────────────▼──────────────────────────────┐
 │                     Delta-Sync Engine                       │
 │   NetInfo Connectivity Observer + WorkManager Background    │
-│   - Batches mutations (<= 50 records)                       │
-│   - Transmits SHA-256 payload hashes to Hono API            │
+│   - Batches mutations (<= 50 records, <= 500 KB gzip)       │
+│   - Computes SHA-256 payload hash                           │
+│   - Transmits to POST /v1/sync/push                         │
+│   - Pulls updates from GET /v1/sync/pull?cursor=...         │
 └──────────────────────────────┬──────────────────────────────┘
-                               │ Calls HTTPS REST / OpenAPI 3.1
+                                │ Authenticated HTTPS REST
 ┌──────────────────────────────▼──────────────────────────────┐
 │                     Shared Hono.js API                      │
 │   PostgreSQL 15+ PostGIS / Redis / Gemini AI / Africa's T.  │
 └─────────────────────────────────────────────────────────────┘
 ```
-
----
-
-## 4. Comparison of Existing vs. Target Architecture
-
-| Aspect | Existing Codebase (`apps/mobile`) | Recommended Target Architecture | Migration Approach |
-| :--- | :--- | :--- | :--- |
-| **Directory Structure** | Flat Expo Router structure in `src/app/`, mixing presentation, logic, and tests. | Clean feature-based modular layout (`src/screens/`, `src/database/`, `src/services/`). | Reorganize files into dedicated functional domains. |
-| **Routing Model** | Expo Router file-based routing (`_layout.tsx`, `explore.tsx`). | React Navigation Native Stack & Tab Navigators with route guards. | Implement `RootNavigator.tsx` and route definitions in `routes.ts`. |
-| **Data Persistence** | None. Purely in-memory React state + temporary AsyncStorage. | WatermelonDB with 19 local synchronized models encrypted via SQLCipher. | Initialize WatermelonDB schema matching PostgreSQL 42-table schema. |
-| **Auth & Security** | `expo-secure-store` with web localStorage fallback. Username login permitted. | `react-native-keychain` Android Keystore. Phone + password only. | Replace auth service with OpenAPI v1.3 endpoints; reject Officer/Admin roles. |
-| **Voice & Accessibility** | None. Standard touch inputs only. | Persistent 56dp voice assistant, intent classifier, Gemini STT/TTS audio streaming. | Implement `VoiceAssistant.tsx`, `audio-recorder.ts`, and `voice-router.ts`. |
-| **Testing Architecture** | No test suites or test setup present. | Jest + React Native Testing Library in `__tests__/` (unit, component, sync integration). | Setup test runners and automated test fixtures. |
