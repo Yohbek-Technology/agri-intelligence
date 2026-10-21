@@ -129,9 +129,9 @@ export function RootNavigator() {
 
       // AI & Weather
       case ROUTES.YIELD_GAP:
-        return <YieldGapScreen cycleId={screenParams.cycleId} />;
+        return <YieldGapScreen cycleId={screenParams.cycleId} onNavigate={navigate} />;
       case ROUTES.WEATHER_FORECAST:
-        return <WeatherForecastScreen />;
+        return <WeatherForecastScreen plotId={screenParams.plotId} onNavigate={navigate} />;
       case ROUTES.PEST_DIAGNOSIS:
         return <PestDiagnosisScreen plotId={screenParams.plotId} onNavigate={navigate} />;
       case ROUTES.CERTIFIED_INPUTS:

@@ -10,6 +10,12 @@ export const Spacing = {
   five: 32,
   six: 48,
   seven: 64,
+  // Standard Stitch & T-shirt scale aliases
+  xs: 4,
+  sm: 8,
+  md: 16,
+  lg: 24,
+  xl: 32,
 } as const;
 
 export const Typography = {
@@ -67,6 +73,20 @@ export const TouchTargets = {
 
 export const Shadows = {
   // Tactile utility elevation for direct sunlight legibility
+  sm: {
+    shadowColor: '#1E293B',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  md: {
+    shadowColor: '#1E293B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
   card: {
     shadowColor: '#1E293B',
     shadowOffset: { width: 0, height: 2 },
