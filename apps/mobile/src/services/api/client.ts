@@ -28,6 +28,11 @@ export async function getActiveLanguage(): Promise<string> {
   return lang || 'en';
 }
 
+export async function setActiveLanguage(lang: string): Promise<void> {
+  await secureStorage.setItem(LANGUAGE_KEY, lang);
+}
+
+
 function generateUuid(): string {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = (Math.random() * 16) | 0;

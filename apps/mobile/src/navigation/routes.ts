@@ -7,6 +7,7 @@ export const ROUTES = {
   // Auth & Onboarding
   LANGUAGE_SELECTION: 'LanguageSelection',
   SIGN_IN: 'SignIn',
+  OTP_VERIFICATION: 'OtpVerification',
   PROFILE_SETUP: 'ProfileSetup',
 
   // Main Navigation Hubs

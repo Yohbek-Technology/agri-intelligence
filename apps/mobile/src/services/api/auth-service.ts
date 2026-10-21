@@ -87,6 +87,31 @@ export const authService = {
   },
 
   /**
+   * Resend SMS OTP to Phone (ADM-8)
+   */
+  async resendOtp(phoneNumber: string): Promise<ServiceResult<{ status: boolean }>> {
+    const normalizedPhone = PhoneUtils.normalize(phoneNumber);
+    return await apiRequest(API_ENDPOINTS.auth.resendOtp, {
+      method: 'POST',
+      body: JSON.stringify({
+        phoneNumber: normalizedPhone,
+      }),
+    });
+  },
+
+  /**
+   * Accept Development Agent Invitation Token
+   */
+  async acceptInvitation(token: string): Promise<ServiceResult<{ status: boolean }>> {
+    return await apiRequest(API_ENDPOINTS.auth.acceptInvitation, {
+      method: 'POST',
+      body: JSON.stringify({
+        token,
+      }),
+    });
+  },
+
+  /**
    * Verify SMS OTP & Activate Credential Account
    */
   async verifyOtpAndSignUp(input: PhoneOtpVerify): Promise<ServiceResult<AuthResponseData>> {

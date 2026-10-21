@@ -7,6 +7,7 @@ export const Colors = {
   light: {
     // Primary Brand (Ethiopian Greenery / Deep Forest Green)
     primary: '#1B5E20',
+    primaryDark: '#0D3812',
     primaryHover: '#15803D',
     primarySubtle: '#E8F5E9',
     primaryContainer: '#2E7D32',
@@ -38,7 +39,9 @@ export const Colors = {
     // Text & Typography (Rich Dark Slate for direct sunlight visibility)
     text: '#1E293B',
     textSecondary: '#475569',
+    textTertiary: '#94A3B8',
     textMuted: '#64748B',
+
 
     // Status & Severity Indicators (Outdoor High Contrast)
     success: '#2E7D32',
@@ -55,6 +58,7 @@ export const Colors = {
   },
   dark: {
     primary: '#4ADE80',
+    primaryDark: '#14532D',
     primaryHover: '#22C55E',
     primarySubtle: '#14532D',
     primaryContainer: '#166534',
@@ -81,7 +85,9 @@ export const Colors = {
 
     text: '#F4F4F5',
     textSecondary: '#A1A1AA',
+    textTertiary: '#71717A',
     textMuted: '#71717A',
+
 
     success: '#4ADE80',
     successLight: '#052E16',

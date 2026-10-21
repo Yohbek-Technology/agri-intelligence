@@ -115,7 +115,8 @@ export function FarmerHomeScreen({ onNavigate }: FarmerHomeScreenProps) {
 
       {/* Persistent 56dp Floating Voice Assistant (VOICE-1) */}
       <VoiceAssistant
-        onIntentResolved={(intent) => {
+        onNavigate={onNavigate}
+        onIntentResolved={(intent: string) => {
           if (intent === 'open_weather') onNavigate?.('WeatherForecast');
         }}
       />

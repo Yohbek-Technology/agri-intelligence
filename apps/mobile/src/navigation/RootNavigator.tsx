@@ -7,6 +7,7 @@ import type { SupportedLanguage } from '@/config/constants';
 // Screens
 import { LanguageSelectionScreen } from '@/screens/auth/LanguageSelectionScreen';
 import { SignInScreen } from '@/screens/auth/SignInScreen';
+import { OtpVerificationScreen } from '@/screens/auth/OtpVerificationScreen';
 import { ProfileSetupScreen } from '@/screens/auth/ProfileSetupScreen';
 import { FarmerHomeScreen } from '@/screens/main/FarmerHomeScreen';
 import { DaOperationsHubScreen } from '@/screens/main/DaOperationsHubScreen';
@@ -26,6 +27,7 @@ import { MarketPricesScreen } from '@/screens/support/MarketPricesScreen';
 import { AnnouncementsScreen } from '@/screens/support/AnnouncementsScreen';
 import { StorageGuideScreen } from '@/screens/support/StorageGuideScreen';
 import { SyncSettingsScreen } from '@/screens/support/SyncSettingsScreen';
+import { VoiceAssistant } from '@/components/overlays/VoiceAssistant';
 
 export function RootNavigator() {
   const { isAuthenticated, role } = useAuth();
@@ -52,20 +54,40 @@ export function RootNavigator() {
           setSelectedLanguage(lang);
           navigate(ROUTES.SIGN_IN);
         }}
+        onOpenDaHelp={() => navigate(ROUTES.SIGN_IN)}
       />
     );
   }
 
-  // 2. Unauthenticated Sign In Flow
+  // 2. Unauthenticated OTP Verification Flow
+  if (!isAuthenticated && currentScreen === ROUTES.OTP_VERIFICATION) {
+    return (
+      <OtpVerificationScreen
+        phoneNumber={screenParams.phoneNumber || ''}
+        name={screenParams.name}
+        password={screenParams.password}
+        isPasswordReset={screenParams.isPasswordReset}
+        onSuccess={() => {
+          navigate(ROUTES.PROFILE_SETUP);
+        }}
+        onBack={() => navigate(ROUTES.SIGN_IN)}
+      />
+    );
+  }
+
+  // 3. Unauthenticated Sign In Flow
   if (!isAuthenticated) {
     return (
       <SignInScreen
         onSuccess={() => {
-          if (role === 'da') {
-            navigate(ROUTES.DA_OPERATIONS_HUB);
-          } else {
-            navigate(ROUTES.FARMER_HOME);
-          }
+          navigate(ROUTES.PROFILE_SETUP);
+        }}
+        onNavigateToOtp={(otpParams) => {
+          navigate(ROUTES.OTP_VERIFICATION, otpParams);
+        }}
+        onBackToLanguage={() => {
+          setSelectedLanguage(null);
+          navigate(ROUTES.LANGUAGE_SELECTION);
         }}
       />
     );
@@ -127,7 +149,12 @@ export function RootNavigator() {
         return <SyncSettingsScreen />;
 
       case ROUTES.PROFILE_SETUP:
-        return <ProfileSetupScreen onComplete={() => navigate(ROUTES.FARMER_HOME)} />;
+        return (
+          <ProfileSetupScreen
+            onComplete={() => navigate(role === 'da' ? ROUTES.DA_OPERATIONS_HUB : ROUTES.FARMER_HOME)}
+            onBack={() => navigate(ROUTES.SIGN_IN)}
+          />
+        );
 
       default:
         return role === 'da' ? (
@@ -138,7 +165,12 @@ export function RootNavigator() {
     }
   };
 
-  return <View style={styles.container}>{renderScreen()}</View>;
+  return (
+    <View style={styles.container}>
+      {renderScreen()}
+      <VoiceAssistant onNavigate={navigate} />
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
