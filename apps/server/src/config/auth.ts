@@ -1,6 +1,6 @@
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
-import { phoneNumber, openAPI, username } from 'better-auth/plugins'
+import { phoneNumber, openAPI, username, bearer } from 'better-auth/plugins'
 import { db } from '@/config/db.js'
 import * as schema from '@/db/index.js'
 import { sendSms, onPhoneVerified, normalizeEthiopianPhone } from '@/services/sms.js'
@@ -53,12 +53,14 @@ export const auth = betterAuth({
 
   plugins: [
     openAPI(),
+    bearer(),
 
     username({
       displayUsername: false,
       minUsernameLength: 3,
       maxUsernameLength: 30,
     }),
+
 
     phoneNumber({
       otpLength: 6,
