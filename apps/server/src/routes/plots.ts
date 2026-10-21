@@ -30,6 +30,41 @@ export function getConversionFactor(unit: string): string {
   }
 }
 
+export async function ensureValidCrop(cityOfficeId: string, cropCode = 'teff'): Promise<string> {
+  const existing = await db
+    .select({ id: crops.id })
+    .from(crops)
+    .where(and(eq(crops.cityOfficeId, cityOfficeId), eq(crops.code, cropCode)))
+    .limit(1)
+
+  if (existing.length && existing[0]) {
+    return existing[0].id
+  }
+
+  const [inserted] = await db
+    .insert(crops)
+    .values({
+      cityOfficeId,
+      code: cropCode,
+      nameEn: 'Teff',
+      nameAm: 'ጤፍ',
+      nameOm: 'Xaafii',
+      nameTi: 'ጣፍ',
+    })
+    .onConflictDoNothing()
+    .returning({ id: crops.id })
+
+  if (inserted) return inserted.id
+
+  const fallback = await db
+    .select({ id: crops.id })
+    .from(crops)
+    .where(eq(crops.cityOfficeId, cityOfficeId))
+    .limit(1)
+
+  return fallback[0]!.id
+}
+
 /**
  * GET /api/v1/plots/geo/resolve
  * Resolves elevation, agro-zone, and default topography for given coordinates
@@ -374,4 +409,90 @@ plotsRouter.post('/:id/crop-history', sessionGuard, async (c) => {
     .returning()
 
   return c.json({ data: created, message: 'Crop history recorded' }, 201)
+})
+
+/**
+ * GET /api/v1/plots/:id/cycles
+ * List all crop cycles for a plot
+ */
+plotsRouter.get('/:id/cycles', sessionGuard, async (c) => {
+  const plotId = c.req.param('id')
+
+  const cycles = await db
+    .select()
+    .from(cropCycles)
+    .where(and(eq(cropCycles.plotId, plotId), isNull(cropCycles.deletedAt)))
+    .orderBy(desc(cropCycles.seasonYear))
+
+  return c.json({ data: cycles })
+})
+
+/**
+ * POST /api/v1/plots/:id/cycles
+ * Create a new cropping cycle for a plot (enforcing 1 active cycle per plot)
+ */
+plotsRouter.post('/:id/cycles', sessionGuard, async (c) => {
+  const plotId = c.req.param('id')
+  const user = c.get('user')
+  const body = await c.req.json().catch(() => ({}))
+
+  const {
+    cropId,
+    varietyId,
+    seasonYear = 2024,
+    startedOn = new Date().toISOString().split('T')[0],
+  } = body
+
+  const plotRecord = await db
+    .select()
+    .from(plots)
+    .where(and(eq(plots.id, plotId), isNull(plots.deletedAt)))
+    .limit(1)
+
+  if (!plotRecord.length || !plotRecord[0]) {
+    return c.json({ error: 'Plot not found' }, 404)
+  }
+
+  // Check 1 active cycle constraint (uq_crop_cycles_one_active)
+  const existingActive = await db
+    .select({ id: cropCycles.id })
+    .from(cropCycles)
+    .where(
+      and(
+        eq(cropCycles.plotId, plotId),
+        eq(cropCycles.status, 'active'),
+        isNull(cropCycles.deletedAt)
+      )
+    )
+    .limit(1)
+
+  if (existingActive.length && existingActive[0]) {
+    return c.json(
+      {
+        error:
+          'Conflict: An active crop cycle already exists for this plot. Complete or archive the active cycle before initiating a new one.',
+      },
+      409
+    )
+  }
+
+  const resolvedCropId = cropId || (await ensureValidCrop(plotRecord[0].cityOfficeId, 'teff'))
+
+  const [created] = await db
+    .insert(cropCycles)
+    .values({
+      cityOfficeId: plotRecord[0].cityOfficeId,
+      farmerId: plotRecord[0].farmerId,
+      plotId,
+      cropId: resolvedCropId,
+      varietyId: varietyId || null,
+      seasonYear: parseInt(String(seasonYear), 10),
+      stage: 'land_preparation',
+      status: 'active',
+      startedOn,
+      createdByUserId: user?.id || null,
+    })
+    .returning()
+
+  return c.json({ data: created, message: 'Crop cycle initiated' }, 201)
 })

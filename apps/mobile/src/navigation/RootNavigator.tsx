@@ -121,6 +121,7 @@ export function RootNavigator() {
             cycleId={screenParams.cycleId}
             initialLogType={screenParams.logType as LogType}
             onComplete={() => navigate(ROUTES.FARMER_HOME)}
+            onNavigate={navigate}
           />
         );
       case ROUTES.DA_TASKS:

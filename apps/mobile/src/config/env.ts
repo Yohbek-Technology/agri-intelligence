@@ -137,6 +137,12 @@ export const API_ENDPOINTS = {
     summary: `${API_BASE_URL}/api/v1/inbox/summary`,
     feed: `${API_BASE_URL}/api/v1/inbox`,
   },
+  daTasks: {
+    list: `${API_BASE_URL}/api/v1/da/tasks`,
+    detail: (id: string) => `${API_BASE_URL}/api/v1/da/tasks/${id}`,
+    create: `${API_BASE_URL}/api/v1/da/tasks`,
+    update: (id: string) => `${API_BASE_URL}/api/v1/da/tasks/${id}`,
+  },
 
   // Offline Delta-Sync & Media Uploads
   sync: {
