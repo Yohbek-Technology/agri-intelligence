@@ -133,9 +133,9 @@ export function RootNavigator() {
       case ROUTES.WEATHER_FORECAST:
         return <WeatherForecastScreen />;
       case ROUTES.PEST_DIAGNOSIS:
-        return <PestDiagnosisScreen />;
+        return <PestDiagnosisScreen plotId={screenParams.plotId} onNavigate={navigate} />;
       case ROUTES.CERTIFIED_INPUTS:
-        return <CertifiedInputsScreen />;
+        return <CertifiedInputsScreen onNavigate={navigate} />;
 
       // Support & Trade
       case ROUTES.GRIEVANCE_CHAT:

@@ -13,6 +13,8 @@ import { farmersRouter } from '@/routes/farmers.js'
 import { plotsRouter } from '@/routes/plots.js'
 import { cropCyclesRouter } from '@/routes/crop-cycles.js'
 import { daTasksRouter } from '@/routes/da-tasks.js'
+import { diagnosticsRouter } from '@/routes/diagnostics.js'
+import { catalogRouter } from '@/routes/catalog.js'
 import { pool } from '@/config/db.js'
 
 const app = new Hono()
@@ -52,6 +54,8 @@ app.route('/api/v1/farmers', farmersRouter)
 app.route('/api/v1/plots', plotsRouter)
 app.route('/api/v1/cycles', cropCyclesRouter)
 app.route('/api/v1/da/tasks', daTasksRouter)
+app.route('/api/v1/diagnoses', diagnosticsRouter)
+app.route('/api/v1/catalog', catalogRouter)
 
 app.get('/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOString() }))
 app.get('/', (c) => c.text('Agricultural Intelligence API is operational'))
