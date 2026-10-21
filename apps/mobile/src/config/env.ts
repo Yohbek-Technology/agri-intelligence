@@ -61,12 +61,13 @@ export const API_ENDPOINTS = {
     detail: (id: string) => `${API_BASE_URL}/api/v1/farmers/${id}`,
   },
   plots: {
+    me: `${API_BASE_URL}/api/v1/farmers/me/plots`,
     byFarmer: (farmerId: string) => `${API_BASE_URL}/api/v1/farmers/${farmerId}/plots`,
     detail: (id: string) => `${API_BASE_URL}/api/v1/plots/${id}`,
     archive: (id: string) => `${API_BASE_URL}/api/v1/plots/${id}/archive`,
     restore: (id: string) => `${API_BASE_URL}/api/v1/plots/${id}/restore`,
     cropHistory: (id: string) => `${API_BASE_URL}/api/v1/plots/${id}/crop-history`,
-    geoResolve: `${API_BASE_URL}/api/v1/geo/resolve`,
+    geoResolve: `${API_BASE_URL}/api/v1/plots/geo/resolve`,
   },
 
   // Crop Lifecycle & Event Logging

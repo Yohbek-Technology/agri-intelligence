@@ -8,7 +8,7 @@ export interface OfficeUnitFactors {
 
 export const DEFAULT_UNIT_FACTORS: OfficeUnitFactors = {
   timadToHa: 0.25, // SRS default: 1 Timad = 0.25 Hectares
-  kertToHa: 0.25, // Configurable per woreda/city office
+  kertToHa: 0.125, // SRS default: 1 Kert = 0.125 Hectares (~half a timad)
   hectareToHa: 1.0,
 };
 
