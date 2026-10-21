@@ -17,6 +17,8 @@ import { diagnosticsRouter } from '@/routes/diagnostics.js'
 import { catalogRouter } from '@/routes/catalog.js'
 import { yieldGapRouter } from '@/routes/yield-gap.js'
 import { weatherRouter } from '@/routes/weather.js'
+import { grievancesRouter } from '@/routes/grievances.js'
+import { syncRouter, devicesRouter, appVersionRouter } from '@/routes/sync.js'
 import { pool } from '@/config/db.js'
 
 const app = new Hono()
@@ -60,6 +62,10 @@ app.route('/api/v1/diagnoses', diagnosticsRouter)
 app.route('/api/v1/catalog', catalogRouter)
 app.route('/api/v1/yield-gap', yieldGapRouter)
 app.route('/api/v1/weather', weatherRouter)
+app.route('/api/v1/grievances', grievancesRouter)
+app.route('/api/v1/sync', syncRouter)
+app.route('/api/v1/devices', devicesRouter)
+app.route('/api/v1/app', appVersionRouter)
 
 app.get('/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOString() }))
 app.get('/', (c) => c.text('Agricultural Intelligence API is operational'))

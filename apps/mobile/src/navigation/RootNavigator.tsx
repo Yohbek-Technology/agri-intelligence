@@ -139,7 +139,12 @@ export function RootNavigator() {
 
       // Support & Trade
       case ROUTES.GRIEVANCE_CHAT:
-        return <GrievanceChatScreen />;
+        return (
+          <GrievanceChatScreen
+            grievanceId={screenParams.grievanceId}
+            onNavigateBack={() => navigate(role === 'da' ? ROUTES.DA_OPERATIONS_HUB : ROUTES.FARMER_HOME)}
+          />
+        );
       case ROUTES.MARKET_PRICES:
         return <MarketPricesScreen />;
       case ROUTES.ANNOUNCEMENTS:
