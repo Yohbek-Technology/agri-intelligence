@@ -44,7 +44,7 @@ export default function TerritoryStaffPage() {
   } = useKebeleManagement()
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 w-full space-y-6">
+    <div className="px-2.5 py-3 sm:p-6 lg:p-8 w-full space-y-4 sm:space-y-6">
 
       {/* Page header */}
       <motion.div
@@ -61,7 +61,7 @@ export default function TerritoryStaffPage() {
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.22, delay: 0.06 }}
-        className="flex items-center justify-between gap-4"
+        className="flex items-center justify-between gap-2 sm:gap-4"
         style={{ borderBottom: UI_BORDER }}
       >
         <div className="flex gap-1">
@@ -71,7 +71,7 @@ export default function TerritoryStaffPage() {
               type="button"
               onClick={() => setActiveTab(tab)}
               className={[
-                'px-4 py-2.5 text-sm font-medium border-b-2 cursor-pointer transition-colors whitespace-nowrap',
+                'px-2.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium border-b-2 cursor-pointer transition-colors whitespace-nowrap',
                 activeTab === tab
                   ? 'border-primary text-primary'
                   : 'border-transparent text-text-muted hover:text-text-primary',
@@ -94,7 +94,7 @@ export default function TerritoryStaffPage() {
               if (activeTab === 'kebeles') setKebeleDrawer({ open: true, mode: 'create' })
               else setStaffDrawer({ open: true, mode: 'create' })
             }}
-            className="flex items-center gap-2 px-4 py-2 mb-0.5 rounded-xl text-sm font-medium text-white bg-primary hover:bg-primary-hover transition-colors cursor-pointer whitespace-nowrap shadow-sm"
+            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 mb-0.5 rounded-xl text-xs sm:text-sm font-medium text-white bg-primary hover:bg-primary-hover transition-colors cursor-pointer whitespace-nowrap shadow-sm"
           >
             <Plus size={15} />
             {activeTab === 'kebeles' ? t('kebeles_add') : t('staff_add')}
@@ -124,13 +124,13 @@ export default function TerritoryStaffPage() {
               className="bg-surface rounded-xl overflow-hidden"
               style={{ border: UI_BORDER, boxShadow: SHADOW }}
             >
-              <div className="px-5 py-3.5" style={{ borderBottom: UI_BORDER }}>
+              <div className="px-3.5 py-2.5 sm:px-5 sm:py-3.5" style={{ borderBottom: UI_BORDER }}>
                 <span className="text-sm font-semibold text-text-primary">
                   {kebelesLoading ? '—' : `${kebeles.length} kebele${kebeles.length !== 1 ? 's' : ''}`}
                 </span>
               </div>
 
-              <div className="p-4">
+              <div className="p-2.5 sm:p-4">
                 {kebelesLoading ? (
                   <ListSkeleton rows={5} />
                 ) : kebeles.length === 0 ? (
@@ -149,7 +149,7 @@ export default function TerritoryStaffPage() {
                         key={k.id}
                         variants={item}
                         layout
-                        className="flex items-center justify-between py-3 gap-4"
+                        className="flex items-center justify-between py-2.5 sm:py-3 gap-2 sm:gap-4"
                         style={i < kebeles.length - 1 ? { borderBottom: UI_BORDER } : {}}
                       >
                         <div className="flex items-center gap-3 min-w-0">
@@ -221,13 +221,13 @@ export default function TerritoryStaffPage() {
               className="bg-surface rounded-xl overflow-hidden"
               style={{ border: UI_BORDER, boxShadow: SHADOW }}
             >
-              <div className="px-5 py-3.5" style={{ borderBottom: UI_BORDER }}>
+              <div className="px-3.5 py-2.5 sm:px-5 sm:py-3.5" style={{ borderBottom: UI_BORDER }}>
                 <span className="text-sm font-semibold text-text-primary">
                   {staffLoading ? '—' : `${staffList.length} member${staffList.length !== 1 ? 's' : ''}`}
                 </span>
               </div>
 
-              <div className="p-4">
+              <div className="p-2.5 sm:p-4">
                 {staffLoading ? (
                   <ListSkeleton rows={5} />
                 ) : staffList.length === 0 ? (
@@ -246,7 +246,7 @@ export default function TerritoryStaffPage() {
                         key={m.id}
                         variants={item}
                         layout
-                        className="flex items-center justify-between py-3 gap-4"
+                        className="flex items-center justify-between py-2.5 sm:py-3 gap-2 sm:gap-4"
                         style={i < staffList.length - 1 ? { borderBottom: UI_BORDER } : {}}
                       >
                         <div className="min-w-0">

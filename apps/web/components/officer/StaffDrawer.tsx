@@ -103,7 +103,7 @@ export function StaffDrawer({
           transition={{ type: 'spring', damping: 28, stiffness: 260 }}
         >
           {/* Header */}
-          <header className="flex items-center justify-between px-6 py-5" style={{ borderBottom: UI_BORDER }}>
+          <header className="flex items-center justify-between px-4 py-3.5 sm:px-6 sm:py-5" style={{ borderBottom: UI_BORDER }}>
             <div className="flex items-center gap-3">
               {step === 'verify_otp' && (
                 <button
@@ -134,7 +134,7 @@ export function StaffDrawer({
           </header>
 
           {/* Body */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-5">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-5">
             <AnimatePresence>
               {displayError && (
                 <motion.div
@@ -327,7 +327,7 @@ export function StaffDrawer({
           </div>
 
           {/* Footer */}
-          <footer className="px-6 py-5 flex gap-3 justify-end" style={{ borderTop: UI_BORDER }}>
+          <footer className="px-4 py-3 sm:px-6 sm:py-5 flex gap-3 justify-end" style={{ borderTop: UI_BORDER }}>
             <Button variant="secondary" onClick={onClose} disabled={isSubmitting || isSendingOtp}>
               {t('cancel')}
             </Button>

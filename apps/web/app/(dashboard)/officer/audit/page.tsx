@@ -97,7 +97,7 @@ export default function AuditPage() {
   const typedLogs = logs as AuditLogRow[]
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 w-full space-y-6">
+    <div className="px-2.5 py-3 sm:p-6 lg:p-8 w-full space-y-4 sm:space-y-6">
 
       {/* Header */}
       <motion.div
@@ -114,17 +114,17 @@ export default function AuditPage() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.22, delay: 0.06 }}
-        className="flex flex-wrap items-end gap-4 p-4 bg-surface rounded-xl"
+        className="flex flex-wrap items-end gap-3 sm:gap-4 p-3 sm:p-4 bg-surface rounded-xl"
         style={{ border: UI_BORDER, boxShadow: SHADOW }}
       >
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 w-full sm:w-auto">
           <label className="text-xs font-semibold text-text-muted uppercase tracking-wider whitespace-nowrap">
             {t('audit_action')}
           </label>
           <select
             value={actionFilter}
             onChange={(e) => setActionFilter(e.target.value as ActionOption)}
-            className="text-sm rounded-lg px-3 py-2 bg-surface text-text-primary min-w-[200px] focus:outline-none focus:ring-2 focus:ring-primary/15"
+            className="text-sm rounded-lg px-3 py-2 bg-surface text-text-primary w-full sm:min-w-[200px] sm:w-auto focus:outline-none focus:ring-2 focus:ring-primary/15"
             style={{ border: UI_BORDER }}
           >
             {ACTION_OPTIONS.map((a) => (
@@ -133,7 +133,7 @@ export default function AuditPage() {
           </select>
         </div>
 
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 flex-1 min-w-[130px] sm:flex-initial sm:w-auto">
           <label className="text-xs font-semibold text-text-muted uppercase tracking-wider whitespace-nowrap">
             {t('audit_from')}
           </label>
@@ -141,12 +141,12 @@ export default function AuditPage() {
             type="date"
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
-            className="text-sm rounded-lg px-3 py-2 bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
+            className="text-sm rounded-lg px-3 py-2 bg-surface text-text-primary w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-primary/15"
             style={{ border: UI_BORDER }}
           />
         </div>
 
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 flex-1 min-w-[130px] sm:flex-initial sm:w-auto">
           <label className="text-xs font-semibold text-text-muted uppercase tracking-wider whitespace-nowrap">
             {t('audit_to')}
           </label>
@@ -154,7 +154,7 @@ export default function AuditPage() {
             type="date"
             value={dateTo}
             onChange={(e) => setDateTo(e.target.value)}
-            className="text-sm rounded-lg px-3 py-2 bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
+            className="text-sm rounded-lg px-3 py-2 bg-surface text-text-primary w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-primary/15"
             style={{ border: UI_BORDER }}
           />
         </div>
@@ -268,7 +268,7 @@ export default function AuditPage() {
             </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-between px-5 py-3" style={{ borderTop: UI_BORDER }}>
+            <div className="flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3" style={{ borderTop: UI_BORDER }}>
               <span className="text-xs text-text-faint">{t('audit_page')} {page}</span>
               <div className="flex gap-2">
                 <button

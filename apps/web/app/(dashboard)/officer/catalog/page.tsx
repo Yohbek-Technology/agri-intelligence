@@ -268,7 +268,7 @@ export default function CatalogPage() {
 
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 w-full space-y-6">
+    <div className="px-2.5 py-3 sm:p-6 lg:p-8 w-full space-y-4 sm:space-y-6">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -284,7 +284,7 @@ export default function CatalogPage() {
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25, delay: 0.06 }}
-        className="flex gap-1 overflow-x-auto"
+        className="flex gap-1 overflow-x-auto pb-0.5"
         style={{ borderBottom: UI_BORDER }}
       >
         {TABS.map((tab) => (
@@ -292,7 +292,7 @@ export default function CatalogPage() {
             key={tab.id}
             type="button"
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 cursor-pointer transition-colors whitespace-nowrap ${
+            className={`px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium border-b-2 cursor-pointer transition-colors whitespace-nowrap ${
               activeTab === tab.id
                 ? 'border-primary text-primary'
                 : 'border-transparent text-text-muted hover:text-text-primary'

@@ -32,7 +32,7 @@ export function AiAssistantPopup() {
   return (
     <>
       {/* Floating Trigger Button — sits above bottom edge, clear of page actions */}
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-4 right-3 sm:bottom-6 sm:right-6 z-50">
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
@@ -51,7 +51,7 @@ export function AiAssistantPopup() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.96 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="fixed bottom-[5.5rem] right-6 z-50 w-[360px] sm:w-[400px] max-w-[calc(100vw-3rem)] h-[520px] max-h-[80vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden text-slate-900"
+            className="fixed bottom-[4.5rem] sm:bottom-[5.5rem] right-2 sm:right-6 z-50 w-[calc(100vw-1rem)] sm:w-[400px] max-w-[400px] h-[520px] max-h-[78vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden text-slate-900"
             style={{ border: '2px solid var(--color-border-ui)' }}
           >
             {/* Header */}

@@ -40,7 +40,7 @@ export function DashboardTopbar({ user, onSignOut, onMenuToggle }: Props) {
   }, [])
 
   return (
-    <header className="flex items-center justify-between px-4 h-14 shrink-0 w-full z-30 bg-transparent">
+    <header className="flex items-center justify-between px-2.5 sm:px-4 h-14 shrink-0 w-full z-30 bg-transparent">
       <div className="flex items-center">
         <BrandLogo size="xs" showSubtitle={false} className="py-0" />
       </div>

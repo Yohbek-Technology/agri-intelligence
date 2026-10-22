@@ -24,7 +24,7 @@ interface ParameterSectionProps {
 function ParameterSection({ title, children, index = 0 }: ParameterSectionProps) {
   return (
     <motion.section
-      className="bg-surface rounded-2xl p-6 space-y-4"
+      className="bg-surface rounded-xl sm:rounded-2xl p-3 sm:p-6 space-y-3 sm:space-y-4"
       style={{ border: UI_BORDER, boxShadow: '0 1px 2px rgba(0,0,0,0.03)' }}
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
@@ -33,7 +33,7 @@ function ParameterSection({ title, children, index = 0 }: ParameterSectionProps)
       <h2 className="text-xs font-semibold text-text-primary uppercase tracking-wider font-mono whitespace-nowrap">
         {title}
       </h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         {children}
       </div>
     </motion.section>
@@ -114,7 +114,7 @@ export default function SettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="w-full p-4 sm:p-6 lg:p-8 space-y-6">
+      <div className="w-full px-2.5 py-3 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
         <div className="space-y-2">
           <div className="h-7 w-48 rounded-lg bg-surface-subtle animate-pulse" />
           <div className="h-4 w-64 rounded-lg bg-surface-subtle animate-pulse" />
@@ -205,7 +205,7 @@ export default function SettingsPage() {
   ]
 
   return (
-    <div className="w-full pb-32 space-y-6 p-4 sm:p-6 lg:p-8">
+    <div className="w-full pb-32 space-y-4 sm:space-y-6 px-2.5 py-3 sm:p-6 lg:p-8">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -238,7 +238,7 @@ export default function SettingsPage() {
 
       {/* Save bar — fixed at bottom of screen, positioned to the right of the sidebar, visible at all times */}
       <div
-        className="fixed bottom-0 right-0 z-20 bg-surface/95 backdrop-blur-md px-4 sm:px-6 py-3.5 space-y-2 transition-[left] duration-[230ms] ease-in-out"
+        className="fixed bottom-0 right-0 z-20 bg-surface/95 backdrop-blur-md px-2.5 sm:px-6 py-2.5 sm:py-3.5 space-y-2 transition-[left] duration-[230ms] ease-in-out"
         style={{
           left: 'var(--sidebar-w, 0px)',
           borderTop: UI_BORDER,
@@ -246,16 +246,16 @@ export default function SettingsPage() {
         }}
       >
         {generalError && <Notice type="error" message={generalError} />}
-        <div className="flex items-center justify-between gap-4 w-full">
+        <div className="flex items-center justify-between gap-2 sm:gap-4 w-full">
           <motion.p
             key={isDirty ? 'dirty' : 'clean'}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className={`text-xs font-mono font-medium whitespace-nowrap ${isDirty ? 'text-accent' : 'text-text-faint'}`}
+            className={`text-xs font-mono font-medium truncate max-w-[130px] sm:max-w-none ${isDirty ? 'text-accent' : 'text-text-faint'}`}
           >
             {isDirty ? t('settings_unsaved') : t('settings_saved')}
           </motion.p>
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3 shrink-0">
             <Button
               variant="ghost"
               size="sm"

@@ -84,7 +84,7 @@ export function KebeleDrawer({
         >
           {/* Header */}
           <header
-            className="flex items-center justify-between px-6 py-5"
+            className="flex items-center justify-between px-4 py-3.5 sm:px-6 sm:py-5"
             style={{ borderBottom: UI_BORDER }}
           >
             <h2 className="text-base font-bold text-text-primary">
@@ -101,7 +101,7 @@ export function KebeleDrawer({
           </header>
 
           {/* Body */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-5">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-5">
             <AnimatePresence>
               {displayError && (
                 <motion.div
@@ -220,7 +220,7 @@ export function KebeleDrawer({
 
           {/* Footer */}
           <footer
-            className="px-6 py-5 flex gap-3 justify-end"
+            className="px-4 py-3 sm:px-6 sm:py-5 flex gap-3 justify-end"
             style={{ borderTop: UI_BORDER }}
           >
             <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>

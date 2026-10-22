@@ -170,8 +170,17 @@ export function OfficerSidebar({ onClose }: Props) {
   )
 
   useEffect(() => {
-    document.documentElement.style.setProperty('--sidebar-w', collapsed ? '60px' : '260px')
+    const updateSidebarWidth = () => {
+      if (window.innerWidth < 1024) {
+        document.documentElement.style.setProperty('--sidebar-w', '0px')
+      } else {
+        document.documentElement.style.setProperty('--sidebar-w', collapsed ? '60px' : '260px')
+      }
+    }
+    updateSidebarWidth()
+    window.addEventListener('resize', updateSidebarWidth)
     return () => {
+      window.removeEventListener('resize', updateSidebarWidth)
       document.documentElement.style.removeProperty('--sidebar-w')
     }
   }, [collapsed])
