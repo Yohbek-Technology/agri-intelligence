@@ -11,6 +11,9 @@ import { kebelesPublicRouter, officeKebeleRouter } from '@/routes/kebele.js'
 import { staffRouter } from '@/routes/staff.js'
 import { catalogPublicRouter, officeCatalogRouter } from '@/routes/catalog.js'
 import { auditRouter } from '@/routes/audit.js'
+import { farmerRouter, officeFarmerRouter } from '@/routes/farmer.js'
+import { plotRouter, geoRouter } from '@/routes/plot.js'
+import { officeRegistryRouter } from '@/routes/registry.js'
 
 const app = new Hono()
 
@@ -50,6 +53,11 @@ app.route('/api/v1/offices', officeRouter)
 // GET /api/v1/kebeles  (any authenticated user)
 app.route('/api/v1/kebeles', kebelesPublicRouter)
 
+// ── Farmers & Plots (Field & Self-service) ─────────────────────────────────────
+app.route('/api/v1/farmers', farmerRouter)
+app.route('/api/v1/plots', plotRouter)
+app.route('/api/v1/geo', geoRouter)
+
 // ── Office management (officer-only writes) ───────────────────────────────────
 const officeManagementRouter = new Hono()
 
@@ -64,6 +72,12 @@ officeManagementRouter.route('/catalog', officeCatalogRouter)
 
 // GET /api/v1/office/audit-logs
 officeManagementRouter.route('/audit-logs', auditRouter)
+
+// PATCH /:id/assign-da + POST /reassign
+officeManagementRouter.route('/farmers', officeFarmerRouter)
+
+// GET /farmers + GET /plots + POST /exports + GET /exports/:id
+officeManagementRouter.route('/registry', officeRegistryRouter)
 
 app.route('/api/v1/office', officeManagementRouter)
 
