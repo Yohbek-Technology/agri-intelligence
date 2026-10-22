@@ -31,13 +31,13 @@ export function AiAssistantPopup() {
 
   return (
     <>
-      {/* Floating Trigger Button — sits above bottom edge, clear of page actions */}
-      <div className="fixed bottom-16 right-3 sm:bottom-6 sm:right-6 z-50">
+      {/* Floating Trigger Button — at the very bottom right */}
+      <div className="fixed bottom-2 right-2 z-50">
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
           aria-label={t('triggerLabel')}
-          className="relative w-12 h-12 rounded-full bg-primary hover:bg-primary-hover text-white flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer shadow-lg select-none"
+          className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-primary hover:bg-primary-hover text-white flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer shadow-lg select-none"
           style={{ border: '2px solid rgba(255,255,255,0.3)' }}
         >
           {isOpen ? <X className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
@@ -51,7 +51,7 @@ export function AiAssistantPopup() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.96 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="fixed bottom-[4.5rem] sm:bottom-[5.5rem] right-2 sm:right-6 z-50 w-[calc(100vw-1rem)] sm:w-[400px] max-w-[400px] h-[520px] max-h-[78vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden text-slate-900"
+            className="fixed bottom-14 right-2 sm:bottom-16 sm:right-4 z-50 w-[calc(100vw-1rem)] sm:w-[400px] max-w-[400px] h-[520px] max-h-[78vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden text-slate-900"
             style={{ border: '2px solid var(--color-border-ui)' }}
           >
             {/* Header */}
