@@ -40,7 +40,7 @@ function ForgotPasswordContent() {
   return (
     <div className="max-w-md w-full mx-auto space-y-6">
       <div className="flex justify-center">
-        <div className="w-14 h-14 rounded-2xl bg-[var(--color-accent-light)] border border-[var(--color-accent)]/30 flex items-center justify-center">
+        <div className="w-14 h-14 rounded-2xl bg-accent-light flex items-center justify-center" style={{ border: '1.5px solid var(--color-border-ui)' }}>
           <LockKeyhole size={28} color="var(--color-accent)" strokeWidth={1.5} />
         </div>
       </div>
@@ -65,7 +65,7 @@ function ForgotPasswordContent() {
           hint={!liveError ? t('phoneHint') : undefined}
         />
 
-        <div className="flex items-center gap-2 text-xs font-mono text-text-muted bg-[var(--color-accent-light)] border border-[var(--color-accent)]/30 rounded-xl px-3 py-2">
+        <div className="flex items-center gap-2 text-xs font-mono text-text-muted bg-accent-light rounded-xl px-3 py-2" style={{ border: '1.5px solid var(--color-border-ui)' }}>
           <span>⏱</span>
           <span>{t('otpNote')}</span>
         </div>

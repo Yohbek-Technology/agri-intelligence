@@ -106,7 +106,7 @@ export default function SignInPage() {
         </Button>
       </form>
 
-      <div className="bg-[var(--color-surface-subtle)] border border-[var(--color-border)] rounded-2xl p-4">
+      <div className="bg-surface-subtle rounded-2xl p-4" style={{ border: '1.5px solid var(--color-border-ui)' }}>
         <div className="flex items-center justify-between mb-1.5">
           <div className="flex items-center gap-2">
             <span>🌤</span>

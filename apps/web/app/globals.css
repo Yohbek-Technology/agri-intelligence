@@ -30,6 +30,8 @@
   --color-border:            #DFD9CB;
   --color-border-strong:     #242E22;
   --color-border-subtle:     #EAE6DB;
+  /* UI panel border — light cool blue-grey, 1.5px, matches design reference */
+  --color-border-ui:         #C9D4DC;
 
   --color-shell:             #274422;
   --color-shell-hover:       rgba(255,255,255,0.06);
@@ -83,4 +85,49 @@ input, button, select, textarea {
 
 .ambient-glow-accent {
   box-shadow: 0 0 35px -8px rgba(199,131,38,0.22);
+}
+
+/* UI panel border — 1.5px light cool blue-grey, as per design reference */
+.ui-border {
+  border: 1.5px solid var(--color-border-ui);
+}
+
+.ui-border-b {
+  border-bottom: 1.5px solid var(--color-border-ui);
+}
+
+.ui-border-t {
+  border-top: 1.5px solid var(--color-border-ui);
+}
+
+.ui-border-l {
+  border-left: 1.5px solid var(--color-border-ui);
+}
+
+/* Legacy thick-border kept for backward compat but now uses ui-border colors */
+.thick-border {
+  border: 1.5px solid var(--color-border-ui);
+}
+
+.thick-border-b {
+  border-bottom: 1.5px solid var(--color-border-ui);
+}
+
+.thick-border-t {
+  border-top: 1.5px solid var(--color-border-ui);
+}
+
+/* Mobile content padding — minimal so content starts close to screen edge */
+@media (max-width: 768px) {
+  .officer-content {
+    padding-left: 0.375rem;
+    padding-right: 0.375rem;
+  }
+}
+
+/* No-wrap utility for tables and headers */
+.nowrap-scroll {
+  white-space: nowrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
 }

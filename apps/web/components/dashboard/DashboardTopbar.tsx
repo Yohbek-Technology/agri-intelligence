@@ -9,6 +9,10 @@ import { LocaleSwitcher } from '@/components/ui/localeSwitcher'
 import { NotificationPanel } from '@/components/dashboard/NotificationPanel'
 import type { AuthUser } from '@repo/shared'
 
+const UI_BORDER = '1.5px solid var(--color-border-ui)'
+/* Shell items sit on a dark green bg, so their border uses the shell token */
+const SHELL_BORDER = '1.5px solid var(--color-shell-border)'
+
 interface Props {
   user: AuthUser | null | undefined
   onSignOut: () => void
@@ -18,9 +22,9 @@ interface Props {
 export function DashboardTopbar({ user, onSignOut, onMenuToggle }: Props) {
   const t = useTranslations('Dashboard')
   const [profileOpen, setProfileOpen] = useState(false)
-  const [notifOpen, setNotifOpen] = useState(false)
+  const [notifOpen,   setNotifOpen]   = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
-  const bellRef = useRef<HTMLButtonElement>(null)
+  const bellRef    = useRef<HTMLButtonElement>(null)
 
   const initials  = user?.name?.charAt(0).toUpperCase() ?? '?'
   const shortName = user?.name?.split(' ')[0] ?? 'User'
@@ -53,8 +57,8 @@ export function DashboardTopbar({ user, onSignOut, onMenuToggle }: Props) {
             type="button"
             onClick={() => { setNotifOpen((p) => !p); setProfileOpen(false) }}
             className="relative w-9 h-9 flex items-center justify-center cursor-pointer rounded-lg
-              bg-shell-hover border border-shell-border text-on-shell
-              hover:bg-shell-active hover:text-on-shell-strong transition-colors overflow-visible"
+              bg-shell-hover text-on-shell hover:bg-shell-active hover:text-on-shell-strong transition-colors overflow-visible"
+            style={{ border: SHELL_BORDER }}
             aria-label={t('notifications')}
           >
             <Bell size={17} />
@@ -73,10 +77,10 @@ export function DashboardTopbar({ user, onSignOut, onMenuToggle }: Props) {
             type="button"
             onClick={() => { setProfileOpen((p) => !p); setNotifOpen(false) }}
             className="flex items-center gap-2 pl-1.5 pr-2.5 py-1.5 cursor-pointer rounded-lg
-              bg-shell-hover border border-shell-border hover:bg-shell-active transition-colors"
+              bg-shell-hover hover:bg-shell-active transition-colors"
+            style={{ border: SHELL_BORDER }}
           >
-            <div className="w-7 h-7 flex items-center justify-center text-xs font-mono
-              font-bold shrink-0 rounded-md bg-primary text-primary-light">
+            <div className="w-7 h-7 flex items-center justify-center text-xs font-mono font-bold shrink-0 rounded-md bg-primary text-primary-light">
               {initials}
             </div>
             <div className="hidden sm:block leading-none text-left">
@@ -97,39 +101,38 @@ export function DashboardTopbar({ user, onSignOut, onMenuToggle }: Props) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 6 }}
                 transition={{ duration: 0.13 }}
-                className="absolute right-0 mt-1.5 w-52 py-1 z-50 bg-surface border border-border rounded-xl shadow-xl"
+                className="absolute right-0 mt-1.5 w-52 py-1 z-50 bg-surface rounded-xl shadow-xl"
+                style={{ border: UI_BORDER }}
               >
-                <div className="px-4 py-3 border-b border-border">
+                <div className="px-4 py-3" style={{ borderBottom: UI_BORDER }}>
                   <div className="text-sm font-semibold text-text-primary">{user?.name ?? 'User'}</div>
                   <div className="text-xs font-mono mt-0.5 text-text-muted">{phone}</div>
                 </div>
                 <button type="button" onClick={() => setProfileOpen(false)}
                   className="w-full flex items-center gap-3 px-4 py-2.5 cursor-pointer text-text-muted hover:bg-surface-subtle transition-colors">
-                  <User size={15} />
-                  <span className="text-sm font-medium">Profile &amp; Settings</span>
+                  <User size={15} /><span className="text-sm font-medium">Profile &amp; Settings</span>
                 </button>
                 <button type="button" onClick={() => setProfileOpen(false)}
                   className="w-full flex items-center gap-3 px-4 py-2.5 cursor-pointer text-text-muted hover:bg-surface-subtle transition-colors">
-                  <Settings size={15} />
-                  <span className="text-sm font-medium">Preferences</span>
+                  <Settings size={15} /><span className="text-sm font-medium">Preferences</span>
                 </button>
-                <div className="my-1 border-t border-border" />
+                <div className="my-1" style={{ borderTop: UI_BORDER }} />
                 <button type="button" onClick={() => { setProfileOpen(false); onSignOut() }}
                   className="w-full flex items-center gap-3 px-4 py-2.5 cursor-pointer text-danger hover:bg-danger-light transition-colors">
-                  <LogOut size={15} />
-                  <span className="text-sm font-medium">{t('signOut')}</span>
+                  <LogOut size={15} /><span className="text-sm font-medium">{t('signOut')}</span>
                 </button>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        {/* Mobile menu toggle — rightmost */}
+        {/* Mobile menu toggle */}
         <button
           type="button"
           onClick={onMenuToggle}
           className="lg:hidden flex items-center justify-center w-9 h-9 rounded-lg cursor-pointer
-            bg-shell-hover border border-shell-border text-on-shell hover:bg-shell-active transition-colors"
+            bg-shell-hover text-on-shell hover:bg-shell-active transition-colors"
+          style={{ border: SHELL_BORDER }}
           aria-label="Open menu"
         >
           <Menu size={17} />

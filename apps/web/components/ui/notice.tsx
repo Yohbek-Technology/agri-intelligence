@@ -10,28 +10,30 @@ export interface NoticeProps {
   onDismiss?: () => void
 }
 
+const BG: Record<string, string> = {
+  error:   'bg-danger-light text-danger',
+  success: 'bg-success-light text-success',
+  warning: 'bg-accent-light text-accent',
+  info:    'bg-primary-light text-primary',
+}
+
+const BORDER_COLOR: Record<string, string> = {
+  error:   'var(--color-danger)',
+  success: 'var(--color-success)',
+  warning: 'var(--color-accent)',
+  info:    'var(--color-primary)',
+}
+
+const ICONS: Record<string, string> = {
+  error: '🛑', success: '✓', warning: '⚠', info: 'ℹ',
+}
+
 export function Notice({ type = 'info', message, onDismiss }: NoticeProps) {
   const t = useTranslations('Notice')
 
-  const styles = {
-    error:   'bg-danger-light border-danger text-danger',
-    success: 'bg-success-light border-success text-success',
-    warning: 'bg-accent-light border-accent text-accent',
-    info:    'bg-primary-light border-primary text-primary',
-  }[type]
-
-  const icons = {
-    error:   '🛑',
-    success: '✓',
-    warning: '⚠',
-    info:    'ℹ',
-  }[type]
-
-  const iconLabels = {
-    error:   t('errorIcon'),
-    success: t('successIcon'),
-    warning: t('warningIcon'),
-    info:    t('infoIcon'),
+  const iconLabel = {
+    error: t('errorIcon'), success: t('successIcon'),
+    warning: t('warningIcon'), info: t('infoIcon'),
   }[type]
 
   return (
@@ -39,11 +41,12 @@ export function Notice({ type = 'info', message, onDismiss }: NoticeProps) {
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
-      className={`p-3.5 rounded-2xl border text-xs sm:text-sm font-medium flex items-start justify-between gap-3 ${styles}`}
+      className={`p-3.5 rounded-2xl text-xs sm:text-sm font-medium flex items-start justify-between gap-3 ${BG[type]}`}
+      style={{ border: `1.5px solid ${BORDER_COLOR[type]}` }}
       role="alert"
     >
       <div className="flex items-center gap-2">
-        <span className="text-base select-none" aria-label={iconLabels}>{icons}</span>
+        <span className="text-base select-none" aria-label={iconLabel}>{ICONS[type]}</span>
         <span>{message}</span>
       </div>
       {onDismiss && (

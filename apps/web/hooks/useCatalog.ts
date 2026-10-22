@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { officerService } from '@/services/officerService'
 import type {
+  ChemicalRow,
   CreateCropInput,
   UpdateCropInput,
   CreateVarietyInput,
@@ -151,9 +152,21 @@ export function useUpdateChemical() {
 }
 
 export function useRetireChemical() {
-  const queryClient = useQueryClient()
+  const qc = useQueryClient()
   return useMutation({
     mutationFn: (id: string) => officerService.retireChemical(id),
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['catalog', 'chemicals'] }),
+    // Optimistic: mark retired immediately in cache
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey: ['catalog', 'chemicals'] })
+      const prev = qc.getQueryData<ChemicalRow[]>(['catalog', 'chemicals'])
+      qc.setQueryData<ChemicalRow[]>(['catalog', 'chemicals'], (old) =>
+        old?.map((c) => (c.id === id ? { ...c, status: 'retired' as const } : c)) ?? [],
+      )
+      return { prev }
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) qc.setQueryData(['catalog', 'chemicals'], ctx.prev)
+    },
+    onSettled: () => void qc.invalidateQueries({ queryKey: ['catalog', 'chemicals'] }),
   })
 }

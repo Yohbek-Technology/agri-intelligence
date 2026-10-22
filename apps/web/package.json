@@ -11,13 +11,15 @@
   "dependencies": {
     "@repo/shared": "workspace:*",
     "@tanstack/react-query": "^5.104.1",
+    "@tanstack/react-table": "8.20.6",
     "better-auth": "^1.7.7",
     "framer-motion": "^14.1.0",
     "lucide-react": "^1.54.0",
     "next": "16.4.0",
     "next-intl": "^4.14.9",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "sonner": "^2.0.8"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",

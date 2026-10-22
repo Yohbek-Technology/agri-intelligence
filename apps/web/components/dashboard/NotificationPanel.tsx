@@ -7,6 +7,8 @@ import {
   MessageSquare, Megaphone, CheckCircle, AlertTriangle,
 } from 'lucide-react'
 
+const UI_BORDER = '1.5px solid var(--color-border-ui)'
+
 export type NotificationKind = 'alert' | 'diagnosis' | 'message' | 'announcement' | 'success' | 'warning'
 
 export interface Notification {
@@ -19,63 +21,21 @@ export interface Notification {
 }
 
 const MOCK_NOTIFICATIONS: Notification[] = [
-  {
-    id: '1',
-    kind: 'alert',
-    title: 'Extreme Weather Alert',
-    body: 'Heavy downpour forecast for Adama tomorrow. Postpone spray window.',
-    time: '2m ago',
-    read: false,
-  },
-  {
-    id: '2',
-    kind: 'diagnosis',
-    title: 'Diagnosis Ready',
-    body: 'Stripe rust detected on PLT-01. Immediate fungicide window open.',
-    time: '18m ago',
-    read: false,
-  },
-  {
-    id: '3',
-    kind: 'message',
-    title: 'DA Tsegaye replied',
-    body: 'Your grievance #GRV-04 has been assigned. Field visit scheduled.',
-    time: '1h ago',
-    read: false,
-  },
-  {
-    id: '4',
-    kind: 'announcement',
-    title: 'NPS Fertilizer Available',
-    body: 'Adama depot has received 2,400 kg NPS. Contact your DA to request.',
-    time: '3h ago',
-    read: true,
-  },
-  {
-    id: '5',
-    kind: 'success',
-    title: 'Yield Gap Analysis Done',
-    body: 'Your PLT-02 result is ready. Top cause: delayed 2nd Urea top-dress.',
-    time: '5h ago',
-    read: true,
-  },
-  {
-    id: '6',
-    kind: 'warning',
-    title: 'Sync Pending',
-    body: '4 field logs are waiting to sync. Connect to WiFi to upload.',
-    time: '1d ago',
-    read: true,
-  },
+  { id: '1', kind: 'alert',        title: 'Extreme Weather Alert',  body: 'Heavy downpour forecast for Adama tomorrow. Postpone spray window.',           time: '2m ago',  read: false },
+  { id: '2', kind: 'diagnosis',    title: 'Diagnosis Ready',        body: 'Stripe rust detected on PLT-01. Immediate fungicide window open.',              time: '18m ago', read: false },
+  { id: '3', kind: 'message',      title: 'DA Tsegaye replied',     body: 'Your grievance #GRV-04 has been assigned. Field visit scheduled.',              time: '1h ago',  read: false },
+  { id: '4', kind: 'announcement', title: 'NPS Fertilizer Available',body: 'Adama depot has received 2,400 kg NPS. Contact your DA to request.',           time: '3h ago',  read: true  },
+  { id: '5', kind: 'success',      title: 'Yield Gap Analysis Done',body: 'Your PLT-02 result is ready. Top cause: delayed 2nd Urea top-dress.',           time: '5h ago',  read: true  },
+  { id: '6', kind: 'warning',      title: 'Sync Pending',           body: '4 field logs are waiting to sync. Connect to WiFi to upload.',                  time: '1d ago',  read: true  },
 ]
 
 const KIND_META: Record<NotificationKind, { icon: React.ReactNode; bg: string; color: string }> = {
-  alert:        { icon: <CloudLightning size={15} />,  bg: 'bg-danger-light',  color: 'text-danger' },
-  diagnosis:    { icon: <Stethoscope size={15} />,     bg: 'bg-primary-light', color: 'text-primary' },
-  message:      { icon: <MessageSquare size={15} />,   bg: 'bg-accent-light',  color: 'text-accent' },
-  announcement: { icon: <Megaphone size={15} />,       bg: 'bg-surface-subtle', color: 'text-text-muted' },
-  success:      { icon: <CheckCircle size={15} />,     bg: 'bg-success-light', color: 'text-success' },
-  warning:      { icon: <AlertTriangle size={15} />,   bg: 'bg-accent-light',  color: 'text-accent' },
+  alert:        { icon: <CloudLightning size={15} />, bg: 'bg-danger-light',   color: 'text-danger'    },
+  diagnosis:    { icon: <Stethoscope size={15} />,    bg: 'bg-primary-light',  color: 'text-primary'   },
+  message:      { icon: <MessageSquare size={15} />,  bg: 'bg-accent-light',   color: 'text-accent'    },
+  announcement: { icon: <Megaphone size={15} />,      bg: 'bg-surface-subtle', color: 'text-text-muted'},
+  success:      { icon: <CheckCircle size={15} />,    bg: 'bg-success-light',  color: 'text-success'   },
+  warning:      { icon: <AlertTriangle size={15} />,  bg: 'bg-accent-light',   color: 'text-accent'    },
 }
 
 interface Props {
@@ -93,9 +53,7 @@ export function NotificationPanel({ open, onClose, anchorRef }: Props) {
       if (
         panelRef.current && !panelRef.current.contains(e.target as Node) &&
         anchorRef.current && !anchorRef.current.contains(e.target as Node)
-      ) {
-        onClose()
-      }
+      ) onClose()
     }
     if (open) document.addEventListener('mousedown', handleOutside)
     return () => document.removeEventListener('mousedown', handleOutside)
@@ -108,11 +66,9 @@ export function NotificationPanel({ open, onClose, anchorRef }: Props) {
     if (!anchorRef.current) return {}
     const rect = anchorRef.current.getBoundingClientRect()
     const vw = window.innerWidth
-
     let left = rect.right - PANEL_WIDTH
     if (left < MARGIN) left = MARGIN
     if (left + PANEL_WIDTH > vw - MARGIN) left = vw - PANEL_WIDTH - MARGIN
-
     return {
       position: 'fixed',
       top: rect.bottom + 8,
@@ -131,11 +87,11 @@ export function NotificationPanel({ open, onClose, anchorRef }: Props) {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 8, scale: 0.97 }}
           transition={{ duration: 0.15, ease: 'easeOut' }}
-          className="z-[999] bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden"
-          style={getStyle()}
+          className="z-[999] bg-surface rounded-2xl shadow-2xl overflow-hidden"
+          style={{ ...getStyle(), border: UI_BORDER }}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+          <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: UI_BORDER }}>
             <div className="flex items-center gap-2.5">
               <Bell size={16} className="text-text-muted" />
               <span className="text-base font-semibold text-text-primary">Notifications</span>
@@ -162,15 +118,13 @@ export function NotificationPanel({ open, onClose, anchorRef }: Props) {
                 <div
                   key={n.id}
                   className={`flex gap-3 px-5 py-4 cursor-pointer transition-colors hover:bg-surface-subtle ${
-                    i < MOCK_NOTIFICATIONS.length - 1 ? 'border-b border-border-subtle' : ''
-                  } ${!n.read ? 'bg-primary-light/30' : ''}`}
+                    !n.read ? 'bg-primary-light/30' : ''
+                  }`}
+                  style={i < MOCK_NOTIFICATIONS.length - 1 ? { borderBottom: UI_BORDER } : {}}
                 >
-                  {/* Icon */}
                   <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${meta.bg} ${meta.color}`}>
                     {meta.icon}
                   </div>
-
-                  {/* Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <p className={`text-sm font-semibold leading-tight ${n.read ? 'text-text-muted' : 'text-text-primary'}`}>
@@ -178,22 +132,16 @@ export function NotificationPanel({ open, onClose, anchorRef }: Props) {
                       </p>
                       <span className="text-xs text-text-faint shrink-0 mt-0.5">{n.time}</span>
                     </div>
-                    <p className="text-sm text-text-muted mt-0.5 leading-snug line-clamp-2">
-                      {n.body}
-                    </p>
+                    <p className="text-sm text-text-muted mt-0.5 leading-snug line-clamp-2">{n.body}</p>
                   </div>
-
-                  {/* Unread dot */}
-                  {!n.read && (
-                    <div className="w-2 h-2 rounded-full bg-primary shrink-0 mt-1.5" />
-                  )}
+                  {!n.read && <div className="w-2 h-2 rounded-full bg-primary shrink-0 mt-1.5" />}
                 </div>
               )
             })}
           </div>
 
           {/* Footer */}
-          <div className="px-5 py-3 border-t border-border bg-surface-subtle">
+          <div className="px-5 py-3 bg-surface-subtle" style={{ borderTop: UI_BORDER }}>
             <button
               type="button"
               className="w-full text-sm text-text-muted hover:text-primary font-medium text-center cursor-pointer transition-colors"

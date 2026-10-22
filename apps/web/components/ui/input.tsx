@@ -34,15 +34,19 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           <input
             ref={ref}
             id={inputId}
-            className={`w-full bg-surface text-text-primary text-sm rounded-xl border transition-all placeholder:text-text-faint min-h-[48px] focus:outline-none ${
+            className={`w-full bg-surface text-text-primary text-sm rounded-xl transition-all placeholder:text-text-faint min-h-[48px] focus:outline-none ${
               leftIcon ? 'pl-10' : 'pl-3.5'
             } ${rightIcon ? 'pr-10' : 'pr-3.5'} ${
               error
-                ? 'border-danger focus:ring-2 focus:ring-danger/20'
+                ? 'border border-danger focus:ring-2 focus:ring-danger/20'
                 : success
-                ? 'border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)]/20'
-                : 'border-border focus:border-primary focus:ring-2 focus:ring-primary/15'
+                ? 'border border-success focus:ring-2 focus:ring-success/20'
+                : 'border focus:border-primary focus:ring-2 focus:ring-primary/15'
             } ${className}`}
+            style={{
+              borderColor: error ? undefined : success ? undefined : 'var(--color-border-ui)',
+              borderWidth: '1.5px',
+            }}
             {...props}
           />
           {rightIcon && (

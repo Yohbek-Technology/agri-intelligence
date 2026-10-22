@@ -199,6 +199,10 @@ export const officerService = {
     })
   },
 
+  reactivateStaff(id: string): Promise<ServiceResult<void>> {
+    return apiFetch<void>(`/api/v1/office/users/${id}/reactivate`, { method: 'POST' })
+  },
+
   retireChemical(id: string): Promise<ServiceResult<void>> {
     return apiFetch<void>(`/api/v1/office/catalog/chemicals/${id}/retire`, { method: 'POST' })
   },

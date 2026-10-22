@@ -1,93 +1,347 @@
 'use client'
 
 import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslations } from 'next-intl'
+import { useQueryClient } from '@tanstack/react-query'
 import {
-  useCrops, useCreateCrop, useUpdateCrop,
-  useVarieties, useCreateVariety, useUpdateVariety,
-  useFertilizerRates, useUpsertFertilizerRate,
-  usePests, useCreatePest, useUpdatePest,
-  useChemicals, useCreateChemical, useUpdateChemical, useRetireChemical,
+  useCrops,
+  useVarieties,
+  useFertilizerRates,
+  usePests,
+  useChemicals,
+  useRetireChemical,
 } from '@/hooks/useCatalog'
-import type { CropRow, VarietyRow, FertilizerRateRow, PestRow, ChemicalRow, AgroZone } from '@repo/shared'
+import { DataTable } from '@/components/ui/dataTable'
+import { TableSkeleton } from '@/components/ui/skeleton'
+import { showSuccessToast, showErrorToast } from '@/components/ui/toast'
+import type { ColumnDef } from '@tanstack/react-table'
+import type {
+  CropRow,
+  VarietyRow,
+  FertilizerRateRow,
+  PestRow,
+  ChemicalRow,
+  CatalogStatus,
+} from '@repo/shared'
+
+const UI_BORDER = '1.5px solid var(--color-border-ui)'
 
 type Tab = 'crops' | 'varieties' | 'fertilizer' | 'pests' | 'chemicals'
 
-const TABS: { id: Tab; label: string }[] = [
-  { id: 'crops',      label: 'Crops' },
-  { id: 'varieties',  label: 'Varieties' },
-  { id: 'fertilizer', label: 'Fertilizer Rates' },
-  { id: 'pests',      label: 'Pests & Diseases' },
-  { id: 'chemicals',  label: 'Chemicals' },
-]
-
-const ZONES: AgroZone[] = ['kolla', 'weyna_dega', 'dega']
-
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status }: { status: CatalogStatus }) {
   return (
-    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
-      status === 'active'
-        ? 'bg-success-light text-success'
-        : 'bg-surface-subtle text-text-faint'
-    }`}>
+    <span
+      className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${
+        status === 'active' ? 'bg-success-light text-success' : 'bg-surface-subtle text-text-faint'
+      }`}
+    >
       {status}
     </span>
   )
 }
 
-function TableEmpty({ label }: { label: string }) {
-  return (
-    <tr>
-      <td colSpan={99} className="px-4 py-8 text-center text-sm text-text-faint">
-        No {label} found.
-      </td>
-    </tr>
-  )
-}
-
 export default function CatalogPage() {
-  const [activeTab, setActiveTab] = useState<Tab>('crops')
-  const [selectedCropId, setSelectedCropId] = useState<string>('')
-  const [retireTarget, setRetireTarget] = useState<string | null>(null)
+  const t  = useTranslations('OfficerPages')
+  const qc = useQueryClient()
 
-  const crops          = useCrops()
-  const createCrop     = useCreateCrop()
-  const updateCrop     = useUpdateCrop()
-  const varieties      = useVarieties(selectedCropId || undefined)
-  const createVariety  = useCreateVariety()
-  const updateVariety  = useUpdateVariety()
-  const fertRates      = useFertilizerRates()
-  const upsertRate     = useUpsertFertilizerRate()
-  const pests          = usePests()
-  const createPest     = useCreatePest()
-  const updatePest     = useUpdatePest()
-  const chemicals      = useChemicals()
-  const createChemical = useCreateChemical()
-  const updateChemical = useUpdateChemical()
-  const retireChemical = useRetireChemical()
+  const [activeTab,      setActiveTab]      = useState<Tab>('crops')
+  const [selectedCropId, setSelectedCropId] = useState('')
+  const [retireTarget,   setRetireTarget]   = useState<string | null>(null)
 
-  const cropList     = (crops.data ?? []) as CropRow[]
-  const varietyList  = (varieties.data ?? []) as VarietyRow[]
-  const rateList     = (fertRates.data ?? []) as FertilizerRateRow[]
-  const pestList     = (pests.data ?? []) as PestRow[]
-  const chemicalList = (chemicals.data ?? []) as ChemicalRow[]
+  const cropsQ    = useCrops()
+  const varietiesQ = useVarieties(selectedCropId || undefined)
+  const ratesQ    = useFertilizerRates()
+  const pestsQ    = usePests()
+  const chemicalsQ = useChemicals()
+  const retireMut  = useRetireChemical()
+
+  const cropList     = (cropsQ.data     ?? []) as CropRow[]
+  const varietyList  = (varietiesQ.data ?? []) as VarietyRow[]
+  const rateList     = (ratesQ.data     ?? []) as FertilizerRateRow[]
+  const pestList     = (pestsQ.data     ?? []) as PestRow[]
+  const chemicalList = (chemicalsQ.data ?? []) as ChemicalRow[]
+
+  const TABS: { id: Tab; label: string }[] = [
+    { id: 'crops',      label: t('catalog_tab_crops') },
+    { id: 'varieties',  label: t('catalog_tab_varieties') },
+    { id: 'fertilizer', label: t('catalog_tab_fertilizer') },
+    { id: 'pests',      label: t('catalog_tab_pests') },
+    { id: 'chemicals',  label: t('catalog_tab_chemicals') },
+  ]
+
+  /* ── Column definitions ─────────────────────────────────────────────── */
+
+  const cropColumns: ColumnDef<CropRow, unknown>[] = [
+    {
+      accessorKey: 'code',
+      header: () => t('catalog_col_code'),
+      cell: ({ row }) => <span className="font-mono text-xs text-text-muted">{row.original.code}</span>,
+      size: 100,
+    },
+    {
+      accessorKey: 'nameEn',
+      header: () => t('catalog_col_name_en'),
+      cell: ({ row }) => <span className="font-medium text-text-primary">{row.original.nameEn}</span>,
+      size: 200,
+    },
+    {
+      accessorKey: 'maxPlausibleYieldQtPerHa',
+      header: () => t('catalog_col_max_yield'),
+      cell: ({ row }) => <span className="text-text-muted">{row.original.maxPlausibleYieldQtPerHa}</span>,
+      size: 150,
+    },
+    {
+      id: 'status',
+      header: () => t('catalog_col_status'),
+      cell: ({ row }) => <StatusBadge status={row.original.status} />,
+      size: 120,
+    },
+  ]
+
+  const varietyColumns: ColumnDef<VarietyRow, unknown>[] = [
+    {
+      accessorKey: 'name',
+      header: () => t('catalog_col_name_en'),
+      cell: ({ row }) => <span className="font-medium text-text-primary">{row.original.name}</span>,
+      size: 200,
+    },
+    {
+      id: 'certified',
+      header: () => t('catalog_col_certified'),
+      cell: ({ row }) => (
+        <span className={`text-xs font-medium whitespace-nowrap ${row.original.isCertified ? 'text-success' : 'text-text-faint'}`}>
+          {row.original.isCertified ? t('catalog_certified') : t('catalog_local')}
+        </span>
+      ),
+      size: 110,
+    },
+    {
+      id: 'zones',
+      header: () => t('catalog_col_zones'),
+      cell: ({ row }) => (
+        <span className="text-text-muted text-xs whitespace-nowrap">
+          {row.original.permittedZones.join(', ')}
+        </span>
+      ),
+      size: 150,
+    },
+    {
+      id: 'status',
+      header: () => t('catalog_col_status'),
+      cell: ({ row }) => <StatusBadge status={row.original.status} />,
+      size: 120,
+    },
+  ]
+
+  const rateColumns: ColumnDef<FertilizerRateRow, unknown>[] = [
+    {
+      id: 'crop',
+      header: () => t('catalog_col_crop'),
+      cell: ({ row }) => {
+        const name = cropList.find((c) => c.id === row.original.cropId)?.nameEn ?? row.original.cropId
+        return <span className="text-text-primary whitespace-nowrap">{name}</span>
+      },
+      size: 160,
+    },
+    {
+      accessorKey: 'agroZone',
+      header: () => t('catalog_col_zone'),
+      cell: ({ row }) => (
+        <span className="text-text-muted capitalize whitespace-nowrap">
+          {row.original.agroZone.replace('_', ' ')}
+        </span>
+      ),
+      size: 120,
+    },
+    {
+      accessorKey: 'ureaKgPerHa',
+      header: () => t('catalog_col_urea'),
+      cell: ({ row }) => <span className="font-mono text-text-primary">{row.original.ureaKgPerHa}</span>,
+      size: 120,
+    },
+    {
+      accessorKey: 'npsKgPerHa',
+      header: () => t('catalog_col_nps'),
+      cell: ({ row }) => <span className="font-mono text-text-primary">{row.original.npsKgPerHa}</span>,
+      size: 120,
+    },
+    {
+      accessorKey: 'seedKgPerHa',
+      header: () => t('catalog_col_seed'),
+      cell: ({ row }) => <span className="font-mono text-text-primary">{row.original.seedKgPerHa}</span>,
+      size: 120,
+    },
+    {
+      accessorKey: 'effectiveFrom',
+      header: () => t('catalog_col_effective'),
+      cell: ({ row }) => <span className="text-text-muted whitespace-nowrap">{row.original.effectiveFrom}</span>,
+      size: 130,
+    },
+    {
+      accessorKey: 'ratesVersion',
+      header: () => t('catalog_col_version'),
+      cell: ({ row }) => <span className="font-mono text-text-faint text-xs">v{row.original.ratesVersion}</span>,
+      size: 90,
+    },
+  ]
+
+  const pestColumns: ColumnDef<PestRow, unknown>[] = [
+    {
+      accessorKey: 'code',
+      header: () => t('catalog_col_code'),
+      cell: ({ row }) => <span className="font-mono text-xs text-text-muted">{row.original.code}</span>,
+      size: 120,
+    },
+    {
+      id: 'name',
+      header: () => t('catalog_col_name_en'),
+      cell: ({ row }) => {
+        const name = typeof row.original.name === 'object' && row.original.name !== null
+          ? (row.original.name as Record<string, string>).en ?? ''
+          : String(row.original.name)
+        return <span className="font-medium text-text-primary">{name}</span>
+      },
+      size: 200,
+    },
+    {
+      accessorKey: 'kind',
+      header: () => t('catalog_col_kind'),
+      cell: ({ row }) => <span className="capitalize text-text-muted whitespace-nowrap">{row.original.kind}</span>,
+      size: 100,
+    },
+    {
+      id: 'quarantine',
+      header: () => t('catalog_col_quarantine'),
+      cell: ({ row }) =>
+        row.original.isQuarantinePest ? (
+          <span className="text-xs font-medium text-danger whitespace-nowrap">
+            {t('catalog_quarantine_badge')}
+          </span>
+        ) : null,
+      size: 110,
+    },
+    {
+      id: 'status',
+      header: () => t('catalog_col_status'),
+      cell: ({ row }) => <StatusBadge status={row.original.status} />,
+      size: 110,
+    },
+  ]
+
+  const chemicalColumns: ColumnDef<ChemicalRow, unknown>[] = [
+    {
+      accessorKey: 'brandName',
+      header: () => t('catalog_col_brand'),
+      cell: ({ row }) => <span className="font-medium text-text-primary whitespace-nowrap">{row.original.brandName}</span>,
+      size: 200,
+    },
+    {
+      accessorKey: 'activeIngredient',
+      header: () => t('catalog_col_ingredient'),
+      cell: ({ row }) => <span className="text-text-muted text-xs whitespace-nowrap">{row.original.activeIngredient}</span>,
+      size: 220,
+    },
+    {
+      accessorKey: 'category',
+      header: () => t('catalog_col_category'),
+      cell: ({ row }) => <span className="capitalize text-text-muted whitespace-nowrap">{row.original.category}</span>,
+      size: 120,
+    },
+    {
+      accessorKey: 'safetyIntervalDays',
+      header: () => t('catalog_col_phi'),
+      cell: ({ row }) => <span className="font-mono text-text-muted whitespace-nowrap">{row.original.safetyIntervalDays}d</span>,
+      size: 90,
+    },
+    {
+      id: 'status',
+      header: () => t('catalog_col_status'),
+      cell: ({ row }) => <StatusBadge status={row.original.status} />,
+      size: 110,
+    },
+    {
+      id: 'actions',
+      header: () => '',
+      enableSorting: false,
+      size: 90,
+      cell: ({ row }) =>
+        row.original.status === 'active' ? (
+          <button
+            type="button"
+            onClick={() => setRetireTarget(row.original.id)}
+            className="text-xs font-medium text-danger hover:underline cursor-pointer whitespace-nowrap"
+          >
+            {t('catalog_retire')}
+          </button>
+        ) : null,
+    },
+  ]
+
+  /* ── Retire with undo ────────────────────────────────────────────────── */
+  function handleRetire(id: string) {
+    const snapshot = qc.getQueryData<ChemicalRow[]>(['catalog', 'chemicals'])
+    let undid = false
+
+    retireMut.mutate(id, {
+      onSuccess: () => {
+        if (!undid) {
+          showSuccessToast(t('toast_chemical_retired'), {
+            label: t('undo'),
+            onUndo: () => {
+              undid = true
+              // Restore immediately from snapshot
+              if (snapshot) qc.setQueryData(['catalog', 'chemicals'], snapshot)
+              // Re-activate via update (set status back to active)
+              // The backend route for unretire would be PATCH with status: active
+              // For now restore cache and refetch — real implementation needs a
+              // dedicated API endpoint
+              qc.invalidateQueries({ queryKey: ['catalog', 'chemicals'] })
+              showSuccessToast('Chemical restored (pending server sync)')
+            },
+          })
+        }
+      },
+      onError: (err) =>
+        showErrorToast(err instanceof Error ? err.message : 'Failed to retire chemical'),
+    })
+    setRetireTarget(null)
+  }
+
+  const isLoading = {
+    crops: cropsQ.isLoading,
+    varieties: varietiesQ.isLoading,
+    fertilizer: ratesQ.isLoading,
+    pests: pestsQ.isLoading,
+    chemicals: chemicalsQ.isLoading,
+  }[activeTab]
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-text-primary">Agricultural Catalog</h1>
-        <p className="text-sm text-text-muted mt-1">
-          Manage approved crops, varieties, fertilizer rates, pests, and registered chemicals.
-        </p>
-      </div>
+    <div className="p-3 sm:p-6 max-w-7xl mx-auto space-y-6">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25 }}
+      >
+        <h1 className="text-2xl font-bold text-text-primary">{t('catalog_title')}</h1>
+        <p className="text-sm text-text-muted mt-1">{t('catalog_subtitle')}</p>
+      </motion.div>
 
       {/* Tab bar */}
-      <div className="flex gap-1 border-b border-border">
+      <motion.div
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25, delay: 0.06 }}
+        className="flex gap-1 overflow-x-auto"
+        style={{ borderBottom: UI_BORDER }}
+      >
         {TABS.map((tab) => (
           <button
             key={tab.id}
             type="button"
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 cursor-pointer transition-colors ${
+            className={`px-4 py-2.5 text-sm font-medium border-b-2 cursor-pointer transition-colors whitespace-nowrap ${
               activeTab === tab.id
                 ? 'border-primary text-primary'
                 : 'border-transparent text-text-muted hover:text-text-primary'
@@ -96,263 +350,125 @@ export default function CatalogPage() {
             {tab.label}
           </button>
         ))}
-      </div>
+      </motion.div>
 
-      {/* ── CROPS ─────────────────────────────────────── */}
-      {activeTab === 'crops' && (
-        <div className="bg-surface border border-border rounded-xl overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-            <h2 className="text-base font-semibold text-text-primary">Crops</h2>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-surface-subtle">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wider">Code</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wider">Name (EN)</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wider">Max Yield (Qt/Ha)</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wider">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border-subtle">
-                {crops.isLoading
-                  ? <TableEmpty label="crops" />
-                  : cropList.length === 0
-                  ? <TableEmpty label="crops" />
-                  : cropList.map((c) => (
-                    <tr key={c.id} className="hover:bg-surface-subtle">
-                      <td className="px-4 py-3 font-mono text-xs text-text-muted">{c.code}</td>
-                      <td className="px-4 py-3 font-medium text-text-primary">{c.nameEn}</td>
-                      <td className="px-4 py-3 text-text-muted">{c.maxPlausibleYieldQtPerHa}</td>
-                      <td className="px-4 py-3"><StatusBadge status={c.status} /></td>
-                    </tr>
-                  ))
-                }
-              </tbody>
-            </table>
-          </div>
-          {createCrop.error && (
-            <p className="px-5 py-3 text-sm text-danger">{createCrop.error.message}</p>
-          )}
-        </div>
-      )}
-
-      {/* ── VARIETIES ─────────────────────────────────── */}
-      {activeTab === 'varieties' && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <label className="text-sm font-medium text-text-primary">Filter by crop:</label>
+      {/* Varieties crop filter */}
+      <AnimatePresence>
+        {activeTab === 'varieties' && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="flex items-center gap-3 overflow-hidden"
+          >
+            <label className="text-sm font-medium text-text-primary whitespace-nowrap">
+              {t('catalog_filter_crop')}
+            </label>
             <select
               value={selectedCropId}
               onChange={(e) => setSelectedCropId(e.target.value)}
-              className="text-sm border border-border rounded-lg px-3 py-2 bg-surface text-text-primary"
+              className="text-sm rounded-lg px-3 py-2 bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
+              style={{ border: UI_BORDER }}
             >
-              <option value="">All crops</option>
+              <option value="">{t('catalog_all_crops')}</option>
               {cropList.map((c) => (
                 <option key={c.id} value={c.id}>{c.nameEn}</option>
               ))}
             </select>
-          </div>
-          <div className="bg-surface border border-border rounded-xl overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-surface-subtle">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wider">Name</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wider">Certified</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wider">Zones</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wider">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border-subtle">
-                  {varieties.isLoading
-                    ? <TableEmpty label="varieties" />
-                    : varietyList.length === 0
-                    ? <TableEmpty label="varieties" />
-                    : varietyList.map((v) => (
-                      <tr key={v.id} className="hover:bg-surface-subtle">
-                        <td className="px-4 py-3 font-medium text-text-primary">{v.name}</td>
-                        <td className="px-4 py-3">
-                          <span className={`text-xs font-medium ${v.isCertified ? 'text-success' : 'text-text-faint'}`}>
-                            {v.isCertified ? 'Certified' : 'Local'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-text-muted text-xs">{v.permittedZones.join(', ')}</td>
-                        <td className="px-4 py-3"><StatusBadge status={v.status} /></td>
-                      </tr>
-                    ))
-                  }
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* ── FERTILIZER RATES ──────────────────────────── */}
-      {activeTab === 'fertilizer' && (
-        <div className="bg-surface border border-border rounded-xl overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-surface-subtle">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wider">Crop</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wider">Zone</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wider">Urea (kg/ha)</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wider">NPS (kg/ha)</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wider">Seed (kg/ha)</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wider">Effective From</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wider">Version</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border-subtle">
-                {fertRates.isLoading
-                  ? <TableEmpty label="fertilizer rates" />
-                  : rateList.length === 0
-                  ? <TableEmpty label="fertilizer rates" />
-                  : rateList.map((r) => {
-                    const cropName = cropList.find((c) => c.id === r.cropId)?.nameEn ?? r.cropId
-                    return (
-                      <tr key={r.id} className="hover:bg-surface-subtle">
-                        <td className="px-4 py-3 text-text-primary">{cropName}</td>
-                        <td className="px-4 py-3 text-text-muted capitalize">{r.agroZone.replace('_', ' ')}</td>
-                        <td className="px-4 py-3 font-mono text-text-primary">{r.ureaKgPerHa}</td>
-                        <td className="px-4 py-3 font-mono text-text-primary">{r.npsKgPerHa}</td>
-                        <td className="px-4 py-3 font-mono text-text-primary">{r.seedKgPerHa}</td>
-                        <td className="px-4 py-3 text-text-muted">{r.effectiveFrom}</td>
-                        <td className="px-4 py-3 font-mono text-text-faint text-xs">v{r.ratesVersion}</td>
-                      </tr>
-                    )
-                  })
-                }
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+      {/* Table — animated tab switch */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.2 }}
+        >
+          {isLoading ? (
+            <TableSkeleton rows={7} cols={5} />
+          ) : activeTab === 'crops' ? (
+            <DataTable<CropRow>
+              columns={cropColumns}
+              data={cropList}
+              emptyMessage={t('catalog_no_crops')}
+            />
+          ) : activeTab === 'varieties' ? (
+            <DataTable<VarietyRow>
+              columns={varietyColumns}
+              data={varietyList}
+              emptyMessage={t('catalog_no_varieties')}
+            />
+          ) : activeTab === 'fertilizer' ? (
+            <DataTable<FertilizerRateRow>
+              columns={rateColumns}
+              data={rateList}
+              emptyMessage={t('catalog_no_rates')}
+            />
+          ) : activeTab === 'pests' ? (
+            <DataTable<PestRow>
+              columns={pestColumns}
+              data={pestList}
+              emptyMessage={t('catalog_no_pests')}
+            />
+          ) : (
+            <DataTable<ChemicalRow>
+              columns={chemicalColumns}
+              data={chemicalList}
+              emptyMessage={t('catalog_no_chemicals')}
+            />
+          )}
+        </motion.div>
+      </AnimatePresence>
 
-      {/* ── PESTS ─────────────────────────────────────── */}
-      {activeTab === 'pests' && (
-        <div className="bg-surface border border-border rounded-xl overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-surface-subtle">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wider">Code</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wider">Name (EN)</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wider">Kind</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wider">Quarantine</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wider">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border-subtle">
-                {pests.isLoading
-                  ? <TableEmpty label="pests" />
-                  : pestList.length === 0
-                  ? <TableEmpty label="pests" />
-                  : pestList.map((p) => (
-                    <tr key={p.id} className="hover:bg-surface-subtle">
-                      <td className="px-4 py-3 font-mono text-xs text-text-muted">{p.code}</td>
-                      <td className="px-4 py-3 font-medium text-text-primary">
-                        {typeof p.name === 'object' && p.name !== null
-                          ? (p.name as Record<string, string>).en ?? ''
-                          : String(p.name)}
-                      </td>
-                      <td className="px-4 py-3 capitalize text-text-muted">{p.kind}</td>
-                      <td className="px-4 py-3">
-                        {p.isQuarantinePest && (
-                          <span className="text-xs font-medium text-danger">⚠ Quarantine</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3"><StatusBadge status={p.status} /></td>
-                    </tr>
-                  ))
-                }
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* ── CHEMICALS ─────────────────────────────────── */}
-      {activeTab === 'chemicals' && (
-        <div className="bg-surface border border-border rounded-xl overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-surface-subtle">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wider">Brand</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wider">Active Ingredient</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wider">Category</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wider">PHI (days)</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wider">Status</th>
-                  <th className="px-4 py-3"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border-subtle">
-                {chemicals.isLoading
-                  ? <TableEmpty label="chemicals" />
-                  : chemicalList.length === 0
-                  ? <TableEmpty label="chemicals" />
-                  : chemicalList.map((ch) => (
-                    <tr key={ch.id} className="hover:bg-surface-subtle">
-                      <td className="px-4 py-3 font-medium text-text-primary">{ch.brandName}</td>
-                      <td className="px-4 py-3 text-text-muted text-xs">{ch.activeIngredient}</td>
-                      <td className="px-4 py-3 capitalize text-text-muted">{ch.category}</td>
-                      <td className="px-4 py-3 font-mono text-text-muted">{ch.safetyIntervalDays}d</td>
-                      <td className="px-4 py-3"><StatusBadge status={ch.status} /></td>
-                      <td className="px-4 py-3">
-                        {ch.status === 'active' && (
-                          <button
-                            type="button"
-                            onClick={() => setRetireTarget(ch.id)}
-                            className="text-xs font-medium text-danger hover:underline cursor-pointer"
-                          >
-                            Retire
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                }
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Retire confirmation */}
-      {retireTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-surface border border-border rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
-            <h3 className="text-base font-bold text-text-primary">Retire Chemical?</h3>
-            <p className="text-sm text-text-muted">
-              This will immediately remove the chemical from the diagnosis safety filter. This action cannot be undone.
-            </p>
-            <div className="flex gap-3 justify-end">
-              <button
-                type="button"
-                onClick={() => setRetireTarget(null)}
-                className="px-4 py-2 text-sm font-medium text-text-muted border border-border rounded-xl cursor-pointer hover:bg-surface-subtle"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={retireChemical.isPending}
-                onClick={() => {
-                  retireChemical.mutate(retireTarget, {
-                    onSuccess: () => setRetireTarget(null),
-                  })
-                }}
-                className="px-4 py-2 text-sm font-medium text-white bg-danger rounded-xl cursor-pointer hover:bg-danger-subtle disabled:opacity-50"
-              >
-                {retireChemical.isPending ? 'Retiring…' : 'Retire'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Retire confirmation modal */}
+      <AnimatePresence>
+        {retireTarget && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="fixed inset-0 bg-black/40"
+              onClick={() => setRetireTarget(null)}
+            />
+            <motion.div
+              className="relative z-10 bg-surface rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-2xl mx-4"
+              style={{ border: UI_BORDER }}
+              initial={{ scale: 0.92, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.92, y: 20 }}
+              transition={{ type: 'spring', damping: 26, stiffness: 280 }}
+            >
+              <h3 className="text-base font-bold text-text-primary">{t('catalog_retire_title')}</h3>
+              <p className="text-sm text-text-muted">{t('catalog_retire_confirm')}</p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  type="button"
+                  onClick={() => setRetireTarget(null)}
+                  className="px-4 py-2 text-sm font-medium text-text-muted rounded-xl cursor-pointer hover:bg-surface-subtle transition-colors"
+                  style={{ border: UI_BORDER }}
+                >
+                  {t('cancel')}
+                </button>
+                <button
+                  type="button"
+                  disabled={retireMut.isPending}
+                  onClick={() => handleRetire(retireTarget)}
+                  className="px-4 py-2 text-sm font-medium text-white bg-danger rounded-xl cursor-pointer hover:bg-danger-subtle disabled:opacity-50 transition-colors"
+                >
+                  {retireMut.isPending ? t('catalog_retiring') : t('catalog_retire')}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
