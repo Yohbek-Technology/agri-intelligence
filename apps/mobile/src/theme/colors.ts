@@ -7,21 +7,44 @@ export const Colors = {
   light: {
     // Primary Brand (Ethiopian Greenery / Deep Forest Green)
     primary: '#1B5E20',
-    primaryDark: '#0D3812',
+    primaryDark: '#00450D',
     primaryHover: '#15803D',
     primarySubtle: '#E8F5E9',
-    primaryContainer: '#2E7D32',
+    primaryContainer: '#1B5E20',
     primaryText: '#FFFFFF',
 
     // Secondary (Fresh Sprout Green / Optimal Health / Sync Active)
-    secondary: '#4CAF50',
-    secondarySubtle: '#F1F8E9',
+    secondary: '#006E1C',
+    secondarySubtle: '#91F78E',
     secondaryText: '#FFFFFF',
 
     // Tertiary / Action Accent (Fertile Terracotta Amber / "Listen" Audio Trigger)
     accent: '#E65100',
     accentLight: '#FFF3E0',
     accentBorder: '#FFB74D',
+
+    // Exact Stitch Design Tokens
+    stitchPrimary: '#00450D',
+    stitchPrimaryContainer: '#1B5E20',
+    stitchOnPrimaryContainer: '#90D689',
+    stitchSecondary: '#006E1C',
+    stitchSecondaryContainer: '#91F78E',
+    stitchOnSecondaryContainer: '#00731E',
+    stitchTertiary: '#6C2200',
+    stitchTertiaryContainer: '#933100',
+    stitchTertiaryFixed: '#FFDBCF',
+    stitchOnTertiaryFixed: '#380D00',
+    stitchOnTertiaryContainer: '#FFB498',
+    stitchSurface: '#F9F9FF',
+    stitchSurfaceLow: '#F0F3FF',
+    stitchSurfaceContainer: '#E7EEFF',
+    stitchSurfaceHigh: '#DEE8FF',
+    stitchSurfaceHighest: '#D8E3FB',
+    stitchSurfaceLowest: '#FFFFFF',
+    stitchOutline: '#717A6D',
+    stitchOutlineVariant: '#C0C9BB',
+    stitchOnSurface: '#111C2D',
+    stitchOnSurfaceVariant: '#41493E',
 
     // Soil & Grain Accents (Beda Red Nitisol / Koticha Black Vertisol / Teff Gold)
     soilKoticha: '#27272A', // Black Vertisol

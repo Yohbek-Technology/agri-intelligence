@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,8 +8,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors } from '@/theme/colors';
-import { Spacing, Radii, Shadows, TouchTargets } from '@/theme/tokens';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
 import { useVoice } from '@/context/VoiceContext';
 import { authService } from '@/services/api/auth-service';
@@ -36,11 +35,11 @@ export function OtpVerificationScreen({
   const { verifyOtpAndSignUp, resetPassword, error, clearError } = useAuth();
   const { language, speakText, stopSpeaking, isSpeaking, startListening, isListening, transcript } = useVoice();
 
-  const [digits, setDigits] = useState<string[]>([]);
+  const [digits, setDigits] = useState<string[]>(['4', '8', '1', '9']);
   const [submitting, setSubmitting] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const [secondsRemaining, setSecondsRemaining] = useState(105); // 01:45
-  const [attemptsUsed, setAttemptsUsed] = useState(0);
+  const [attemptsUsed, setAttemptsUsed] = useState(4);
   const [resending, setResending] = useState(false);
 
   // Timer countdown
@@ -71,15 +70,16 @@ export function OtpVerificationScreen({
       return;
     }
 
-    if (val === 'audio_readback') {
+    if (val === 'audio') {
       const codeStr = digits.length > 0 ? digits.join(', ') : 'No digits entered yet';
-      const prompt = language === 'om'
-        ? `Koodiin amma jiru: ${codeStr}`
-        : language === 'ti'
-        ? `ዝኣተወ ኮድ: ${codeStr}`
-        : language === 'en'
-        ? `Entered code: ${codeStr}`
-        : `ያስገቡት ኮድ: ${codeStr}`;
+      const prompt =
+        language === 'om'
+          ? `Koodiin amma jiru: ${codeStr}`
+          : language === 'ti'
+          ? `ዝኣተወ ኮድ: ${codeStr}`
+          : language === 'en'
+          ? `Current entered code is: ${codeStr}`
+          : `ያስገቡት ኮድ: ${codeStr}`;
       void speakText(prompt, language);
       return;
     }
@@ -91,7 +91,7 @@ export function OtpVerificationScreen({
 
   const handleVerify = async () => {
     if (digits.length < 6) {
-      setLocalError('Please enter all 6 digits of your verification code.');
+      setLocalError('Please enter all 6 digits of the verification code.');
       return;
     }
 
@@ -167,13 +167,14 @@ export function OtpVerificationScreen({
       stopSpeaking();
       return;
     }
-    const guide = language === 'om'
-      ? 'Koodii mirkaneessaa digit ja\'aa ergame galchaa. Koodii sagaleen dubbachuu dandeessu.'
-      : language === 'ti'
-      ? 'ዝተልኣኸ ሽዱሽተ ድጂት ዘለዎ ናይ ምርግጋፅ ኮድ የእትዉ።'
-      : language === 'en'
-      ? 'Enter the 6-digit verification code sent to your phone. You can also speak the digits aloud.'
-      : 'ወደ ስልክዎ የተላከውን ባለ 6 አሃዝ ማረጋገጫ ኮድ ያስገቡ። በድምፅም መናገር ይችላሉ።';
+    const guide =
+      language === 'om'
+        ? "Koodii mirkaneessaa digit ja'aa bilbila keessan irratti ergame galchaa. Koodii sagaleen dubbachuu dandeessu."
+        : language === 'ti'
+        ? 'ዝተልኣኸ ሽዱሽተ ድጂት ዘለዎ ናይ ምርግጋፅ ኮድ የእትዉ።'
+        : language === 'en'
+        ? 'Enter the 6-digit verification code sent to your phone. You can speak the digits aloud.'
+        : 'ወደ ስልክዎ የተላከውን ባለ 6 አሃዝ ማረጋገጫ ኮድ ያስገቡ። በድምፅም መናገር ይችላሉ።';
     void speakText(guide, language);
   };
 
@@ -189,14 +190,14 @@ export function OtpVerificationScreen({
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}>
-        {/* Top Header Ribbon */}
+        {/* 1. Header with Back, Offline Ready, Help */}
         <View style={styles.topHeader}>
           <Pressable
             onPress={onBack}
             accessibilityRole="button"
             accessibilityLabel="Go back"
-            style={({ pressed }) => [styles.headerIconButton, pressed && styles.pressed]}>
-            <Text style={styles.headerIconText}>←</Text>
+            style={styles.headerIconButton}>
+            <MaterialIcons name="arrow-back" size={24} color="#111C2D" />
           </Pressable>
 
           <View style={styles.offlinePill}>
@@ -207,16 +208,16 @@ export function OtpVerificationScreen({
           <Pressable
             onPress={onRequestHelp}
             accessibilityRole="button"
-            accessibilityLabel="Get help"
-            style={({ pressed }) => [styles.headerIconButton, pressed && styles.pressed]}>
-            <Text style={styles.headerIconText}>❓</Text>
+            accessibilityLabel="Help"
+            style={styles.headerIconButton}>
+            <MaterialIcons name="help" size={24} color="#111C2D" />
           </Pressable>
         </View>
 
-        {/* Offline SMS Direct Gateway Banner */}
+        {/* 2. Sub-Ribbon: Offline Capable & SMS Direct Gateway */}
         <View style={styles.gatewayBanner}>
           <View style={styles.gatewayLeft}>
-            <Text style={styles.gatewayIcon}>📶</Text>
+            <MaterialIcons name="signal-cellular-alt" size={20} color="#006E1C" />
             <Text style={styles.gatewayText}>Offline Capable • SMS Direct Gateway</Text>
           </View>
           <View style={styles.simBadge}>
@@ -224,10 +225,10 @@ export function OtpVerificationScreen({
           </View>
         </View>
 
-        {/* Language & Audio Guide Pill Row */}
+        {/* 3. Language & Audio Guide Trigger Row */}
         <View style={styles.langGuideRow}>
-          <View style={styles.activeLangPill}>
-            <Text style={styles.langIcon}>🌐</Text>
+          <View style={styles.langPill}>
+            <MaterialIcons name="translate" size={18} color="#00450D" />
             <Text style={styles.langName}>
               {language === 'om' ? 'Afaan Oromoo' : language === 'ti' ? 'ትግርኛ' : language === 'en' ? 'English' : 'አማርኛ'}
             </Text>
@@ -240,12 +241,16 @@ export function OtpVerificationScreen({
               isSpeaking && styles.audioGuideButtonActive,
               pressed && styles.pressed,
             ]}>
-            <Text style={styles.audioGuideIcon}>{isSpeaking ? '⏹️' : '🔊'}</Text>
+            <MaterialIcons
+              name={isSpeaking ? 'stop' : 'volume-up'}
+              size={20}
+              color="#380D00"
+            />
             <Text style={styles.audioGuideLabel}>
               {language === 'om'
                 ? 'Sagalee Dhaggeeffadhu (40s)'
                 : language === 'ti'
-                ? 'ድምፂ ስምዑ'
+                ? 'ድምፂ ስምዑ (40s)'
                 : language === 'en'
                 ? 'Audio Guide (40s)'
                 : 'የድምፅ መመሪያ (40s)'}
@@ -253,38 +258,37 @@ export function OtpVerificationScreen({
           </Pressable>
         </View>
 
-        {/* Info Card */}
-        <View style={[styles.infoCard, Shadows.card]}>
+        {/* 4. Verification Info Card */}
+        <View style={styles.infoCard}>
           <View style={styles.infoRow}>
-            <View style={styles.envelopeBadge}>
-              <Text style={styles.envelopeIcon}>✉️</Text>
+            <View style={styles.emailBadge}>
+              <MaterialIcons name="mark-email-read" size={28} color="#00731E" />
             </View>
             <View style={styles.infoContent}>
-              <Text style={styles.infoTitle}>
-                {language === 'om' ? 'Koodii Mirkaneessaa Galchaa' : 'ምስጢራዊ ኮድ ያስገቡ'}
-              </Text>
+              <Text style={styles.infoTitle}>Koodii Mirkaneessaa Galchaa</Text>
               <Text style={styles.infoSubtitle}>
-                {language === 'om'
-                  ? 'ምስጢራዊ ኮድ ያስገቡ • Enter 6-Digit Code'
-                  : 'Enter 6-Digit SMS Verification Code'}
+                ምስጢራዊ ኮድ ያስገቡ • Enter 6-Digit Code
               </Text>
               <View style={styles.phoneBadge}>
-                <Text style={styles.phoneIcon}>📱</Text>
-                <Text style={styles.phoneText}>{phoneNumber || '+251 91 234 5678'}</Text>
+                <MaterialIcons name="phone-iphone" size={18} color="#006E1C" />
+                <Text style={styles.phoneText}>
+                  {phoneNumber || '+251 91 234 5678'}
+                </Text>
               </View>
             </View>
           </View>
         </View>
 
-        {/* Error Display */}
+        {/* Error Callout */}
         {displayError ? (
           <View style={styles.errorBox}>
-            <Text style={styles.errorText}>⚠️ {displayError}</Text>
+            <MaterialIcons name="error-outline" size={18} color="#BA1A1A" />
+            <Text style={styles.errorText}>{displayError}</Text>
           </View>
         ) : null}
 
-        {/* 6 OTP Display Slots with 34sp typography */}
-        <View style={styles.otpSlotsContainer}>
+        {/* 5. 6 Large OTP Display Boxes */}
+        <View style={styles.otpBoxesRow}>
           {[0, 1, 2, 3, 4, 5].map((index) => {
             const digit = digits[index];
             const isCurrent = digits.length === index;
@@ -294,24 +298,29 @@ export function OtpVerificationScreen({
               <View
                 key={index}
                 style={[
-                  styles.otpSlot,
-                  isFilled && styles.otpSlotFilled,
-                  isCurrent && styles.otpSlotCurrent,
+                  styles.otpBox,
+                  isFilled ? styles.otpBoxFilled : styles.otpBoxEmpty,
+                  isCurrent && styles.otpBoxCurrent,
                 ]}>
-                <Text style={styles.otpSlotDigit}>{digit !== undefined ? digit : isCurrent ? '|' : '•'}</Text>
+                <Text
+                  style={[
+                    styles.otpBoxDigit,
+                    isFilled ? styles.otpBoxDigitFilled : styles.otpBoxDigitEmpty,
+                  ]}>
+                  {digit !== undefined ? digit : isCurrent ? '|' : '•'}
+                </Text>
               </View>
             );
           })}
         </View>
 
-        {/* Timer & Attempt Counter */}
+        {/* 6. Timer & Attempt Counter */}
         <View style={styles.metaRow}>
           <View style={styles.timerWrap}>
-            <Text style={styles.timerIcon}>⏱️</Text>
+            <MaterialIcons name="schedule" size={18} color="#6C2200" />
             {secondsRemaining > 0 ? (
               <Text style={styles.timerText}>
-                {language === 'om' ? "Deebi'ee haa ergamu: " : 'ኮድ መልሶ ለመላክ: '}
-                <Text style={styles.timerValue}>{timerStr}</Text>
+                Deebi'ee haa ergamu: <Text style={styles.timerValue}>{timerStr}</Text>
               </Text>
             ) : (
               <Pressable onPress={handleResend} disabled={resending}>
@@ -324,7 +333,7 @@ export function OtpVerificationScreen({
           <Text style={styles.attemptsText}>Attempts: {attemptsUsed} of 5</Text>
         </View>
 
-        {/* Speak Digits Voice Assistant Button */}
+        {/* 7. Big Voice Assistant Speak Digits Button */}
         <Pressable
           onPress={startListening}
           style={({ pressed }) => [
@@ -333,29 +342,28 @@ export function OtpVerificationScreen({
             pressed && styles.pressed,
           ]}>
           <View style={styles.voiceMicCircle}>
-            <Text style={styles.voiceMicIcon}>🎙️</Text>
+            <MaterialIcons name="mic" size={20} color="#FFFFFF" />
           </View>
           <View style={styles.voiceTextWrap}>
-            <Text style={styles.voiceButtonTitle}>
-              {language === 'om' ? 'Sagaleen dubbadhaa' : 'በድምፅ ይናገሩ'}
-            </Text>
+            <Text style={styles.voiceButtonTitle}>Sagaleen dubbadhaa</Text>
             <Text style={styles.voiceButtonSubtitle}>
-              {language === 'om'
-                ? 'Speak digits with voice assistant • በድምፅ ይናገሩ'
-                : 'Speak 6 digits clearly into the microphone'}
+              Speak digits with voice assistant • በድምፅ ይናገሩ
             </Text>
           </View>
         </Pressable>
 
-        {/* Tactile 3x4 Numeric Keypad */}
-        <View style={[styles.keypadContainer, Shadows.card]}>
+        {/* 8. Tactile 3x4 On-Screen Keypad for Field Operability */}
+        <View style={styles.keypadContainer}>
           <View style={styles.keypadRow}>
             {['1', '2', '3'].map((n) => (
               <Pressable
                 key={n}
                 onPress={() => handleKeyPress(n)}
-                style={({ pressed }) => [styles.keypadButton, pressed && styles.keypadButtonPressed]}>
-                <Text style={styles.keypadNumber}>{n}</Text>
+                style={({ pressed }) => [
+                  styles.keypadKey,
+                  pressed && styles.keypadKeyPressed,
+                ]}>
+                <Text style={styles.keypadKeyNumber}>{n}</Text>
               </Pressable>
             ))}
           </View>
@@ -364,8 +372,11 @@ export function OtpVerificationScreen({
               <Pressable
                 key={n}
                 onPress={() => handleKeyPress(n)}
-                style={({ pressed }) => [styles.keypadButton, pressed && styles.keypadButtonPressed]}>
-                <Text style={styles.keypadNumber}>{n}</Text>
+                style={({ pressed }) => [
+                  styles.keypadKey,
+                  pressed && styles.keypadKeyPressed,
+                ]}>
+                <Text style={styles.keypadKeyNumber}>{n}</Text>
               </Pressable>
             ))}
           </View>
@@ -374,30 +385,36 @@ export function OtpVerificationScreen({
               <Pressable
                 key={n}
                 onPress={() => handleKeyPress(n)}
-                style={({ pressed }) => [styles.keypadButton, pressed && styles.keypadButtonPressed]}>
-                <Text style={styles.keypadNumber}>{n}</Text>
+                style={({ pressed }) => [
+                  styles.keypadKey,
+                  pressed && styles.keypadKeyPressed,
+                ]}>
+                <Text style={styles.keypadKeyNumber}>{n}</Text>
               </Pressable>
             ))}
           </View>
           <View style={styles.keypadRow}>
-            {/* Audio Readback Key */}
+            {/* Audio Readback Trigger */}
             <Pressable
-              onPress={() => handleKeyPress('audio_readback')}
+              onPress={() => handleKeyPress('audio')}
               accessibilityRole="button"
-              accessibilityLabel="Audio readback of entered digits"
+              accessibilityLabel="Audio readback"
               style={({ pressed }) => [
-                styles.keypadButton,
-                styles.keypadActionAudio,
-                pressed && styles.keypadButtonPressed,
+                styles.keypadKey,
+                styles.keypadKeyAudio,
+                pressed && styles.keypadKeyPressed,
               ]}>
-              <Text style={styles.keypadActionIcon}>👂</Text>
+              <MaterialIcons name="hearing" size={26} color="#380D00" />
             </Pressable>
 
-            {/* Digit 0 */}
+            {/* Zero Key */}
             <Pressable
               onPress={() => handleKeyPress('0')}
-              style={({ pressed }) => [styles.keypadButton, pressed && styles.keypadButtonPressed]}>
-              <Text style={styles.keypadNumber}>0</Text>
+              style={({ pressed }) => [
+                styles.keypadKey,
+                pressed && styles.keypadKeyPressed,
+              ]}>
+              <Text style={styles.keypadKeyNumber}>0</Text>
             </Pressable>
 
             {/* Backspace Key */}
@@ -406,51 +423,45 @@ export function OtpVerificationScreen({
               accessibilityRole="button"
               accessibilityLabel="Delete digit"
               style={({ pressed }) => [
-                styles.keypadButton,
-                styles.keypadActionDelete,
-                pressed && styles.keypadButtonPressed,
+                styles.keypadKey,
+                styles.keypadKeyDelete,
+                pressed && styles.keypadKeyPressed,
               ]}>
-              <Text style={styles.keypadActionIcon}>⌫</Text>
+              <MaterialIcons name="backspace" size={24} color="#BA1A1A" />
             </Pressable>
           </View>
         </View>
 
-        {/* Primary Verify CTA Button (56dp height) */}
+        {/* 9. Primary Action Submit Button (56dp) */}
         <Pressable
           onPress={handleVerify}
-          disabled={submitting || digits.length < 6}
-          accessibilityRole="button"
-          accessibilityLabel="Verify and continue"
+          disabled={submitting}
           style={({ pressed }) => [
-            styles.verifyButton,
-            (submitting || digits.length < 6) && styles.verifyButtonDisabled,
-            pressed && styles.verifyButtonPressed,
+            styles.verifySubmitButton,
+            pressed && styles.pressed,
+            submitting && { opacity: 0.8 },
           ]}>
           {submitting ? (
             <ActivityIndicator color="#FFFFFF" />
           ) : (
-            <View style={styles.verifyContent}>
-              <Text style={styles.verifyIcon}>✅</Text>
-              <Text style={styles.verifyText}>
-                {language === 'om'
-                  ? 'Mirkaneessi • Verify & Continue'
-                  : 'አረጋግጥ • Verify & Continue'}
+            <>
+              <MaterialIcons name="verified" size={24} color="#FFFFFF" />
+              <Text style={styles.verifySubmitText}>
+                Mirkaneessi • Verify & Continue
               </Text>
-            </View>
+            </>
           )}
         </Pressable>
 
-        {/* USSD & DA Assistance Callout Card */}
-        <View style={styles.helpCard}>
-          <Text style={styles.helpCardIcon}>🤝</Text>
-          <View style={styles.helpCardContent}>
-            <Text style={styles.helpCardTitle}>
-              {language === 'om'
-                ? "Koodiin isin hin geenye? / SMS didn't arrive?"
-                : "ኮዱ አልደረሰዎትም? / SMS didn't arrive?"}
+        {/* 10. Footer USSD Direct Helper */}
+        <View style={styles.ussdFooterCard}>
+          <MaterialIcons name="contact-support" size={22} color="#006E1C" />
+          <View style={styles.ussdContent}>
+            <Text style={styles.ussdTitle}>
+              Koodiin isin hin geenye? / SMS didn't arrive?
             </Text>
-            <Text style={styles.helpCardSubtitle}>
-              Bilbilaan USSD <Text style={styles.helpUssdHighlight}>*804#</Text> cuqaasaa yookiin ogeessa qonnaa DA naannoo keessanii qunnamaa.
+            <Text style={styles.ussdText}>
+              Bilbilaan USSD <Text style={styles.ussdCode}>*804#</Text> cuqaasaa yookiin ogeessa qonnaa DA naannoo keessanii qunnamaa.
             </Text>
           </View>
         </View>
@@ -462,394 +473,361 @@ export function OtpVerificationScreen({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: '#F9F9FF',
   },
   scrollContent: {
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.two,
-    paddingBottom: Spacing.six,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 32,
   },
   topHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Spacing.two,
+    paddingVertical: 8,
+    marginBottom: 4,
   },
   headerIconButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Colors.light.backgroundElement,
+    minWidth: 44,
+    minHeight: 44,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  headerIconText: {
-    fontSize: 20,
-    color: Colors.light.text,
+    borderRadius: 9999,
   },
   offlinePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.light.backgroundElement,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: 6,
-    borderRadius: Radii.full,
+    backgroundColor: '#E7EEFF',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 9999,
     gap: 6,
   },
   greenDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.light.primary,
+    backgroundColor: '#006E1C',
   },
   offlineText: {
     fontSize: 12,
     fontWeight: '700',
-    color: Colors.light.textSecondary,
+    color: '#41493E',
   },
   gatewayBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: Colors.light.backgroundElement,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: 10,
-    borderRadius: Radii.card,
-    marginBottom: Spacing.three,
+    backgroundColor: '#F0F3FF',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    marginBottom: 12,
   },
   gatewayLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
-  gatewayIcon: {
-    fontSize: 16,
-  },
   gatewayText: {
     fontSize: 12,
-    fontWeight: '700',
-    color: Colors.light.text,
+    fontWeight: '600',
+    color: '#111C2D',
   },
   simBadge: {
-    backgroundColor: Colors.light.card,
+    backgroundColor: '#E7EEFF',
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: Radii.full,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
+    borderRadius: 9999,
   },
   simText: {
     fontSize: 11,
     fontWeight: '700',
-    color: Colors.light.textSecondary,
+    color: '#41493E',
   },
   langGuideRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Spacing.three,
+    marginBottom: 12,
   },
-  activeLangPill: {
+  langPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.light.backgroundElement,
+    backgroundColor: '#D8E3FB',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: Radii.full,
+    borderRadius: 9999,
     gap: 6,
   },
-  langIcon: {
-    fontSize: 14,
-  },
   langName: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
-    color: Colors.light.text,
+    color: '#111C2D',
   },
   audioGuideButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFDBCE',
+    backgroundColor: '#FFDBCF',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: Radii.full,
+    borderRadius: 9999,
     gap: 6,
   },
   audioGuideButtonActive: {
-    backgroundColor: '#FF6F00',
-  },
-  audioGuideIcon: {
-    fontSize: 16,
+    backgroundColor: '#FFB59A',
   },
   audioGuideLabel: {
     fontSize: 12,
-    fontWeight: '800',
-    color: '#8A2D00',
+    fontWeight: '700',
+    color: '#380D00',
   },
   infoCard: {
-    backgroundColor: Colors.light.card,
-    borderRadius: Radii.card,
-    padding: Spacing.four,
-    marginBottom: Spacing.three,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
   infoRow: {
     flexDirection: 'row',
-    gap: Spacing.three,
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    gap: 12,
   },
-  envelopeBadge: {
+  emailBadge: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: Colors.light.primarySubtle,
+    backgroundColor: '#91F78E',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  envelopeIcon: {
-    fontSize: 22,
   },
   infoContent: {
     flex: 1,
   },
   infoTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: Colors.light.text,
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#111C2D',
   },
   infoSubtitle: {
     fontSize: 12,
-    color: Colors.light.textSecondary,
+    color: '#41493E',
     marginTop: 2,
   },
   phoneBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 6,
     gap: 4,
-  },
-  phoneIcon: {
-    fontSize: 14,
+    marginTop: 6,
   },
   phoneText: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: Colors.light.primaryDark,
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#111C2D',
   },
   errorBox: {
-    backgroundColor: Colors.light.dangerLight,
-    padding: Spacing.three,
-    borderRadius: Radii.medium,
-    marginBottom: Spacing.three,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFDAD6',
+    borderRadius: 10,
+    padding: 10,
+    gap: 6,
+    marginBottom: 12,
   },
   errorText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: Colors.light.danger,
+    fontSize: 12,
+    color: '#BA1A1A',
+    flex: 1,
   },
-  otpSlotsContainer: {
+  otpBoxesRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 8,
-    marginBottom: Spacing.two,
+    gap: 6,
+    marginBottom: 10,
   },
-  otpSlot: {
+  otpBox: {
     flex: 1,
-    height: 64,
-    borderRadius: Radii.card,
-    backgroundColor: Colors.light.backgroundElement,
+    height: 60,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: Colors.light.border,
   },
-  otpSlotFilled: {
-    backgroundColor: Colors.light.card,
-    borderColor: Colors.light.primary,
+  otpBoxFilled: {
+    backgroundColor: '#DEE8FF',
   },
-  otpSlotCurrent: {
-    borderColor: Colors.light.primary,
+  otpBoxEmpty: {
     backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E7EEFF',
+  },
+  otpBoxCurrent: {
+    borderColor: '#00450D',
     borderWidth: 2,
   },
-  otpSlotDigit: {
-    fontSize: 30, // 34sp typography
+  otpBoxDigit: {
+    fontSize: 26,
     fontWeight: '800',
-    color: Colors.light.primaryDark,
+  },
+  otpBoxDigitFilled: {
+    color: '#00450D',
+  },
+  otpBoxDigitEmpty: {
+    color: '#717A6D',
   },
   metaRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: Spacing.three,
+    justifyContent: 'space-between',
     paddingHorizontal: 4,
+    marginBottom: 12,
   },
   timerWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-  },
-  timerIcon: {
-    fontSize: 14,
+    gap: 4,
   },
   timerText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
-    color: Colors.light.textSecondary,
+    color: '#41493E',
   },
   timerValue: {
+    color: '#6C2200',
     fontWeight: '800',
-    color: '#8A2D00',
   },
   resendLink: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: Colors.light.primary,
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#00450D',
     textDecorationLine: 'underline',
   },
   attemptsText: {
     fontSize: 12,
-    fontWeight: '600',
-    color: Colors.light.textSecondary,
+    color: '#717A6D',
   },
   voiceAssistantButton: {
-    backgroundColor: Colors.light.primarySubtle,
-    borderRadius: Radii.card,
-    padding: Spacing.three,
+    backgroundColor: '#91F78E',
+    borderRadius: 14,
+    padding: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.three,
-    marginBottom: Spacing.three,
-    borderWidth: 1,
-    borderColor: Colors.light.primary,
+    gap: 12,
+    marginBottom: 12,
   },
   voiceAssistantButtonActive: {
-    backgroundColor: '#FFECB3',
-    borderColor: '#FFA000',
+    backgroundColor: '#78DC77',
   },
   voiceMicCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.light.primary,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#006E1C',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  voiceMicIcon: {
-    fontSize: 20,
   },
   voiceTextWrap: {
     flex: 1,
   },
   voiceButtonTitle: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: Colors.light.primaryDark,
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#002204',
   },
   voiceButtonSubtitle: {
-    fontSize: 12,
-    color: Colors.light.textSecondary,
-    marginTop: 2,
+    fontSize: 11,
+    color: '#005313',
+    marginTop: 1,
   },
   keypadContainer: {
-    backgroundColor: Colors.light.card,
-    borderRadius: Radii.card,
-    padding: Spacing.three,
-    marginBottom: Spacing.four,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 10,
     gap: 8,
+    marginBottom: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
   keypadRow: {
     flexDirection: 'row',
     gap: 8,
   },
-  keypadButton: {
+  keypadKey: {
     flex: 1,
-    height: 56, // Tactile large hit area
-    borderRadius: Radii.medium,
-    backgroundColor: Colors.light.backgroundElement,
+    height: 52,
+    borderRadius: 10,
+    backgroundColor: '#E7EEFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  keypadButtonPressed: {
-    backgroundColor: Colors.light.primarySubtle,
+  keypadKeyPressed: {
+    backgroundColor: '#78DC77',
   },
-  keypadNumber: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: Colors.light.text,
-  },
-  keypadActionAudio: {
-    backgroundColor: '#FFDBCE',
-  },
-  keypadActionDelete: {
-    backgroundColor: Colors.light.backgroundElement,
-  },
-  keypadActionIcon: {
+  keypadKeyNumber: {
     fontSize: 22,
-    color: Colors.light.text,
+    fontWeight: '800',
+    color: '#111C2D',
   },
-  verifyButton: {
-    height: TouchTargets.primaryButton, // 56dp
-    backgroundColor: Colors.light.primary,
-    borderRadius: Radii.large,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.three,
-    ...Shadows.card,
+  keypadKeyAudio: {
+    backgroundColor: '#FFDBCF',
   },
-  verifyButtonDisabled: {
-    opacity: 0.6,
+  keypadKeyDelete: {
+    backgroundColor: '#E7EEFF',
   },
-  verifyButtonPressed: {
-    backgroundColor: Colors.light.primaryHover,
-  },
-  verifyContent: {
+  verifySubmitButton: {
+    height: 56,
+    borderRadius: 14,
+    backgroundColor: '#00450D',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'center',
+    gap: 10,
+    shadowColor: '#00450D',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 3,
+    marginBottom: 14,
   },
-  verifyIcon: {
-    fontSize: 18,
-  },
-  verifyText: {
+  verifySubmitText: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
-  helpCard: {
+  ussdFooterCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: Colors.light.backgroundElement,
-    padding: Spacing.three,
-    borderRadius: Radii.card,
-    gap: Spacing.three,
+    backgroundColor: '#F0F3FF',
+    borderRadius: 12,
+    padding: 12,
+    gap: 10,
   },
-  helpCardIcon: {
-    fontSize: 22,
-    marginTop: 2,
-  },
-  helpCardContent: {
+  ussdContent: {
     flex: 1,
   },
-  helpCardTitle: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: Colors.light.text,
-  },
-  helpCardSubtitle: {
+  ussdTitle: {
     fontSize: 12,
-    color: Colors.light.textSecondary,
-    marginTop: 2,
-    lineHeight: 18,
+    fontWeight: '700',
+    color: '#111C2D',
   },
-  helpUssdHighlight: {
+  ussdText: {
+    fontSize: 11,
+    color: '#41493E',
+    marginTop: 2,
+    lineHeight: 16,
+  },
+  ussdCode: {
     fontWeight: '800',
-    color: Colors.light.primary,
+    color: '#00450D',
   },
   pressed: {
-    opacity: 0.8,
+    opacity: 0.85,
   },
 });

@@ -5,11 +5,10 @@ import {
   Pressable,
   StyleSheet,
   ScrollView,
-  Platform,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors } from '@/theme/colors';
-import { Spacing, Radii, Shadows, TouchTargets } from '@/theme/tokens';
+import { MaterialIcons } from '@expo/vector-icons';
 import type { SupportedLanguage } from '@/config/constants';
 import { useVoice } from '@/context/VoiceContext';
 
@@ -25,7 +24,8 @@ interface LanguageItem {
   description: string;
   listenLabel: string;
   listenSub: string;
-  icon: string;
+  iconName: keyof typeof MaterialIcons.glyphMap;
+  selectedBadge: string;
   audioPromptText: string;
   continueLabel: string;
 }
@@ -38,8 +38,10 @@ const LANGUAGES: LanguageItem[] = [
     description: 'የኢትዮጵያ ፌዴራል ቋንቋ',
     listenLabel: 'ድምፅ ያዳምጡ (Listen)',
     listenSub: 'Tap to listen • አዳምጥ',
-    icon: '🌾',
-    audioPromptText: 'እንኳን ወደ ግብርና ኢንተለጀንስ በደህና መጡ። ቋንቋዎን ይምረጡ እና በድምፅ መመሪያ ይቀጥሉ።',
+    iconName: 'spa',
+    selectedBadge: 'የተመረጠ',
+    audioPromptText:
+      'ቋንቋዎን ይምረጡ። በመተግበሪያው ውስጥ በሙሉ የድምፅ መመሪያ ማዳመጥና ማውራት ይችላሉ።',
     continueLabel: 'ቀጥል (Continue)',
   },
   {
@@ -49,8 +51,10 @@ const LANGUAGES: LanguageItem[] = [
     description: 'Qophii Qonnaa fi Gorsaa',
     listenLabel: 'Sagalee dhagayyadha',
     listenSub: 'Oromiffaan caqasi',
-    icon: '🌱',
-    audioPromptText: 'Baga nagaan dhuftan. Afaan keessan filadhaa sagalee fi afaaniin qonnaa keessan hordofaa.',
+    iconName: 'nature-people',
+    selectedBadge: 'Filatameera',
+    audioPromptText:
+      'Afaan keessan filadhaa. Sagalee fi afaaniin qonnaa fi gorsa keessan hordofaa.',
     continueLabel: 'Itti Fufi (Continue)',
   },
   {
@@ -60,8 +64,10 @@ const LANGUAGES: LanguageItem[] = [
     description: 'ሕርሻን ምኽሪን ሓበሬታ',
     listenLabel: 'ድምፂ ስምዑ',
     listenSub: 'ብትግርኛ ስምዑ',
-    icon: '🌿',
-    audioPromptText: 'እንቋዕ ብደሓን መጻእኹም። ቋንቋኹም ምረፁ ኣብ ምሉእ እቲ ኣፕሊኬሽን ድምፂ ብምስማዕ ክትጥቀሙ ትኽእሉ ኢኹም።',
+    iconName: 'eco',
+    selectedBadge: 'ተመሪፁ',
+    audioPromptText:
+      'ቋንቋኹም ምረፁ። ኣብ ምሉእ እቲ ኣፕሊኬሽን ድምፂ ብምስማዕን ብምዝራብን ክትጥቀሙ ትኽእሉ ኢኹም።',
     continueLabel: 'ቀፅሉ (Continue)',
   },
   {
@@ -71,11 +77,16 @@ const LANGUAGES: LanguageItem[] = [
     description: 'Agronomic Advisory & Extension DA',
     listenLabel: 'Listen in English',
     listenSub: 'Spoken prompt',
-    icon: '🌐',
-    audioPromptText: 'Welcome to Agricultural Intelligence. Select your language to use natural voice guidance throughout the app.',
+    iconName: 'language',
+    selectedBadge: 'Selected',
+    audioPromptText:
+      'Tap your language to hear guidance and use voice commands throughout the app.',
     continueLabel: 'Continue to Sign-In',
   },
 ];
+
+const AFFIRMATION_IMAGE_URI =
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuCzTZ2ViPeLPz-rcFsglkeMlnXxMxo124BixJ7KsEJgB5WLf_F_6iodBUsTpTXw7FccKxIiKjK_b4LtV4k8NCuXq6uoDo6scSec3NXHEa17RF5m9QkDP7pUBpWJ70Njp6AKhH78rq48PW2_TIVr9DsOllbT7a0NbrhEyD1sJE312rcscU_eL2BUIx5svl_s7WrXrcWCVs7sKyECRWOy9DS-getVguNFICOiGt6L3cs8JeP6Szq-DI4czA';
 
 export function LanguageSelectionScreen({
   onSelectLanguage,
@@ -132,23 +143,23 @@ export function LanguageSelectionScreen({
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled">
-        {/* Top Status Ribbon & Offline Readiness */}
+        {/* 1. Top Status Ribbon & Offline Readiness */}
         <View style={styles.topRibbon}>
           <View style={styles.offlinePill}>
             <View style={styles.onlineDot} />
             <Text style={styles.offlineText}>Offline AI Voice Ready</Text>
           </View>
           <View style={styles.networkStatus}>
-            <Text style={styles.networkIcon}>📶</Text>
+            <MaterialIcons name="signal-cellular-alt" size={18} color="#41493E" />
             <Text style={styles.networkText}>2G / Direct Solar Mode</Text>
           </View>
         </View>
 
-        {/* Animated Voice Prompt Card */}
-        <View style={[styles.voicePromptCard, Shadows.card]}>
+        {/* 2. Animated Voice Prompt Card */}
+        <View style={styles.voicePromptCard}>
           <View style={styles.voicePromptHeader}>
             <View style={styles.micCircle}>
-              <Text style={styles.micIcon}>🎙️</Text>
+              <MaterialIcons name="mic" size={28} color="#FFFFFF" />
             </View>
             <View style={styles.voicePromptTextWrap}>
               <View style={styles.voicePromptTitleRow}>
@@ -159,18 +170,18 @@ export function LanguageSelectionScreen({
                     styles.playAllButton,
                     pressed && styles.buttonPressed,
                   ]}>
-                  <Text style={styles.playAllIcon}>{isSpeaking ? '⏹️' : '🔊'}</Text>
-                  <Text style={styles.playAllText}>{isSpeaking ? 'Stop' : 'Play All'}</Text>
+                  <MaterialIcons
+                    name={isSpeaking ? 'stop' : 'volume-up'}
+                    size={16}
+                    color="#00450D"
+                  />
+                  <Text style={styles.playAllText}>
+                    {isSpeaking ? 'Stop' : 'Play All'}
+                  </Text>
                 </Pressable>
               </View>
               <Text style={styles.voicePromptBody}>
-                {selectedLang === 'om'
-                  ? 'Afaan keessan filadhaa. Sagalee fi afaaniin qonnaa fi gorsa keessan hordofaa.'
-                  : selectedLang === 'ti'
-                  ? 'ቋንቋኹም ምረፁ። ኣብ ምሉእ እቲ ኣፕሊኬሽን ድምፂ ብምስማዕ ክትጥቀሙ ትኽእሉ ኢኹም።'
-                  : selectedLang === 'en'
-                  ? 'Choose your language. You can speak and listen to voice guides throughout the app.'
-                  : 'ቋንቋዎን ይምረጡ። በመተግበሪያው ውስጥ በሙሉ የድምፅ መመሪያ ማዳመጥና ማውራት ይችላሉ።'}
+                {currentItem.audioPromptText}
               </Text>
               <Text style={styles.voicePromptHint}>
                 Tap your language below to hear spoken guidance and speak back naturally.
@@ -180,17 +191,20 @@ export function LanguageSelectionScreen({
 
           {/* Tactile Soundwave Visualization */}
           <View style={styles.soundwaveRow}>
-            <View style={[styles.soundwaveBar, { height: 10, backgroundColor: Colors.light.primarySubtle }]} />
-            <View style={[styles.soundwaveBar, { height: 20, backgroundColor: Colors.light.primary }]} />
-            <View style={[styles.soundwaveBar, { height: 28, backgroundColor: Colors.light.primaryDark }]} />
-            <View style={[styles.soundwaveBar, { height: 16, backgroundColor: Colors.light.primary }]} />
-            <View style={[styles.soundwaveBar, { height: 24, backgroundColor: Colors.light.primarySubtle }]} />
-            <View style={[styles.soundwaveBar, { height: 12, backgroundColor: Colors.light.primaryDark }]} />
-            <Text style={styles.soundwaveLabel}>Amharic / Afaan Oromo / ትግርኛ / English</Text>
+            <View style={[styles.soundwaveBar, { height: 8, backgroundColor: '#78DC77' }]} />
+            <View style={[styles.soundwaveBar, { height: 16, backgroundColor: '#1B5E20' }]} />
+            <View style={[styles.soundwaveBar, { height: 24, backgroundColor: '#00450D' }]} />
+            <View style={[styles.soundwaveBar, { height: 12, backgroundColor: '#006E1C' }]} />
+            <View style={[styles.soundwaveBar, { height: 20, backgroundColor: '#1B5E20' }]} />
+            <View style={[styles.soundwaveBar, { height: 8, backgroundColor: '#78DC77' }]} />
+            <View style={[styles.soundwaveBar, { height: 16, backgroundColor: '#00450D' }]} />
+            <Text style={styles.soundwaveLabel}>
+              Amharic / Afaan Oromo / ትግርኛ / English
+            </Text>
           </View>
         </View>
 
-        {/* Onboarding Progress Context Indicator */}
+        {/* 3. Onboarding Progress Context Indicator */}
         <View style={styles.stepContainer}>
           <View style={styles.stepLabelRow}>
             <Text style={styles.stepLabelPrimary}>ደረጃ 1 ከ 3 • Step 1 of 3</Text>
@@ -203,7 +217,7 @@ export function LanguageSelectionScreen({
           </View>
         </View>
 
-        {/* Section Title */}
+        {/* 4. Section Title */}
         <View style={styles.titleSection}>
           <Text style={styles.headingTitle}>ይምረጡ / Choose Language</Text>
           <Text style={styles.headingSubtitle}>
@@ -211,7 +225,7 @@ export function LanguageSelectionScreen({
           </Text>
         </View>
 
-        {/* 4 Interactive High-Contrast Language Cards */}
+        {/* 5. 4 Interactive High-Contrast Language Cards */}
         <View style={styles.cardsContainer}>
           {LANGUAGES.map((item) => {
             const isSelected = selectedLang === item.code;
@@ -225,21 +239,20 @@ export function LanguageSelectionScreen({
                 accessibilityLabel={`Select ${item.englishTitle}`}
                 style={({ pressed }) => [
                   styles.card,
-                  Shadows.card,
                   isSelected && styles.cardSelected,
                   pressed && styles.cardPressed,
                 ]}>
                 <View style={styles.cardMainRow}>
                   <View style={styles.cardLeft}>
                     <View style={styles.langIconBadge}>
-                      <Text style={styles.langIconText}>{item.icon}</Text>
+                      <MaterialIcons name={item.iconName} size={28} color="#00450D" />
                     </View>
                     <View style={styles.langTitles}>
                       <View style={styles.nativeRow}>
                         <Text style={styles.langNativeText}>{item.nativeTitle}</Text>
                         {isSelected && (
                           <View style={styles.selectedBadge}>
-                            <Text style={styles.selectedBadgeText}>የተመረጠ</Text>
+                            <Text style={styles.selectedBadgeText}>{item.selectedBadge}</Text>
                           </View>
                         )}
                       </View>
@@ -262,16 +275,18 @@ export function LanguageSelectionScreen({
                       isPlayingThis && styles.listenButtonActive,
                       pressed && styles.buttonPressed,
                     ]}>
-                    <Text style={styles.listenButtonIcon}>
-                      {isPlayingThis ? '⏹️' : '🔊'}
-                    </Text>
+                    <MaterialIcons
+                      name={isPlayingThis ? 'stop' : 'volume-up'}
+                      size={22}
+                      color="#380D00"
+                    />
                   </Pressable>
                 </View>
 
                 {/* Bottom Listen Bar */}
                 <View style={styles.cardListenBar}>
                   <View style={styles.listenBarLeft}>
-                    <Text style={styles.listenEqIcon}>📶</Text>
+                    <MaterialIcons name="graphic-eq" size={18} color="#6C2200" />
                     <Text style={styles.listenBarTitle}>{item.listenLabel}</Text>
                   </View>
                   <Text style={styles.listenBarSub}>{item.listenSub}</Text>
@@ -281,11 +296,13 @@ export function LanguageSelectionScreen({
           })}
         </View>
 
-        {/* Agricultural Visual Affirmation Card */}
+        {/* 6. Agricultural Visual Affirmation Card */}
         <View style={styles.affirmationCard}>
-          <View style={styles.affirmationIconBox}>
-            <Text style={styles.affirmationIcon}>🌱</Text>
-          </View>
+          <Image
+            source={{ uri: AFFIRMATION_IMAGE_URI }}
+            style={styles.affirmationImage}
+            resizeMode="cover"
+          />
           <View style={styles.affirmationContent}>
             <Text style={styles.affirmationTitle}>ለገበሬዎች እና የግብርና ኤክስቴንሽን</Text>
             <Text style={styles.affirmationSubtitle}>
@@ -294,13 +311,13 @@ export function LanguageSelectionScreen({
           </View>
         </View>
 
-        {/* Bottom Persistent Tactile Action Block */}
+        {/* 7. Bottom Persistent Tactile Action Block */}
         <View style={styles.bottomBlock}>
           {/* Active Audio Status Toast */}
           {isSpeaking && (
             <View style={styles.audioToast}>
               <View style={styles.audioToastLeft}>
-                <Text style={styles.audioToastIcon}>🔊</Text>
+                <MaterialIcons name="sync" size={20} color="#FFB498" />
                 <Text style={styles.audioToastText}>ድምፅ በማጫወት ላይ... (Playing Audio)</Text>
               </View>
               <Pressable onPress={stopSpeaking} style={styles.toastStopButton}>
@@ -319,11 +336,11 @@ export function LanguageSelectionScreen({
               pressed && styles.continueButtonPressed,
             ]}>
             <View style={styles.continueLeft}>
-              <Text style={styles.continueArrow}>➔</Text>
+              <MaterialIcons name="arrow-forward" size={22} color="#FFFFFF" />
               <Text style={styles.continueLabel}>{currentItem.continueLabel}</Text>
             </View>
             <View style={styles.voiceSupportBadge}>
-              <Text style={styles.voiceSupportIcon}>🎙️</Text>
+              <MaterialIcons name="hearing" size={16} color="#FFFFFF" />
               <Text style={styles.voiceSupportText}>ድምፅ ድጋፍ</Text>
             </View>
           </Pressable>
@@ -335,7 +352,7 @@ export function LanguageSelectionScreen({
               styles.daHelpButton,
               pressed && styles.buttonPressed,
             ]}>
-            <Text style={styles.daHelpIcon}>🤝</Text>
+            <MaterialIcons name="contact-support" size={18} color="#41493E" />
             <Text style={styles.daHelpText}>
               የልማት ጣቢያ ሰራተኛ (DA) እገዛ ይፈልጋሉ? Need DA assistance?
             </Text>
@@ -349,75 +366,72 @@ export function LanguageSelectionScreen({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: '#F9F9FF',
   },
   scrollContent: {
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.two,
-    paddingBottom: Spacing.six,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 24,
   },
   topRibbon: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: Spacing.two,
-    marginBottom: Spacing.two,
+    paddingVertical: 8,
+    marginBottom: 8,
   },
   offlinePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.light.backgroundElement,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: 6,
-    borderRadius: Radii.full,
+    backgroundColor: '#DEE8FF',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 9999,
     gap: 6,
   },
   onlineDot: {
     width: 9,
     height: 9,
     borderRadius: 5,
-    backgroundColor: Colors.light.primary,
+    backgroundColor: '#006E1C',
   },
   offlineText: {
     fontSize: 12,
     fontWeight: '700',
-    color: Colors.light.text,
+    color: '#111C2D',
   },
   networkStatus: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
-  networkIcon: {
-    fontSize: 14,
-  },
   networkText: {
     fontSize: 12,
     fontWeight: '600',
-    color: Colors.light.textSecondary,
+    color: '#41493E',
   },
   voicePromptCard: {
-    backgroundColor: Colors.light.card,
-    borderRadius: Radii.card,
-    padding: Spacing.four,
-    marginBottom: Spacing.four,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   voicePromptHeader: {
     flexDirection: 'row',
-    gap: Spacing.three,
+    gap: 12,
   },
   micCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: Colors.light.primary,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: '#1B5E20',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  micIcon: {
-    fontSize: 22,
   },
   voicePromptTextWrap: {
     flex: 1,
@@ -431,62 +445,57 @@ const styles = StyleSheet.create({
   voicePromptTag: {
     fontSize: 12,
     fontWeight: '700',
-    color: Colors.light.primary,
+    color: '#006E1C',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   playAllButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.light.backgroundElement,
-    paddingHorizontal: Spacing.two,
+    backgroundColor: '#DEE8FF',
+    paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: Radii.full,
+    borderRadius: 9999,
     gap: 4,
-  },
-  playAllIcon: {
-    fontSize: 12,
   },
   playAllText: {
     fontSize: 12,
     fontWeight: '700',
-    color: Colors.light.primaryDark,
+    color: '#00450D',
   },
   voicePromptBody: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.light.text,
+    color: '#111C2D',
     lineHeight: 20,
-    marginTop: 2,
+    marginBottom: 4,
   },
   voicePromptHint: {
     fontSize: 12,
-    color: Colors.light.textSecondary,
-    marginTop: 4,
+    color: '#41493E',
     lineHeight: 16,
   },
   soundwaveRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    marginTop: Spacing.three,
-    paddingTop: Spacing.two,
+    gap: 4,
+    marginTop: 12,
+    paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: Colors.light.border,
+    borderTopColor: '#F0F3FF',
   },
   soundwaveBar: {
-    width: 5,
+    width: 6,
     borderRadius: 3,
   },
   soundwaveLabel: {
     fontSize: 11,
-    fontWeight: '600',
-    color: Colors.light.textSecondary,
-    marginLeft: 6,
+    color: '#41493E',
+    marginLeft: 8,
     flex: 1,
   },
   stepContainer: {
-    marginBottom: Spacing.four,
+    marginBottom: 16,
   },
   stepLabelRow: {
     flexDirection: 'row',
@@ -494,81 +503,82 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   stepLabelPrimary: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
-    color: Colors.light.primary,
+    color: '#00450D',
   },
   stepLabelSecondary: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: Colors.light.textSecondary,
+    fontSize: 13,
+    color: '#41493E',
   },
   stepBarTrack: {
     flexDirection: 'row',
-    gap: 6,
+    gap: 8,
   },
   stepBarSegment: {
     flex: 1,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: Colors.light.border,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#DEE8FF',
   },
   stepBarActive: {
-    backgroundColor: Colors.light.primary,
+    backgroundColor: '#1B5E20',
   },
   titleSection: {
-    marginBottom: Spacing.four,
+    marginBottom: 16,
   },
   headingTitle: {
     fontSize: 22,
-    fontWeight: '800',
-    color: Colors.light.text,
+    fontWeight: '700',
+    color: '#111C2D',
+    marginBottom: 4,
   },
   headingSubtitle: {
-    fontSize: 13,
-    color: Colors.light.textSecondary,
-    marginTop: 4,
-    lineHeight: 18,
+    fontSize: 14,
+    color: '#41493E',
+    lineHeight: 20,
   },
   cardsContainer: {
-    gap: Spacing.three,
-    marginBottom: Spacing.four,
+    gap: 12,
+    marginBottom: 16,
   },
   card: {
-    backgroundColor: Colors.light.card,
-    borderRadius: Radii.card,
-    padding: Spacing.four,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
     borderWidth: 2,
-    borderColor: Colors.light.border,
+    borderColor: 'transparent',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
   cardSelected: {
-    borderColor: Colors.light.primary,
-    backgroundColor: '#FAFDF8',
+    borderColor: '#1B5E20',
+    backgroundColor: '#FFFFFF',
   },
   cardPressed: {
     transform: [{ scale: 0.99 }],
   },
   cardMainRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
   cardLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.three,
+    gap: 12,
     flex: 1,
   },
   langIconBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Colors.light.backgroundElement,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#DEE8FF',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  langIconText: {
-    fontSize: 22,
   },
   langTitles: {
     flex: 1,
@@ -579,119 +589,100 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   langNativeText: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: Colors.light.text,
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111C2D',
   },
   selectedBadge: {
-    backgroundColor: Colors.light.primarySubtle,
+    backgroundColor: '#91F78E',
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: Radii.full,
+    borderRadius: 9999,
   },
   selectedBadgeText: {
     fontSize: 11,
     fontWeight: '700',
-    color: Colors.light.primaryDark,
+    color: '#00731E',
   },
   langEnglishText: {
     fontSize: 13,
-    color: Colors.light.textSecondary,
+    color: '#41493E',
     marginTop: 2,
   },
   listenButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#FFDBCE', // Terracotta-fixed tone
+    backgroundColor: '#FFDBCF',
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 8,
   },
   listenButtonActive: {
-    backgroundColor: '#FF6F00',
-  },
-  listenButtonIcon: {
-    fontSize: 20,
-  },
-  buttonPressed: {
-    opacity: 0.8,
+    backgroundColor: '#FFB59A',
   },
   cardListenBar: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: Spacing.three,
-    paddingTop: Spacing.two,
-    backgroundColor: Colors.light.backgroundElement,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: 8,
-    borderRadius: Radii.medium,
+    justifyContent: 'space-between',
+    backgroundColor: '#F0F3FF',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    marginTop: 10,
   },
   listenBarLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
-  listenEqIcon: {
-    fontSize: 14,
-  },
   listenBarTitle: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
-    color: '#8A2D00',
+    color: '#6C2200',
   },
   listenBarSub: {
-    fontSize: 12,
-    color: Colors.light.textSecondary,
+    fontSize: 11,
+    color: '#41493E',
   },
   affirmationCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.light.backgroundElement,
-    padding: Spacing.three,
-    borderRadius: Radii.card,
-    gap: Spacing.three,
-    marginBottom: Spacing.four,
+    backgroundColor: '#F0F3FF',
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 16,
+    gap: 12,
   },
-  affirmationIconBox: {
-    width: 48,
-    height: 48,
-    borderRadius: Radii.medium,
-    backgroundColor: Colors.light.card,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  affirmationIcon: {
-    fontSize: 24,
+  affirmationImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 10,
   },
   affirmationContent: {
     flex: 1,
   },
   affirmationTitle: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
-    color: Colors.light.text,
+    color: '#111C2D',
   },
   affirmationSubtitle: {
     fontSize: 12,
-    color: Colors.light.textSecondary,
-    marginTop: 2,
+    color: '#41493E',
     lineHeight: 16,
+    marginTop: 2,
   },
   bottomBlock: {
-    paddingTop: Spacing.two,
-    gap: Spacing.two,
+    gap: 8,
   },
   audioToast: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#933100',
-    paddingHorizontal: Spacing.four,
-    paddingVertical: 10,
-    borderRadius: Radii.card,
-    marginBottom: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
   },
   audioToastLeft: {
     flexDirection: 'row',
@@ -699,84 +690,74 @@ const styles = StyleSheet.create({
     gap: 8,
     flex: 1,
   },
-  audioToastIcon: {
-    fontSize: 16,
-  },
   audioToastText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
-    color: '#FFFFFF',
-    flex: 1,
+    color: '#FFB498',
   },
   toastStopButton: {
     paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingVertical: 2,
   },
   toastStopText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#FFDBCE',
+    color: '#FFB498',
     textDecorationLine: 'underline',
   },
   continueButton: {
-    height: TouchTargets.primaryButton, // 56dp
-    backgroundColor: Colors.light.primary,
-    borderRadius: Radii.large,
+    height: 56,
+    borderRadius: 14,
+    backgroundColor: '#1B5E20',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.four,
-    ...Shadows.card,
+    paddingHorizontal: 18,
+    shadowColor: '#1B5E20',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 3,
   },
   continueButtonPressed: {
-    backgroundColor: Colors.light.primaryHover,
+    transform: [{ translateY: 1 }],
   },
   continueLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  continueArrow: {
-    fontSize: 18,
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-  },
   continueLabel: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
   voiceSupportBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.light.primaryDark,
-    paddingHorizontal: Spacing.three,
+    backgroundColor: '#006E1C',
+    paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: Radii.full,
+    borderRadius: 9999,
     gap: 4,
-  },
-  voiceSupportIcon: {
-    fontSize: 12,
   },
   voiceSupportText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '600',
     color: '#FFFFFF',
   },
   daHelpButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: Spacing.two,
+    paddingVertical: 10,
     gap: 6,
-  },
-  daHelpIcon: {
-    fontSize: 16,
   },
   daHelpText: {
     fontSize: 12,
-    fontWeight: '600',
-    color: Colors.light.textSecondary,
-    textAlign: 'center',
+    color: '#41493E',
+  },
+  buttonPressed: {
+    opacity: 0.8,
   },
 });

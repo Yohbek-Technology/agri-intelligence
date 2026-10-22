@@ -8,10 +8,10 @@ import {
   ScrollView,
   Switch,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors } from '@/theme/colors';
-import { Spacing, Radii, Shadows, TouchTargets } from '@/theme/tokens';
+import { MaterialIcons } from '@expo/vector-icons';
 import type { SupportedLanguage } from '@/config/constants';
 import { useVoice } from '@/context/VoiceContext';
 import { farmerService } from '@/services/api/farmer-service';
@@ -56,6 +56,9 @@ const AREA_UNITS = [
   { id: 'kert', name: 'Kert', sub: 'Local Plot' },
   { id: 'hectare', name: 'Hektaara', sub: '10,000 m²' },
 ];
+
+const AGRONOMIC_ILLUSTRATION_URI =
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuBPw-FFq7ZQfBu3lXiYg6o9yfdnPgO4u7YjRiJ0hsNPeUGKYpnVJEnPuJA6x5AMwUHV9lH28lcoRJB1k0HlmoLiXx7Hgwm-pOrsphz521NgWCmKIqAun69LgZz4phriOkrlly32mO1DbWz02VjL6V7LRW-lFeFCIL-Ekhw1kZ6zIum-sc3P6u2DV8yW--ClWc67iYr7dmhp91Xy6ZNBYzJ5HGQqY-ypa0oQmOgP4gpPf2mMqA9fbT8DlQ';
 
 export function ProfileSetupScreen({
   onComplete,
@@ -115,7 +118,6 @@ export function ProfileSetupScreen({
         if (res.success) {
           onComplete?.();
         } else {
-          // If claim endpoint is offline or not pre-matched, continue with local update
           setStatusMessage(res.error || 'Profile verified & linked locally.');
           setTimeout(() => onComplete?.(), 600);
         }
@@ -151,15 +153,15 @@ export function ProfileSetupScreen({
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}>
-        {/* Top Header Ribbon */}
+        {/* 1. Top Header with Back, Offline Ready, Help */}
         <View style={styles.topHeader}>
           {onBack ? (
             <Pressable
               onPress={onBack}
               accessibilityRole="button"
               accessibilityLabel="Go back"
-              style={({ pressed }) => [styles.headerIconButton, pressed && styles.pressed]}>
-              <Text style={styles.headerIconText}>←</Text>
+              style={styles.headerIconButton}>
+              <MaterialIcons name="arrow-back" size={24} color="#111C2D" />
             </Pressable>
           ) : (
             <View style={{ width: 44 }} />
@@ -174,12 +176,12 @@ export function ProfileSetupScreen({
             onPress={onRequestHelp}
             accessibilityRole="button"
             accessibilityLabel="Help"
-            style={({ pressed }) => [styles.headerIconButton, pressed && styles.pressed]}>
-            <Text style={styles.headerIconText}>❓</Text>
+            style={styles.headerIconButton}>
+            <MaterialIcons name="help" size={24} color="#111C2D" />
           </Pressable>
         </View>
 
-        {/* Progress & Audio Pill Header */}
+        {/* 2. Progress & Audio Pill Header */}
         <View style={styles.progressRow}>
           <View style={styles.stepPill}>
             <View style={styles.pulseDot} />
@@ -197,17 +199,21 @@ export function ProfileSetupScreen({
               isSpeaking && styles.listenButtonActive,
               pressed && styles.pressed,
             ]}>
-            <Text style={styles.listenIcon}>{isSpeaking ? '⏹️' : '🔊'}</Text>
+            <MaterialIcons
+              name={isSpeaking ? 'stop' : 'volume-up'}
+              size={20}
+              color="#380D00"
+            />
             <Text style={styles.listenText}>
               {selectedLanguage === 'om' ? 'Dhaggeeffadhu' : 'አዳምጥ (Listen)'}
             </Text>
           </Pressable>
         </View>
 
-        {/* Screen Identity */}
+        {/* 3. Screen Identity */}
         <View style={styles.identityCard}>
           <View style={styles.identityIconBadge}>
-            <Text style={styles.identityIcon}>📍</Text>
+            <MaterialIcons name="person-pin" size={28} color="#00731E" />
           </View>
           <View style={styles.identityContent}>
             <Text style={styles.identityTitle}>
@@ -219,11 +225,11 @@ export function ProfileSetupScreen({
           </View>
         </View>
 
-        {/* DA Pre-Registered Profile Claim Card Banner */}
-        <View style={[styles.daClaimCard, Shadows.card]}>
+        {/* 4. DA Pre-Registered Profile Claim Card Banner */}
+        <View style={styles.daClaimCard}>
           <View style={styles.daClaimHeader}>
             <View style={styles.daClaimLeft}>
-              <Text style={styles.daClaimShield}>🛡️</Text>
+              <MaterialIcons name="verified-user" size={28} color="#00450D" />
               <View style={styles.daClaimTextWrap}>
                 <Text style={styles.daClaimTitle}>
                   {selectedLanguage === 'om'
@@ -238,13 +244,13 @@ export function ProfileSetupScreen({
             <Switch
               value={isClaimMode}
               onValueChange={setIsClaimMode}
-              trackColor={{ false: Colors.light.border, true: Colors.light.primary }}
+              trackColor={{ false: '#CFDAF2', true: '#00450D' }}
               thumbColor="#FFFFFF"
             />
           </View>
 
           <View style={styles.daSyncNotice}>
-            <Text style={styles.daSyncIcon}>🔄</Text>
+            <MaterialIcons name="sync" size={18} color="#006E1C" />
             <Text style={styles.daSyncText}>
               <Text style={styles.boldPrimary}>Qophaa'aa: </Text>
               Galmeen DA wajjin battalumatti wal-qabata. (Pre-synced with Oromia Agronomic Registry).
@@ -259,10 +265,10 @@ export function ProfileSetupScreen({
           </View>
         )}
 
-        {/* Main Input Form */}
+        {/* 5. Main Input Form */}
         <View style={styles.formContainer}>
           {/* 1. Full Name Field with Mic Voice Dictation */}
-          <View style={[styles.fieldCard, Shadows.card]}>
+          <View style={styles.fieldCard}>
             <View style={styles.fieldHeader}>
               <Text style={styles.fieldLabel}>
                 1. {selectedLanguage === 'om' ? 'Maqaa Guutuu' : 'ሙሉ ስም'} <Text style={styles.req}>*</Text>
@@ -270,24 +276,24 @@ export function ProfileSetupScreen({
               <Text style={styles.fieldSubLabel}>Full Name</Text>
             </View>
             <View style={styles.inputWrapper}>
-              <Text style={styles.inputLeftIcon}>🪪</Text>
+              <MaterialIcons name="badge" size={20} color="#717A6D" />
               <TextInput
                 style={styles.textInput}
                 value={fullName}
                 onChangeText={setFullName}
                 placeholder="Maqaa keessan barreessaa..."
-                placeholderTextColor={Colors.light.textTertiary}
+                placeholderTextColor="#C0C9BB"
               />
               <Pressable
                 onPress={startListening}
                 accessibilityRole="button"
                 accessibilityLabel="Speak full name"
-                style={({ pressed }) => [styles.micButton, pressed && styles.pressed]}>
-                <Text style={styles.micButtonIcon}>🎙️</Text>
+                style={styles.micButton}>
+                <MaterialIcons name="mic" size={22} color="#00450D" />
               </Pressable>
             </View>
             <View style={styles.verifiedRow}>
-              <Text style={styles.checkIcon}>✅</Text>
+              <MaterialIcons name="check-circle" size={16} color="#006E1C" />
               <Text style={styles.verifiedText}>
                 Galmee Kootaa (Profile verified with Rural Kebele book)
               </Text>
@@ -295,60 +301,61 @@ export function ProfileSetupScreen({
           </View>
 
           {/* 2. Kebele ID Number Field */}
-          <View style={[styles.fieldCard, Shadows.card]}>
+          <View style={styles.fieldCard}>
             <View style={styles.fieldHeader}>
               <Text style={styles.fieldLabel}>
-                2. {selectedLanguage === 'om' ? 'Lakkoofsa Waraqaa Eenyummaa' : 'የመታወቂያ ቁጥር'} <Text style={styles.req}>*</Text>
+                2. {selectedLanguage === 'om' ? 'Lakkoofsa Waraqaa Eenyummaa' : 'የቀበሌ መታወቂያ ቁጥር'}{' '}
+                <Text style={styles.req}>*</Text>
               </Text>
               <Text style={styles.fieldSubLabel}>Kebele ID</Text>
             </View>
             <View style={styles.inputWrapper}>
-              <Text style={styles.inputLeftIcon}>🔢</Text>
+              <MaterialIcons name="pin" size={20} color="#717A6D" />
               <TextInput
                 style={[styles.textInput, styles.monoInput]}
                 value={localId}
                 onChangeText={setLocalId}
                 placeholder="ET-OR-ADM-0000"
+                placeholderTextColor="#C0C9BB"
                 autoCapitalize="characters"
-                placeholderTextColor={Colors.light.textTertiary}
               />
-              <Text style={styles.verifiedBadgeIcon}>✅</Text>
+              <MaterialIcons name="verified" size={22} color="#006E1C" />
             </View>
-            <Text style={styles.hintText}>
+            <Text style={styles.regexHint}>
               Qajeelfama: ET-OR-XXX-0000 (Regex Match Verified)
             </Text>
           </View>
 
           {/* 3. Jurisdiction & Territory */}
-          <View style={[styles.fieldCard, Shadows.card]}>
+          <View style={styles.fieldCard}>
             <View style={styles.fieldHeader}>
               <Text style={styles.fieldLabel}>
-                3. {selectedLanguage === 'om' ? 'Bakka Jireenyaa / Qophii Lafa' : 'የመኖሪያ ቀበሌ እና ወረዳ'}
+                3. {selectedLanguage === 'om' ? 'Bakka Jireenyaa / Qophii Lafa' : 'የመኖሪያ እና የማሳ ሥፍራ'}
               </Text>
               <Text style={styles.fieldSubLabel}>Jurisdiction & Kebele</Text>
             </View>
 
-            {/* District Selector Pills */}
-            <Text style={styles.subFieldTitle}>Magaalaa / Godina (District)</Text>
-            <View style={styles.selectorGrid}>
+            {/* District Selector Chips */}
+            <Text style={styles.pickerSectionLabel}>Magaalaa / Godina (District)</Text>
+            <View style={styles.chipRow}>
               {DISTRICTS.map((d) => (
                 <Pressable
                   key={d.id}
                   onPress={() => {
                     setSelectedDistrict(d.id);
-                    const kebList = KEBELIS[d.id];
-                    if (kebList && kebList.length > 0) {
-                      setSelectedKebele(kebList[0].id);
+                    const kList = KEBELIS[d.id];
+                    if (kList && kList.length > 0) {
+                      setSelectedKebele(kList[0].id);
                     }
                   }}
                   style={[
-                    styles.selectorPill,
-                    selectedDistrict === d.id && styles.selectorPillActive,
+                    styles.chip,
+                    selectedDistrict === d.id && styles.chipActive,
                   ]}>
                   <Text
                     style={[
-                      styles.selectorPillText,
-                      selectedDistrict === d.id && styles.selectorPillTextActive,
+                      styles.chipText,
+                      selectedDistrict === d.id && styles.chipTextActive,
                     ]}>
                     {d.name}
                   </Text>
@@ -356,23 +363,21 @@ export function ProfileSetupScreen({
               ))}
             </View>
 
-            {/* Kebele Selector Pills */}
-            <Text style={[styles.subFieldTitle, { marginTop: Spacing.two }]}>
-              Ganda (Kebele / Village)
-            </Text>
-            <View style={styles.selectorGrid}>
+            {/* Kebele Selector Chips */}
+            <Text style={styles.pickerSectionLabel}>Ganda (Kebele / Village)</Text>
+            <View style={styles.chipRow}>
               {activeKebeles.map((k) => (
                 <Pressable
                   key={k.id}
                   onPress={() => setSelectedKebele(k.id)}
                   style={[
-                    styles.selectorPill,
-                    selectedKebele === k.id && styles.selectorPillActive,
+                    styles.chip,
+                    selectedKebele === k.id && styles.chipActive,
                   ]}>
                   <Text
                     style={[
-                      styles.selectorPillText,
-                      selectedKebele === k.id && styles.selectorPillTextActive,
+                      styles.chipText,
+                      selectedKebele === k.id && styles.chipTextActive,
                     ]}>
                     {k.name}
                   </Text>
@@ -382,15 +387,15 @@ export function ProfileSetupScreen({
 
             {/* Agro-Ecological Hint */}
             <View style={styles.agroHintBox}>
-              <Text style={styles.agroHintIcon}>⛰️</Text>
+              <MaterialIcons name="landscape" size={18} color="#006E1C" />
               <Text style={styles.agroHintText}>
                 Naannoo Oomisha: Gammoojjii / Baddaa-dareessa (Mid-altitude Rift Basin)
               </Text>
             </View>
           </View>
 
-          {/* 4. Preferred Language Selector */}
-          <View style={[styles.fieldCard, Shadows.card]}>
+          {/* 4. Preferred Language */}
+          <View style={styles.fieldCard}>
             <View style={styles.fieldHeader}>
               <Text style={styles.fieldLabel}>
                 4. {selectedLanguage === 'om' ? 'Afaan Filatame' : 'የተመረጠ ቋንቋ'}
@@ -403,52 +408,61 @@ export function ProfileSetupScreen({
                 { code: 'am' as SupportedLanguage, label: 'አማርኛ' },
                 { code: 'ti' as SupportedLanguage, label: 'ትግርኛ' },
                 { code: 'en' as SupportedLanguage, label: 'English' },
-              ].map((l) => (
-                <Pressable
-                  key={l.code}
-                  onPress={async () => {
-                    setSelectedLanguage(l.code);
-                    await setLanguage(l.code);
-                  }}
-                  style={[
-                    styles.langChoiceButton,
-                    selectedLanguage === l.code && styles.langChoiceButtonActive,
-                  ]}>
-                  <Text
+              ].map((item) => {
+                const isSelected = selectedLanguage === item.code;
+                return (
+                  <Pressable
+                    key={item.code}
+                    onPress={async () => {
+                      setSelectedLanguage(item.code);
+                      await setLanguage(item.code);
+                    }}
                     style={[
-                      styles.langChoiceText,
-                      selectedLanguage === l.code && styles.langChoiceTextActive,
+                      styles.langPillButton,
+                      isSelected && styles.langPillButtonActive,
                     ]}>
-                    {l.label}
-                  </Text>
-                  <Text style={styles.langCheckIcon}>
-                    {selectedLanguage === l.code ? '✅' : '⚪'}
-                  </Text>
-                </Pressable>
-              ))}
+                    <Text
+                      style={[
+                        styles.langPillLabel,
+                        isSelected && styles.langPillLabelActive,
+                      ]}>
+                      {item.label}
+                    </Text>
+                    <MaterialIcons
+                      name={isSelected ? 'check-circle' : 'radio-button-unchecked'}
+                      size={18}
+                      color={isSelected ? '#FFFFFF' : '#717A6D'}
+                    />
+                  </Pressable>
+                );
+              })}
             </View>
           </View>
 
           {/* 5. Calendar System Switcher */}
-          <View style={[styles.fieldCard, Shadows.card]}>
+          <View style={styles.fieldCard}>
             <View style={styles.fieldHeader}>
               <Text style={styles.fieldLabel}>
-                5. {selectedLanguage === 'om' ? 'Dhaha Yeroo' : 'የቀን መቁጠሪያ'}
+                5. {selectedLanguage === 'om' ? 'Dhaha Yeroo' : 'የዘመን አቆጣጠር'}
               </Text>
               <Text style={styles.fieldSubLabel}>Calendar System</Text>
             </View>
-            <View style={styles.calendarToggleContainer}>
+            <View style={styles.calendarSwitchRow}>
               <Pressable
                 onPress={() => setCalendarSystem('ethiopian')}
                 style={[
                   styles.calendarOption,
                   calendarSystem === 'ethiopian' && styles.calendarOptionActive,
                 ]}>
-                <Text style={styles.calendarIcon}>📅</Text>
+                <MaterialIcons
+                  name="calendar-today"
+                  size={18}
+                  color={calendarSystem === 'ethiopian' ? '#FFFFFF' : '#41493E'}
+                />
                 <Text
                   style={[
-                    styles.calendarText,
-                    calendarSystem === 'ethiopian' && styles.calendarTextActive,
+                    styles.calendarOptionText,
+                    calendarSystem === 'ethiopian' && styles.calendarOptionTextActive,
                   ]}>
                   Itoophiyaa (EC)
                 </Text>
@@ -460,11 +474,15 @@ export function ProfileSetupScreen({
                   styles.calendarOption,
                   calendarSystem === 'gregorian' && styles.calendarOptionActive,
                 ]}>
-                <Text style={styles.calendarIcon}>📆</Text>
+                <MaterialIcons
+                  name="event"
+                  size={18}
+                  color={calendarSystem === 'gregorian' ? '#FFFFFF' : '#41493E'}
+                />
                 <Text
                   style={[
-                    styles.calendarText,
-                    calendarSystem === 'gregorian' && styles.calendarTextActive,
+                    styles.calendarOptionText,
+                    calendarSystem === 'gregorian' && styles.calendarOptionTextActive,
                   ]}>
                   Giriigoorii (GC)
                 </Text>
@@ -472,118 +490,127 @@ export function ProfileSetupScreen({
             </View>
           </View>
 
-          {/* 6. Area Measurement Unit Selector */}
-          <View style={[styles.fieldCard, Shadows.card]}>
+          {/* 6. Area Measurement Unit */}
+          <View style={styles.fieldCard}>
             <View style={styles.fieldHeader}>
               <Text style={styles.fieldLabel}>
-                6. {selectedLanguage === 'om' ? "Safartuu Bal'ina Lafa" : 'የይዞታ መለኪያ'}
+                6. {selectedLanguage === 'om' ? "Safartuu Bal'ina Lafa" : 'የቦታ ስፋት መለኪያ'}
               </Text>
               <Text style={styles.fieldSubLabel}>Plot Metric</Text>
             </View>
-            <View style={styles.unitGrid}>
-              {AREA_UNITS.map((u) => (
-                <Pressable
-                  key={u.id}
-                  onPress={() => setAreaUnit(u.id)}
-                  style={[
-                    styles.unitButton,
-                    areaUnit === u.id && styles.unitButtonActive,
-                  ]}>
-                  <Text
+            <View style={styles.unitRow}>
+              {AREA_UNITS.map((u) => {
+                const isSelected = areaUnit === u.id;
+                return (
+                  <Pressable
+                    key={u.id}
+                    onPress={() => setAreaUnit(u.id)}
                     style={[
-                      styles.unitTitle,
-                      areaUnit === u.id && styles.unitTitleActive,
+                      styles.unitButton,
+                      isSelected && styles.unitButtonActive,
                     ]}>
-                    {u.name}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.unitSub,
-                      areaUnit === u.id && styles.unitSubActive,
-                    ]}>
-                    {u.sub}
-                  </Text>
-                </Pressable>
-              ))}
+                    <Text
+                      style={[
+                        styles.unitTitle,
+                        isSelected && styles.unitTitleActive,
+                      ]}>
+                      {u.name}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.unitSub,
+                        isSelected && styles.unitSubActive,
+                      ]}>
+                      {u.sub}
+                    </Text>
+                  </Pressable>
+                );
+              })}
             </View>
           </View>
 
           {/* 7. Data Consent & SMS Agricultural Advisory Toggle */}
-          <View style={[styles.fieldCard, Shadows.card]}>
+          <View style={styles.fieldCard}>
             <View style={styles.consentHeader}>
-              <View style={styles.smsBadge}>
-                <Text style={styles.smsIcon}>💬</Text>
-              </View>
-              <View style={styles.consentTextWrap}>
-                <Text style={styles.consentTitle}>
-                  7. {selectedLanguage === 'om' ? 'Hayyama Eegumsa Daataa & SMS' : 'የውሂብ ጥበቃ እና SMS ፈቃድ'}
-                </Text>
-                <Text style={styles.consentSub}>
-                  Waldaa fi Gamtaa Gidduugaleessa (Cluster outbreak warnings & weekly weather SMS advisories).
-                </Text>
+              <View style={styles.consentLeft}>
+                <View style={styles.smsBadge}>
+                  <MaterialIcons name="sms" size={20} color="#00731E" />
+                </View>
+                <View style={styles.consentTextWrap}>
+                  <Text style={styles.consentTitle}>
+                    7. Hayyama Eegumsa Daataa & SMS
+                  </Text>
+                  <Text style={styles.consentSub}>
+                    Waldaa fi Gamtaa Gidduugaleessa (Cluster outbreak warnings & weekly weather SMS advisories).
+                  </Text>
+                </View>
               </View>
               <Switch
                 value={consentAgreed}
                 onValueChange={setConsentAgreed}
-                trackColor={{ false: Colors.light.border, true: Colors.light.primary }}
+                trackColor={{ false: '#CFDAF2', true: '#006E1C' }}
                 thumbColor="#FFFFFF"
               />
             </View>
             <View style={styles.lockRow}>
-              <Text style={styles.lockIcon}>🔒</Text>
+              <MaterialIcons name="lock" size={16} color="#006E1C" />
               <Text style={styles.lockText}>
                 Daataan keessan eegamaadha (Offline-first encrypted storage).
               </Text>
             </View>
           </View>
 
-          {/* Action Section */}
-          <View style={styles.actionBlock}>
-            {/* Primary Save Action Button (56dp height) */}
+          {/* Action Buttons */}
+          <View style={styles.actionContainer}>
+            {/* Primary Save Action Button (56dp) */}
             <Pressable
               onPress={handleSaveProfile}
               disabled={submitting}
-              accessibilityRole="button"
-              accessibilityLabel="Save profile and continue"
               style={({ pressed }) => [
                 styles.saveButton,
                 pressed && styles.pressed,
-                submitting && styles.saveButtonDisabled,
+                submitting && { opacity: 0.8 },
               ]}>
               {submitting ? (
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
-                <View style={styles.saveContent}>
-                  <Text style={styles.saveIcon}>💾</Text>
-                  <Text style={styles.saveText}>
-                    {selectedLanguage === 'om'
-                      ? 'Piroofayilii Mirkaneessi (Save & Continue)'
-                      : 'መገለጫውን አረጋግጥ እና ቀጥል'}
+                <>
+                  <MaterialIcons name="save" size={24} color="#FFFFFF" />
+                  <Text style={styles.saveButtonText}>
+                    Piroofayilii Mirkaneessi (Save & Continue)
                   </Text>
-                </View>
+                </>
               )}
             </Pressable>
 
             {/* Secondary DA Assistance Button */}
             <Pressable
               onPress={onRequestHelp}
-              style={({ pressed }) => [styles.daHelpButton, pressed && styles.pressed]}>
-              <Text style={styles.daHelpIcon}>🤝</Text>
-              <Text style={styles.daHelpText}>
-                {selectedLanguage === 'om'
-                  ? 'Gargaarsa DA Gaafadhu (Request DA Help)'
-                  : 'የልማት ጣቢያ ሰራተኛ እርዳታ ይጠይቁ'}
+              style={({ pressed }) => [
+                styles.daAssistButton,
+                pressed && styles.pressed,
+              ]}>
+              <MaterialIcons name="support-agent" size={22} color="#6C2200" />
+              <Text style={styles.daAssistText}>
+                Gargaarsa DA Gaafadhu (Request DA Help)
               </Text>
             </Pressable>
           </View>
-        </View>
 
-        {/* Agronomic Field Illustration Banner Card */}
-        <View style={styles.fieldBanner}>
-          <Text style={styles.fieldBannerIcon}>🌾</Text>
-          <Text style={styles.fieldBannerText}>
-            Oromia Agricultural Extension & Field Advisory System • Adama Rift Valley
-          </Text>
+          {/* 8. Agronomic Field Illustration Card */}
+          <View style={styles.illustrationCard}>
+            <Image
+              source={{ uri: AGRONOMIC_ILLUSTRATION_URI }}
+              style={styles.illustrationImage}
+              resizeMode="cover"
+            />
+            <View style={styles.illustrationOverlay}>
+              <MaterialIcons name="spa" size={18} color="#94F990" />
+              <Text style={styles.illustrationText}>
+                Oromia Agricultural Extension & Field Advisory System
+              </Text>
+            </View>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -593,547 +620,498 @@ export function ProfileSetupScreen({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: '#F9F9FF',
   },
   scrollContent: {
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.two,
-    paddingBottom: Spacing.six,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 36,
   },
   topHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Spacing.two,
+    paddingVertical: 8,
+    marginBottom: 4,
   },
   headerIconButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Colors.light.backgroundElement,
+    minWidth: 44,
+    minHeight: 44,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  headerIconText: {
-    fontSize: 20,
-    color: Colors.light.text,
+    borderRadius: 9999,
   },
   offlinePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.light.backgroundElement,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: 6,
-    borderRadius: Radii.full,
+    backgroundColor: '#E7EEFF',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 9999,
     gap: 6,
   },
   greenDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.light.primary,
+    backgroundColor: '#006E1C',
   },
   offlineText: {
     fontSize: 12,
     fontWeight: '700',
-    color: Colors.light.textSecondary,
+    color: '#41493E',
   },
   progressRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: Spacing.three,
+    justifyContent: 'space-between',
+    marginBottom: 12,
   },
   stepPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.light.backgroundElement,
+    backgroundColor: '#DEE8FF',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: Radii.full,
+    borderRadius: 9999,
     gap: 6,
   },
   pulseDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.light.primary,
+    backgroundColor: '#00450D',
   },
   stepPillText: {
     fontSize: 12,
-    fontWeight: '800',
-    color: Colors.light.primaryDark,
-    letterSpacing: 0.5,
+    fontWeight: '700',
+    color: '#111C2D',
   },
   stepPillDot: {
-    fontSize: 12,
-    color: Colors.light.textSecondary,
+    color: '#717A6D',
   },
   stepPillSub: {
-    fontSize: 12,
-    color: Colors.light.textSecondary,
+    fontSize: 11,
+    color: '#41493E',
   },
   listenButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFDBCE',
+    backgroundColor: '#FFDBCF',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: Radii.full,
+    borderRadius: 9999,
     gap: 6,
   },
   listenButtonActive: {
-    backgroundColor: '#FF6F00',
-  },
-  listenIcon: {
-    fontSize: 16,
+    backgroundColor: '#FFB59A',
   },
   listenText: {
     fontSize: 12,
-    fontWeight: '800',
-    color: '#8A2D00',
+    fontWeight: '700',
+    color: '#380D00',
   },
   identityCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.three,
-    marginBottom: Spacing.three,
+    gap: 12,
+    marginBottom: 14,
   },
   identityIconBadge: {
     width: 48,
     height: 48,
-    borderRadius: Radii.card,
-    backgroundColor: Colors.light.primarySubtle,
+    borderRadius: 14,
+    backgroundColor: '#91F78E',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  identityIcon: {
-    fontSize: 24,
   },
   identityContent: {
     flex: 1,
   },
   identityTitle: {
     fontSize: 20,
-    fontWeight: '800',
-    color: Colors.light.text,
+    fontWeight: '700',
+    color: '#111C2D',
   },
   identitySubtitle: {
-    fontSize: 12,
-    color: Colors.light.textSecondary,
+    fontSize: 13,
+    color: '#41493E',
     marginTop: 2,
   },
   daClaimCard: {
-    backgroundColor: Colors.light.backgroundElement,
-    borderRadius: Radii.card,
-    padding: Spacing.four,
-    marginBottom: Spacing.three,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
+    backgroundColor: '#DEE8FF',
+    borderRadius: 14,
+    padding: 14,
+    gap: 10,
+    marginBottom: 14,
   },
   daClaimHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
-    marginBottom: Spacing.two,
+    gap: 8,
   },
   daClaimLeft: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 8,
+    gap: 10,
     flex: 1,
-    marginRight: 8,
-  },
-  daClaimShield: {
-    fontSize: 22,
-    marginTop: 2,
   },
   daClaimTextWrap: {
     flex: 1,
   },
   daClaimTitle: {
     fontSize: 14,
-    fontWeight: '800',
-    color: Colors.light.text,
+    fontWeight: '700',
+    color: '#111C2D',
+    lineHeight: 18,
   },
   daClaimSub: {
     fontSize: 12,
-    color: Colors.light.textSecondary,
+    color: '#41493E',
     marginTop: 2,
   },
   daSyncNotice: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.light.card,
-    padding: Spacing.two,
-    borderRadius: Radii.medium,
-    gap: 6,
-  },
-  daSyncIcon: {
-    fontSize: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    padding: 10,
+    borderRadius: 8,
+    gap: 8,
   },
   daSyncText: {
     fontSize: 12,
-    color: Colors.light.text,
+    color: '#111C2D',
     flex: 1,
     lineHeight: 16,
   },
   boldPrimary: {
-    fontWeight: '800',
-    color: Colors.light.primary,
+    fontWeight: '700',
+    color: '#006E1C',
   },
   statusToast: {
-    backgroundColor: Colors.light.primarySubtle,
-    padding: Spacing.three,
-    borderRadius: Radii.medium,
-    marginBottom: Spacing.three,
-    borderWidth: 1,
-    borderColor: Colors.light.primary,
+    backgroundColor: '#E7EEFF',
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 12,
   },
   statusText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: Colors.light.primaryDark,
+    fontSize: 12,
+    color: '#00450D',
+    fontWeight: '600',
     textAlign: 'center',
   },
   formContainer: {
-    gap: Spacing.three,
+    gap: 12,
   },
   fieldCard: {
-    backgroundColor: Colors.light.card,
-    borderRadius: Radii.card,
-    padding: Spacing.four,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 14,
+    gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
   fieldHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'baseline',
-    marginBottom: 8,
+    justifyContent: 'space-between',
   },
   fieldLabel: {
     fontSize: 14,
-    fontWeight: '800',
-    color: Colors.light.text,
-  },
-  req: {
-    color: Colors.light.danger,
+    fontWeight: '700',
+    color: '#111C2D',
   },
   fieldSubLabel: {
-    fontSize: 12,
-    color: Colors.light.textSecondary,
+    fontSize: 11,
+    color: '#41493E',
+  },
+  req: {
+    color: '#6C2200',
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: TouchTargets.minimum,
-    borderWidth: 1.5,
-    borderColor: Colors.light.border,
-    borderRadius: Radii.medium,
-    backgroundColor: Colors.light.backgroundElement,
-    paddingHorizontal: Spacing.three,
-  },
-  inputLeftIcon: {
-    fontSize: 16,
-    marginRight: 8,
+    backgroundColor: '#F0F3FF',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    gap: 8,
   },
   textInput: {
     flex: 1,
     fontSize: 15,
-    color: Colors.light.text,
-    fontWeight: '600',
+    color: '#111C2D',
+    paddingVertical: 8,
   },
   monoInput: {
     letterSpacing: 1,
     fontWeight: '700',
   },
   micButton: {
-    padding: 6,
-  },
-  micButtonIcon: {
-    fontSize: 18,
-  },
-  verifiedBadgeIcon: {
-    fontSize: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   verifiedRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginTop: 6,
-  },
-  checkIcon: {
-    fontSize: 12,
+    marginTop: 2,
   },
   verifiedText: {
     fontSize: 11,
-    fontWeight: '600',
-    color: Colors.light.textSecondary,
+    color: '#41493E',
   },
-  hintText: {
+  regexHint: {
     fontSize: 11,
-    color: Colors.light.textTertiary,
-    marginTop: 6,
+    color: '#717A6D',
   },
-  subFieldTitle: {
+  pickerSectionLabel: {
     fontSize: 12,
-    fontWeight: '700',
-    color: Colors.light.textSecondary,
-    marginBottom: 6,
+    fontWeight: '600',
+    color: '#41493E',
+    marginTop: 4,
   },
-  selectorGrid: {
+  chipRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 6,
   },
-  selectorPill: {
+  chip: {
+    backgroundColor: '#F0F3FF',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: Radii.medium,
-    backgroundColor: Colors.light.backgroundElement,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
+    borderRadius: 8,
   },
-  selectorPillActive: {
-    backgroundColor: Colors.light.primarySubtle,
-    borderColor: Colors.light.primary,
+  chipActive: {
+    backgroundColor: '#00450D',
   },
-  selectorPillText: {
+  chipText: {
     fontSize: 12,
-    fontWeight: '700',
-    color: Colors.light.textSecondary,
+    color: '#111C2D',
+    fontWeight: '600',
   },
-  selectorPillTextActive: {
-    color: Colors.light.primaryDark,
+  chipTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '700',
   },
   agroHintBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.light.backgroundElement,
-    padding: Spacing.two,
-    borderRadius: Radii.medium,
+    backgroundColor: '#F0F3FF',
+    padding: 8,
+    borderRadius: 8,
     gap: 6,
-    marginTop: Spacing.three,
-  },
-  agroHintIcon: {
-    fontSize: 16,
+    marginTop: 4,
   },
   agroHintText: {
     fontSize: 11,
-    fontWeight: '600',
-    color: Colors.light.textSecondary,
+    color: '#41493E',
     flex: 1,
   },
   langGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 6,
+    paddingTop: 4,
   },
-  langChoiceButton: {
-    width: '48%',
+  langPillButton: {
+    flex: 1,
+    minWidth: '45%',
+    height: 48,
+    borderRadius: 10,
+    backgroundColor: '#E7EEFF',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: Radii.medium,
-    backgroundColor: Colors.light.backgroundElement,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
   },
-  langChoiceButtonActive: {
-    backgroundColor: Colors.light.primary,
-    borderColor: Colors.light.primary,
+  langPillButtonActive: {
+    backgroundColor: '#00450D',
   },
-  langChoiceText: {
+  langPillLabel: {
     fontSize: 13,
     fontWeight: '700',
-    color: Colors.light.text,
+    color: '#111C2D',
   },
-  langChoiceTextActive: {
+  langPillLabelActive: {
     color: '#FFFFFF',
   },
-  langCheckIcon: {
-    fontSize: 14,
-  },
-  calendarToggleContainer: {
+  calendarSwitchRow: {
     flexDirection: 'row',
-    backgroundColor: Colors.light.backgroundElement,
-    borderRadius: Radii.medium,
+    backgroundColor: '#F0F3FF',
+    borderRadius: 10,
     padding: 4,
-    gap: 6,
+    gap: 4,
   },
   calendarOption: {
     flex: 1,
+    height: 44,
+    borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
-    borderRadius: Radii.medium,
     gap: 6,
   },
   calendarOptionActive: {
-    backgroundColor: Colors.light.primary,
-    ...Shadows.card,
+    backgroundColor: '#1B5E20',
   },
-  calendarIcon: {
-    fontSize: 14,
-  },
-  calendarText: {
+  calendarOptionText: {
     fontSize: 13,
     fontWeight: '700',
-    color: Colors.light.textSecondary,
+    color: '#41493E',
   },
-  calendarTextActive: {
+  calendarOptionTextActive: {
     color: '#FFFFFF',
   },
-  unitGrid: {
+  unitRow: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 6,
+    paddingTop: 4,
   },
   unitButton: {
     flex: 1,
+    height: 48,
+    borderRadius: 10,
+    backgroundColor: '#E7EEFF',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
-    borderRadius: Radii.medium,
-    backgroundColor: Colors.light.backgroundElement,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
+    paddingHorizontal: 6,
   },
   unitButtonActive: {
-    backgroundColor: Colors.light.primary,
-    borderColor: Colors.light.primary,
+    backgroundColor: '#00450D',
   },
   unitTitle: {
     fontSize: 12,
-    fontWeight: '800',
-    color: Colors.light.text,
+    fontWeight: '700',
+    color: '#111C2D',
   },
   unitTitleActive: {
     color: '#FFFFFF',
   },
   unitSub: {
     fontSize: 10,
-    color: Colors.light.textSecondary,
-    marginTop: 2,
+    color: '#41493E',
+    marginTop: 1,
   },
   unitSubActive: {
-    color: '#FFFFFF',
-    opacity: 0.9,
+    color: '#ACF4A4',
   },
   consentHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
+    justifyContent: 'space-between',
     gap: 8,
-    marginBottom: 6,
+  },
+  consentLeft: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    flex: 1,
   },
   smsBadge: {
     width: 36,
     height: 36,
-    borderRadius: 18,
-    backgroundColor: Colors.light.primarySubtle,
+    borderRadius: 8,
+    backgroundColor: '#91F78E',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  smsIcon: {
-    fontSize: 16,
   },
   consentTextWrap: {
     flex: 1,
   },
   consentTitle: {
     fontSize: 13,
-    fontWeight: '800',
-    color: Colors.light.text,
+    fontWeight: '700',
+    color: '#111C2D',
   },
   consentSub: {
     fontSize: 11,
-    color: Colors.light.textSecondary,
+    color: '#41493E',
     marginTop: 2,
-    lineHeight: 16,
+    lineHeight: 15,
   },
   lockRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginTop: 6,
-    paddingTop: 6,
-    borderTopWidth: 1,
-    borderTopColor: Colors.light.border,
-  },
-  lockIcon: {
-    fontSize: 12,
+    paddingTop: 4,
   },
   lockText: {
     fontSize: 11,
-    color: Colors.light.textSecondary,
+    color: '#41493E',
   },
-  actionBlock: {
-    marginTop: Spacing.two,
-    gap: Spacing.two,
+  actionContainer: {
+    gap: 10,
+    marginTop: 6,
   },
   saveButton: {
-    height: TouchTargets.primaryButton, // 56dp
-    backgroundColor: Colors.light.primary,
-    borderRadius: Radii.large,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...Shadows.card,
-  },
-  saveButtonDisabled: {
-    opacity: 0.6,
-  },
-  saveContent: {
+    height: 56,
+    borderRadius: 14,
+    backgroundColor: '#00450D',
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
+    shadowColor: '#00450D',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  saveIcon: {
-    fontSize: 18,
-  },
-  saveText: {
+  saveButtonText: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
-  daHelpButton: {
-    height: 48,
-    borderRadius: Radii.large,
-    backgroundColor: Colors.light.backgroundElement,
+  daAssistButton: {
+    height: 50,
+    borderRadius: 12,
+    backgroundColor: '#DEE8FF',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    flexDirection: 'row',
     gap: 8,
   },
-  daHelpIcon: {
-    fontSize: 16,
-  },
-  daHelpText: {
+  daAssistText: {
     fontSize: 13,
     fontWeight: '700',
-    color: Colors.light.textSecondary,
+    color: '#111C2D',
   },
-  fieldBanner: {
+  illustrationCard: {
+    height: 140,
+    borderRadius: 14,
+    overflow: 'hidden',
+    position: 'relative',
+    marginTop: 8,
+    backgroundColor: '#D8E3FB',
+  },
+  illustrationImage: {
+    width: '100%',
+    height: '100%',
+  },
+  illustrationOverlay: {
+    position: 'absolute',
+    inset: 0,
+    backgroundColor: 'rgba(0, 69, 13, 0.6)',
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.light.backgroundElement,
-    padding: Spacing.three,
-    borderRadius: Radii.card,
-    gap: 8,
-    marginTop: Spacing.four,
+    alignItems: 'flex-end',
+    padding: 12,
+    gap: 6,
   },
-  fieldBannerIcon: {
-    fontSize: 18,
-  },
-  fieldBannerText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: Colors.light.textSecondary,
+  illustrationText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#FFFFFF',
     flex: 1,
   },
   pressed: {
-    opacity: 0.8,
+    opacity: 0.85,
   },
 });

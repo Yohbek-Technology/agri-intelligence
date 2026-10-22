@@ -9,10 +9,10 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors } from '@/theme/colors';
-import { Spacing, Radii, Shadows, TouchTargets } from '@/theme/tokens';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
 import { useVoice } from '@/context/VoiceContext';
 import { authService } from '@/services/api/auth-service';
@@ -29,6 +29,9 @@ export interface SignInScreenProps {
   onRequestHelp?: () => void;
 }
 
+const HERO_IMAGE_URI =
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuD9HPaJBxGbBSCHUMuGly-m_dV2bTd5FXebq93f8nuh8_slGFZ22ZKU3poGdBm4I19gcMBEjk8J3WWpvegG4jjNMCNdXrISjV58csW64avDFCdLodfB3xuou0h4qKIhp0M57JMWk1j360aEe_TRqdLonVegdcEt0lPHBP6vdV8VK0hrxvuBlhgQDHAECiJlC0LgZmBC2Z0pCcwYBTgMchekmcK5THfWgD0An6A39Lfj58WSZ2R064bagA';
+
 export function SignInScreen({
   onSuccess,
   onNavigateToOtp,
@@ -38,20 +41,21 @@ export function SignInScreen({
   const { signInWithPhone, requestOtp, requestPasswordReset, error, clearError } = useAuth();
   const { language, speakText, stopSpeaking, isSpeaking } = useVoice();
 
-  // Mode: 'signin' | 'signup' | 'forgot' | 'da_invite'
-  const [authMode, setAuthMode] = useState<'signin' | 'signup' | 'forgot' | 'da_invite'>('signin');
+  // Mode: 'signin' | 'signup' | 'forgot'
+  const [authMode, setAuthMode] = useState<'signin' | 'signup' | 'forgot'>('signin');
+  const [selectedRole, setSelectedRole] = useState<'farmer' | 'da'>('farmer');
 
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [inviteToken, setInviteToken] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberDevice, setRememberDevice] = useState(true);
 
   const [localError, setLocalError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [officerWarning, setOfficerWarning] = useState(false);
 
-  const handleAudioGuide = () => {
+  const handleAudioExplainer = () => {
     if (isSpeaking) {
       stopSpeaking();
       return;
@@ -59,12 +63,16 @@ export function SignInScreen({
     const guide =
       authMode === 'signin'
         ? language === 'om'
-          ? 'Lakkoofsa bilbilaa fi jecha icciitii keessan galchuun seenaa.'
-          : 'ስልክ ቁጥርዎን እና የይለፍ ቃልዎን በማስገባት ይግቡ።'
+          ? 'Lakkoofsa bilbilaa fi jecha icciitii keessan galchuun seenaa. Osoo hin mallatteessin dura qonnaan bulaa ykn ogeessa DA filadhaa.'
+          : 'ስልክ ቁጥርዎን እና የይለፍ ቃልዎን በማስገባት ይግቡ። ገበሬ ወይም የልማት ሰራተኛ መሆንዎን ይምረጡ።'
         : language === 'om'
-        ? 'Galmee haaraa uumuuf maqaa fi lakkoofsa bilbilaa galchaa.'
-        : 'አዲስ መለያ ለመክፈት ሙሉ ስም እና ስልክ ቁጥርዎን ያስገቡ።';
+        ? 'Galmee haaraa uumuuf maqaa fi lakkoofsa bilbilaa galchaa. Koodiin SMS isiniif ergama.'
+        : 'አዲስ መለያ ለመክፈት ሙሉ ስም እና ስልክ ቁጥርዎን ያስገቡ። በSMS የማረጋገጫ ኮድ ይላክልዎታል።';
     void speakText(guide, language);
+  };
+
+  const handleTriggerVoiceHelp = () => {
+    handleAudioExplainer();
   };
 
   const handleSubmit = async () => {
@@ -72,10 +80,20 @@ export function SignInScreen({
     setLocalError(null);
     setOfficerWarning(false);
 
-    const cleanPhone = phoneNumber.trim();
+    let cleanPhone = phoneNumber.trim().replace(/\s+/g, '');
+    if (cleanPhone.startsWith('0')) {
+      cleanPhone = cleanPhone.substring(1);
+    }
+    if (!cleanPhone.startsWith('+251')) {
+      if (cleanPhone.startsWith('251')) {
+        cleanPhone = '+' + cleanPhone;
+      } else {
+        cleanPhone = '+251' + cleanPhone;
+      }
+    }
 
-    if (authMode !== 'da_invite' && !cleanPhone) {
-      setLocalError('Please enter a valid Ethiopian phone number (+251...).');
+    if (cleanPhone.length < 12) {
+      setLocalError('Please enter a valid 9-digit Ethiopian mobile number.');
       return;
     }
 
@@ -108,7 +126,7 @@ export function SignInScreen({
           return;
         }
         if (!password || password.length < 10) {
-          setLocalError('Password must be at least 10 characters with uppercase, lowercase & a number.');
+          setLocalError('Password must be at least 10 characters.');
           return;
         }
 
@@ -134,18 +152,6 @@ export function SignInScreen({
         } else {
           setLocalError(res.error || 'Failed to request password reset code.');
         }
-      } else if (authMode === 'da_invite') {
-        if (!inviteToken.trim()) {
-          setLocalError('Please enter your DA invitation token.');
-          return;
-        }
-        const res = await authService.acceptInvitation(inviteToken.trim());
-        if (res.success) {
-          setAuthMode('signin');
-          setLocalError('Invitation verified! Please sign in with your phone credentials.');
-        } else {
-          setLocalError(res.error || 'Invalid or expired invitation token.');
-        }
       }
     } finally {
       setSubmitting(false);
@@ -163,103 +169,107 @@ export function SignInScreen({
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}>
-          {/* Top Status Header */}
-          <View style={styles.topHeader}>
-            <Pressable
-              onPress={onBackToLanguage}
-              accessibilityRole="button"
-              accessibilityLabel="Change language"
-              style={({ pressed }) => [styles.headerIconButton, pressed && styles.pressed]}>
-              <Text style={styles.headerIconText}>←</Text>
-            </Pressable>
-
-            <View style={styles.offlinePill}>
-              <View style={styles.greenDot} />
-              <Text style={styles.offlineText}>Offline Ready</Text>
+          {/* 1. Top Offline & Telemetry Status Bar */}
+          <View style={styles.statusBarRow}>
+            <View style={styles.offlineCapablePill}>
+              <View style={styles.greenPulseDot} />
+              <Text style={styles.offlineCapableText}>Local AI Active • Offline Capable</Text>
             </View>
-
-            <Pressable
-              onPress={onRequestHelp}
-              accessibilityRole="button"
-              accessibilityLabel="Help"
-              style={({ pressed }) => [styles.headerIconButton, pressed && styles.pressed]}>
-              <Text style={styles.headerIconText}>❓</Text>
-            </Pressable>
-          </View>
-
-          {/* Offline SMS Direct Gateway Banner */}
-          <View style={styles.gatewayBanner}>
-            <View style={styles.gatewayLeft}>
-              <Text style={styles.gatewayIcon}>📶</Text>
-              <Text style={styles.gatewayText}>Offline Capable • SMS Direct Gateway</Text>
-            </View>
-            <View style={styles.simBadge}>
-              <Text style={styles.simText}>SIM 1</Text>
+            <View style={styles.networkDirectPill}>
+              <MaterialIcons name="signal-cellular-alt" size={16} color="#41493E" />
+              <Text style={styles.networkDirectText}>4G / SMS Direct</Text>
             </View>
           </View>
 
-          {/* Language & Audio Guide Row */}
-          <View style={styles.langGuideRow}>
-            <View style={styles.activeLangPill}>
-              <Text style={styles.langIcon}>🌐</Text>
-              <Text style={styles.langName}>
-                {language === 'om' ? 'Afaan Oromoo' : language === 'ti' ? 'ትግርኛ' : language === 'en' ? 'English' : 'አማርኛ'}
+          {/* 2. Illiteracy-First Audio Explainer Banner */}
+          <Pressable
+            onPress={handleAudioExplainer}
+            style={({ pressed }) => [
+              styles.audioExplainerBanner,
+              isSpeaking && styles.audioExplainerActive,
+              pressed && styles.pressed,
+            ]}>
+            <View style={styles.audioBannerLeft}>
+              <View style={styles.audioBannerIconCircle}>
+                <MaterialIcons
+                  name={isSpeaking ? 'stop' : 'volume-up'}
+                  size={24}
+                  color="#FFFFFF"
+                />
+              </View>
+              <View style={styles.audioBannerTextGroup}>
+                <Text style={styles.audioBannerTitle}>Listen to Instructions</Text>
+                <Text style={styles.audioBannerSub}>የመግቢያ መመሪያዎችን ያዳምጡ</Text>
+              </View>
+            </View>
+            <View style={styles.audioTimeBadge}>
+              <Text style={styles.audioTimeText}>{isSpeaking ? 'Playing' : '44s Audio'}</Text>
+            </View>
+          </Pressable>
+
+          {/* 3. Hero Image: Grounded Agrarian Trust */}
+          <View style={styles.heroCard}>
+            <Image
+              source={{ uri: HERO_IMAGE_URI }}
+              style={styles.heroImage}
+              resizeMode="cover"
+            />
+            <View style={styles.heroOverlay}>
+              <View style={styles.heroTitleRow}>
+                <MaterialIcons name="eco" size={18} color="#94F990" />
+                <Text style={styles.heroTitle}>Autonomous Agronomic Portal</Text>
+              </View>
+              <Text style={styles.heroSubtitle}>
+                Oromia & Amhara Integrated Agro-Telemetry
               </Text>
             </View>
+          </View>
 
+          {/* 4. Role Selector Switch (Farmer vs DA) */}
+          <View style={styles.roleContainer}>
             <Pressable
-              onPress={handleAudioGuide}
-              style={({ pressed }) => [
-                styles.audioGuideButton,
-                isSpeaking && styles.audioGuideButtonActive,
-                pressed && styles.pressed,
+              onPress={() => setSelectedRole('farmer')}
+              style={[
+                styles.roleButton,
+                selectedRole === 'farmer' && styles.roleButtonActive,
               ]}>
-              <Text style={styles.audioGuideIcon}>{isSpeaking ? '⏹️' : '🔊'}</Text>
-              <Text style={styles.audioGuideLabel}>
-                {language === 'om' ? 'Sagalee Dhaggeeffadhu' : 'የድምፅ መመሪያ'}
+              <MaterialIcons
+                name="agriculture"
+                size={20}
+                color={selectedRole === 'farmer' ? '#FFFFFF' : '#41493E'}
+              />
+              <Text
+                style={[
+                  styles.roleText,
+                  selectedRole === 'farmer' && styles.roleTextActive,
+                ]}>
+                Farmer / አርሶ አደር
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => setSelectedRole('da')}
+              style={[
+                styles.roleButton,
+                selectedRole === 'da' && styles.roleButtonActive,
+              ]}>
+              <MaterialIcons
+                name="engineering"
+                size={20}
+                color={selectedRole === 'da' ? '#FFFFFF' : '#41493E'}
+              />
+              <Text
+                style={[
+                  styles.roleText,
+                  selectedRole === 'da' && styles.roleTextActive,
+                ]}>
+                DA / ኤክስቴንሽን
               </Text>
             </Pressable>
           </View>
 
-          {/* Title Header Card */}
-          <View style={[styles.titleCard, Shadows.card]}>
-            <View style={styles.titleRow}>
-              <View style={styles.titleBadge}>
-                <Text style={styles.titleBadgeIcon}>🌾</Text>
-              </View>
-              <View style={styles.titleContent}>
-                <Text style={styles.mainTitle}>
-                  {authMode === 'signup'
-                    ? language === 'om'
-                      ? 'Galmee Haaraa Uumi'
-                      : 'አዲስ መለያ ይፍጠሩ'
-                    : authMode === 'forgot'
-                    ? language === 'om'
-                      ? 'Jecha Icciitii Haaromsi'
-                      : 'የይለፍ ቃል መልሶ ማግኛ'
-                    : authMode === 'da_invite'
-                    ? language === 'om'
-                      ? 'Afeerraa DA Fudhadhu'
-                      : 'የልማት ጣቢያ ሰራተኛ ግብዣ'
-                    : language === 'om'
-                    ? 'Seensa Herregaa'
-                    : 'ወደ መለያዎ ይግቡ'}
-                </Text>
-                <Text style={styles.subTitle}>
-                  {authMode === 'signup'
-                    ? 'Farmer Registration & SMS Verification'
-                    : authMode === 'forgot'
-                    ? 'Reset password via SMS OTP'
-                    : authMode === 'da_invite'
-                    ? 'Accept Development Agent credential invitation'
-                    : 'Farmer & Extension DA Mobile Portal'}
-                </Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Mode Switcher Tabs */}
-          <View style={styles.tabContainer}>
+          {/* 5. Mode Toggle: Sign In vs Create Account */}
+          <View style={styles.modeContainer}>
             <Pressable
               onPress={() => {
                 clearError();
@@ -267,9 +277,21 @@ export function SignInScreen({
                 setOfficerWarning(false);
                 setAuthMode('signin');
               }}
-              style={[styles.tabButton, authMode === 'signin' && styles.tabButtonActive]}>
-              <Text style={[styles.tabText, authMode === 'signin' && styles.tabTextActive]}>
-                {language === 'om' ? 'Seensa (Sign In)' : 'ይግቡ (Sign In)'}
+              style={[
+                styles.modeButton,
+                authMode === 'signin' && styles.modeButtonActive,
+              ]}>
+              <MaterialIcons
+                name="login"
+                size={18}
+                color={authMode === 'signin' ? '#00450D' : '#41493E'}
+              />
+              <Text
+                style={[
+                  styles.modeText,
+                  authMode === 'signin' && styles.modeTextActive,
+                ]}>
+                Sign In / ይግቡ
               </Text>
             </Pressable>
 
@@ -280,17 +302,29 @@ export function SignInScreen({
                 setOfficerWarning(false);
                 setAuthMode('signup');
               }}
-              style={[styles.tabButton, authMode === 'signup' && styles.tabButtonActive]}>
-              <Text style={[styles.tabText, authMode === 'signup' && styles.tabTextActive]}>
-                {language === 'om' ? 'Galmee (Sign Up)' : 'ይመዝገቡ (Sign Up)'}
+              style={[
+                styles.modeButton,
+                authMode === 'signup' && styles.modeButtonActive,
+              ]}>
+              <MaterialIcons
+                name="person-add"
+                size={18}
+                color={authMode === 'signup' ? '#00450D' : '#41493E'}
+              />
+              <Text
+                style={[
+                  styles.modeText,
+                  authMode === 'signup' && styles.modeTextActive,
+                ]}>
+                Create Account / ይመዝገቡ
               </Text>
             </Pressable>
           </View>
 
-          {/* Officer/Admin Web Portal Redirection Callout Banner (MOB-3) */}
+          {/* Officer Redirection Notice (SRS ADM-8) */}
           {officerWarning && (
             <View style={styles.officerWarningCard}>
-              <Text style={styles.officerWarningIcon}>🏛️</Text>
+              <MaterialIcons name="computer" size={24} color="#6C2200" />
               <View style={styles.officerWarningContent}>
                 <Text style={styles.officerWarningTitle}>
                   Desktop Web Portal Required
@@ -302,147 +336,221 @@ export function SignInScreen({
             </View>
           )}
 
-          {/* Error Banner */}
-          {displayError ? (
-            <View style={styles.errorBox}>
-              <Text style={styles.errorText}>⚠️ {displayError}</Text>
+          {/* Error Message Callout */}
+          {displayError && !officerWarning && (
+            <View style={styles.errorBanner}>
+              <MaterialIcons name="error-outline" size={20} color="#BA1A1A" />
+              <Text style={styles.errorText}>{displayError}</Text>
             </View>
-          ) : null}
+          )}
 
-          {/* Form Card */}
-          <View style={[styles.formCard, Shadows.card]}>
+          {/* 6. Form Fields Container */}
+          <View style={styles.formContainer}>
+            {/* If Signup: Full Name Field */}
             {authMode === 'signup' && (
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>
-                  {language === 'om' ? 'Maqaa Guutuu' : 'ሙሉ ስም'} • Full Name
-                </Text>
+              <View style={styles.inputCard}>
+                <View style={styles.inputHeader}>
+                  <Text style={styles.inputLabel}>Full Name / ሙሉ ስም</Text>
+                  <Text style={styles.inputSub}>Official Farmer Record</Text>
+                </View>
                 <View style={styles.inputWrapper}>
-                  <Text style={styles.inputIcon}>👤</Text>
+                  <MaterialIcons name="badge" size={20} color="#717A6D" />
                   <TextInput
                     style={styles.textInput}
-                    placeholder="e.g. Gudeta Feyissa"
+                    placeholder="e.g. Abebe Bekele"
+                    placeholderTextColor="#C0C9BB"
                     value={fullName}
                     onChangeText={setFullName}
                     autoCapitalize="words"
-                    placeholderTextColor={Colors.light.textTertiary}
                   />
                 </View>
               </View>
             )}
 
-            {authMode !== 'da_invite' ? (
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>
-                  {language === 'om' ? 'Lakkoofsa Bilbilaa' : 'ስልክ ቁጥር'} • Phone Number
+            {/* Mobile Phone Number with +251 prefix */}
+            <View style={styles.inputCard}>
+              <View style={styles.inputHeader}>
+                <View style={styles.inputLabelWithIcon}>
+                  <MaterialIcons name="call" size={18} color="#00450D" />
+                  <Text style={styles.inputLabel}>Mobile Phone Number / የስልክ ቁጥር</Text>
+                </View>
+                <Text style={styles.inputSub}>Ethio Telecom / Safaricom</Text>
+              </View>
+
+              <View style={styles.phoneInputRow}>
+                <View style={styles.countryCodeBadge}>
+                  <Text style={styles.flagEmoji}>🇪🇹</Text>
+                  <Text style={styles.countryCodeText}>+251</Text>
+                </View>
+                <TextInput
+                  style={styles.phoneTextInput}
+                  placeholder="91 234 5678"
+                  placeholderTextColor="#C0C9BB"
+                  keyboardType="phone-pad"
+                  maxLength={11}
+                  value={phoneNumber}
+                  onChangeText={setPhoneNumber}
+                />
+                <Pressable
+                  onPress={handleAudioExplainer}
+                  style={styles.voiceDictateButton}>
+                  <MaterialIcons name="mic" size={22} color="#00731E" />
+                </Pressable>
+              </View>
+              <Text style={styles.inputHint}>
+                Starts with 9... or 7... (9 digits without initial zero)
+              </Text>
+            </View>
+
+            {/* Password Field */}
+            <View style={styles.inputCard}>
+              <View style={styles.inputHeader}>
+                <View style={styles.inputLabelWithIcon}>
+                  <MaterialIcons name="lock" size={18} color="#00450D" />
+                  <Text style={styles.inputLabel}>Password / የይለፍ ቃል</Text>
+                </View>
+                <Text style={styles.passwordMinCounter}>Min 10 characters</Text>
+              </View>
+
+              <View style={styles.passwordInputRow}>
+                <TextInput
+                  style={styles.passwordTextInput}
+                  placeholder="••••••••••••"
+                  placeholderTextColor="#C0C9BB"
+                  secureTextEntry={!showPassword}
+                  value={password}
+                  onChangeText={setPassword}
+                />
+                <Pressable
+                  onPress={() => setShowPassword(!showPassword)}
+                  style={styles.passwordVisibilityButton}>
+                  <MaterialIcons
+                    name={showPassword ? 'visibility-off' : 'visibility'}
+                    size={22}
+                    color="#41493E"
+                  />
+                </Pressable>
+              </View>
+
+              {/* Password Strength Indicator Bars */}
+              <View style={styles.passwordStrengthRow}>
+                <View
+                  style={[
+                    styles.strengthBar,
+                    password.length > 0 && { backgroundColor: '#1B5E20' },
+                  ]}
+                />
+                <View
+                  style={[
+                    styles.strengthBar,
+                    password.length >= 6 && { backgroundColor: '#1B5E20' },
+                  ]}
+                />
+                <View
+                  style={[
+                    styles.strengthBar,
+                    password.length >= 10 && { backgroundColor: '#006E1C' },
+                  ]}
+                />
+                <Text style={styles.strengthText}>
+                  {password.length >= 10 ? 'Strong PIN/Pass' : 'Standard PIN/Pass'}
                 </Text>
-                <View style={styles.inputWrapper}>
-                  <Text style={styles.inputIcon}>📱</Text>
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="+251 91 123 4567"
-                    value={phoneNumber}
-                    onChangeText={setPhoneNumber}
-                    keyboardType="phone-pad"
-                    autoCapitalize="none"
-                    placeholderTextColor={Colors.light.textTertiary}
-                  />
-                </View>
               </View>
-            ) : (
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Invitation Token / የመጋበዣ ኮድ</Text>
-                <View style={styles.inputWrapper}>
-                  <Text style={styles.inputIcon}>🔑</Text>
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="Enter DA token..."
-                    value={inviteToken}
-                    onChangeText={setInviteToken}
-                    autoCapitalize="none"
-                    placeholderTextColor={Colors.light.textTertiary}
-                  />
-                </View>
-              </View>
-            )}
+            </View>
 
-            {authMode !== 'da_invite' && (
-              <View style={styles.inputGroup}>
-                <View style={styles.labelRow}>
-                  <Text style={styles.inputLabel}>
-                    {language === 'om' ? 'Jecha Icciitii' : 'የይለፍ ቃል'} • Password
-                  </Text>
-                  {authMode === 'signin' && (
-                    <Pressable onPress={() => setAuthMode('forgot')}>
-                      <Text style={styles.forgotLink}>
-                        {language === 'om' ? 'Irraanfattee?' : 'ረስተዋል?'}
-                      </Text>
-                    </Pressable>
-                  )}
-                </View>
-                <View style={styles.inputWrapper}>
-                  <Text style={styles.inputIcon}>🔒</Text>
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder={authMode === 'signup' ? 'Min 10 chars (Aa1...)' : 'Enter password'}
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry={!showPassword}
-                    placeholderTextColor={Colors.light.textTertiary}
-                  />
-                  <Pressable
-                    onPress={() => setShowPassword(!showPassword)}
-                    style={styles.eyeButton}>
-                    <Text style={styles.eyeIcon}>{showPassword ? '👁️' : '🙈'}</Text>
-                  </Pressable>
-                </View>
-              </View>
-            )}
+            {/* Remember Me & Forgot Password */}
+            <View style={styles.rememberForgotRow}>
+              <Pressable
+                onPress={() => setRememberDevice(!rememberDevice)}
+                style={styles.rememberRow}>
+                <MaterialIcons
+                  name={rememberDevice ? 'check-box' : 'check-box-outline-blank'}
+                  size={20}
+                  color="#1B5E20"
+                />
+                <Text style={styles.rememberText}>Remember on this device</Text>
+              </Pressable>
 
-            {/* Primary Submit Button (56dp standard height) */}
+              <Pressable
+                onPress={() => setAuthMode('forgot')}
+                style={styles.forgotButton}>
+                <MaterialIcons name="history-edu" size={16} color="#6C2200" />
+                <Text style={styles.forgotText}>Forgot? / ረሱት?</Text>
+              </Pressable>
+            </View>
+
+            {/* 7. Large High-Contrast Primary Submit Action (56dp) */}
             <Pressable
               onPress={handleSubmit}
               disabled={submitting}
-              accessibilityRole="button"
-              accessibilityLabel="Submit form"
               style={({ pressed }) => [
-                styles.submitButton,
-                pressed && styles.submitButtonPressed,
-                submitting && styles.submitButtonDisabled,
+                styles.primarySubmitButton,
+                pressed && styles.pressed,
+                submitting && { opacity: 0.8 },
               ]}>
               {submitting ? (
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
-                <Text style={styles.submitButtonText}>
-                  {authMode === 'signin'
-                    ? language === 'om'
-                      ? 'Seeni (Sign In)'
-                      : 'ይግቡ (Sign In)'
-                    : authMode === 'signup'
-                    ? language === 'om'
-                      ? 'Koodii SMS Gaafadhu'
-                      : 'የማረጋገጫ SMS ይላኩ'
-                    : authMode === 'forgot'
-                    ? 'Send Reset Code'
-                    : 'Accept Invitation'}
-                </Text>
+                <>
+                  <MaterialIcons
+                    name={authMode === 'signup' ? 'person-add' : 'lock-open'}
+                    size={22}
+                    color="#FFFFFF"
+                  />
+                  <Text style={styles.primarySubmitText}>
+                    {authMode === 'signup'
+                      ? 'Create Account / ይመዝገቡ'
+                      : authMode === 'forgot'
+                      ? 'Send Reset Code / ኮድ ላክ'
+                      : 'Sign In / ይግቡ'}
+                  </Text>
+                </>
               )}
             </Pressable>
 
-            {/* Secondary Option Links */}
-            <View style={styles.secondaryLinks}>
-              {authMode !== 'da_invite' ? (
-                <Pressable onPress={() => setAuthMode('da_invite')}>
-                  <Text style={styles.secondaryLinkText}>
-                    📋 Development Agent with Invite Token? Click here
-                  </Text>
-                </Pressable>
-              ) : (
-                <Pressable onPress={() => setAuthMode('signin')}>
-                  <Text style={styles.secondaryLinkText}>
-                    ← Back to standard Sign In
-                  </Text>
-                </Pressable>
-              )}
+            {/* 8. Quick Audio Assistance Tap Action */}
+            <View style={styles.voiceHelpRow}>
+              <Pressable
+                onPress={handleTriggerVoiceHelp}
+                style={({ pressed }) => [
+                  styles.voiceHelpButton,
+                  pressed && styles.pressed,
+                ]}>
+                <MaterialIcons name="support-agent" size={20} color="#6C2200" />
+                <Text style={styles.voiceHelpText}>
+                  Need Voice Help? • የድምፅ ድጋፍ ይፈልጋሉ?
+                </Text>
+              </Pressable>
+            </View>
+
+            {/* Back to Language Selection */}
+            {onBackToLanguage && (
+              <Pressable
+                onPress={onBackToLanguage}
+                style={styles.backLanguageButton}>
+                <MaterialIcons name="arrow-back" size={16} color="#41493E" />
+                <Text style={styles.backLanguageText}>
+                  ቋንቋ ይቀይሩ / Change Language
+                </Text>
+              </Pressable>
+            )}
+
+            {/* 9. Prominent Administrative Portal Advisory Notice */}
+            <View style={styles.adminNoticeCard}>
+              <View style={styles.adminNoticeIconCircle}>
+                <MaterialIcons name="admin-panel-settings" size={22} color="#6C2200" />
+              </View>
+              <View style={styles.adminNoticeContent}>
+                <View style={styles.adminNoticeHeader}>
+                  <Text style={styles.adminNoticeTitle}>Administrative Access Notice</Text>
+                  <View style={styles.govBadge}>
+                    <Text style={styles.govBadgeText}>Gov / SRS ADM-8</Text>
+                  </View>
+                </View>
+                <Text style={styles.adminNoticeText}>
+                  Development Agents and Agronomic Experts only. System activity is cryptographically signed and synced to the regional agricultural bureau.
+                </Text>
+              </View>
             </View>
           </View>
         </ScrollView>
@@ -454,318 +562,497 @@ export function SignInScreen({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: '#F9F9FF',
   },
   flex: {
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.two,
-    paddingBottom: Spacing.six,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 32,
   },
-  topHeader: {
+  statusBarRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Spacing.two,
+    paddingVertical: 8,
+    marginBottom: 8,
   },
-  headerIconButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Colors.light.backgroundElement,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerIconText: {
-    fontSize: 20,
-    color: Colors.light.text,
-  },
-  offlinePill: {
+  offlineCapablePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.light.backgroundElement,
-    paddingHorizontal: Spacing.three,
+    backgroundColor: '#91F78E',
+    paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: Radii.full,
+    borderRadius: 9999,
     gap: 6,
   },
-  greenDot: {
+  greenPulseDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.light.primary,
+    backgroundColor: '#006E1C',
   },
-  offlineText: {
+  offlineCapableText: {
     fontSize: 12,
     fontWeight: '700',
-    color: Colors.light.textSecondary,
+    color: '#00731E',
   },
-  gatewayBanner: {
+  networkDirectPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#DEE8FF',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 9999,
+    gap: 4,
+  },
+  networkDirectText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#41493E',
+  },
+  audioExplainerBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: Colors.light.backgroundElement,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: 10,
-    borderRadius: Radii.card,
-    marginBottom: Spacing.three,
+    backgroundColor: '#FFDBCF',
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 12,
   },
-  gatewayLeft: {
+  audioExplainerActive: {
+    backgroundColor: '#FFB59A',
+  },
+  audioBannerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 12,
+    flex: 1,
   },
-  gatewayIcon: {
-    fontSize: 16,
-  },
-  gatewayText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: Colors.light.text,
-  },
-  simBadge: {
-    backgroundColor: Colors.light.card,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: Radii.full,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-  },
-  simText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: Colors.light.textSecondary,
-  },
-  langGuideRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: Spacing.three,
-  },
-  activeLangPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.light.backgroundElement,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: Radii.full,
-    gap: 6,
-  },
-  langIcon: {
-    fontSize: 14,
-  },
-  langName: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: Colors.light.text,
-  },
-  audioGuideButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFDBCE',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: Radii.full,
-    gap: 6,
-  },
-  audioGuideButtonActive: {
-    backgroundColor: '#FF6F00',
-  },
-  audioGuideIcon: {
-    fontSize: 16,
-  },
-  audioGuideLabel: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#8A2D00',
-  },
-  titleCard: {
-    backgroundColor: Colors.light.card,
-    borderRadius: Radii.card,
-    padding: Spacing.four,
-    marginBottom: Spacing.three,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.three,
-  },
-  titleBadge: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: Colors.light.primarySubtle,
+  audioBannerIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#6C2200',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  titleBadgeIcon: {
-    fontSize: 24,
-  },
-  titleContent: {
+  audioBannerTextGroup: {
     flex: 1,
   },
-  mainTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: Colors.light.text,
-  },
-  subTitle: {
-    fontSize: 12,
-    color: Colors.light.textSecondary,
-    marginTop: 2,
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    backgroundColor: Colors.light.backgroundElement,
-    borderRadius: Radii.card,
-    padding: 4,
-    marginBottom: Spacing.three,
-  },
-  tabButton: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-    borderRadius: Radii.medium,
-  },
-  tabButtonActive: {
-    backgroundColor: Colors.light.card,
-    ...Shadows.card,
-  },
-  tabText: {
+  audioBannerTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: Colors.light.textSecondary,
+    color: '#380D00',
   },
-  tabTextActive: {
-    color: Colors.light.primaryDark,
+  audioBannerSub: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#933100',
+    marginTop: 2,
+  },
+  audioTimeBadge: {
+    backgroundColor: '#6C2200',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 9999,
+  },
+  audioTimeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    textTransform: 'uppercase',
+  },
+  heroCard: {
+    height: 140,
+    borderRadius: 14,
+    overflow: 'hidden',
+    position: 'relative',
+    marginBottom: 12,
+    backgroundColor: '#D8E3FB',
+  },
+  heroImage: {
+    width: '100%',
+    height: '100%',
+  },
+  heroOverlay: {
+    position: 'absolute',
+    inset: 0,
+    backgroundColor: 'rgba(0, 69, 13, 0.65)',
+    justifyContent: 'flex-end',
+    padding: 12,
+  },
+  heroTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  heroTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  heroSubtitle: {
+    fontSize: 12,
+    color: '#90D689',
+    marginTop: 2,
+  },
+  roleContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#DEE8FF',
+    borderRadius: 12,
+    padding: 4,
+    gap: 4,
+    marginBottom: 12,
+  },
+  roleButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 8,
+    gap: 6,
+  },
+  roleButtonActive: {
+    backgroundColor: '#00450D',
+  },
+  roleText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#41493E',
+  },
+  roleTextActive: {
+    color: '#FFFFFF',
+  },
+  modeContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#F0F3FF',
+    borderRadius: 12,
+    padding: 4,
+    gap: 4,
+    marginBottom: 16,
+  },
+  modeButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 8,
+    gap: 6,
+  },
+  modeButtonActive: {
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  modeText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#41493E',
+  },
+  modeTextActive: {
+    fontWeight: '700',
+    color: '#111C2D',
+  },
+  formContainer: {
+    gap: 12,
+  },
+  inputCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+    gap: 8,
+  },
+  inputHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  inputLabelWithIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#111C2D',
+  },
+  inputSub: {
+    fontSize: 11,
+    color: '#41493E',
+  },
+  passwordMinCounter: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#6C2200',
+  },
+  phoneInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0F3FF',
+    borderRadius: 10,
+    padding: 6,
+    gap: 8,
+  },
+  countryCodeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#D8E3FB',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 6,
+    gap: 4,
+  },
+  flagEmoji: {
+    fontSize: 14,
+  },
+  countryCodeText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#111C2D',
+  },
+  phoneTextInput: {
+    flex: 1,
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111C2D',
+    letterSpacing: 1,
+    paddingVertical: 4,
+  },
+  voiceDictateButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: '#91F78E',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  inputHint: {
+    fontSize: 11,
+    color: '#41493E',
+  },
+  passwordInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0F3FF',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
+  passwordTextInput: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#111C2D',
+    letterSpacing: 2,
+    paddingVertical: 8,
+  },
+  passwordVisibilityButton: {
+    padding: 6,
+  },
+  passwordStrengthRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingTop: 4,
+  },
+  strengthBar: {
+    flex: 1,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: '#D8E3FB',
+  },
+  strengthText: {
+    fontSize: 11,
+    color: '#41493E',
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0F3FF',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    gap: 8,
+  },
+  textInput: {
+    flex: 1,
+    fontSize: 15,
+    color: '#111C2D',
+    paddingVertical: 8,
+  },
+  rememberForgotRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 2,
+  },
+  rememberRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  rememberText: {
+    fontSize: 12,
+    color: '#111C2D',
+  },
+  forgotButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  forgotText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#6C2200',
+  },
+  primarySubmitButton: {
+    height: 56,
+    borderRadius: 14,
+    backgroundColor: '#00450D',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    shadowColor: '#00450D',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 3,
+    marginTop: 6,
+  },
+  primarySubmitText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  voiceHelpRow: {
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  voiceHelpButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#DEE8FF',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 9999,
+    gap: 6,
+  },
+  voiceHelpText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#111C2D',
+  },
+  backLanguageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 8,
+  },
+  backLanguageText: {
+    fontSize: 12,
+    color: '#41493E',
+  },
+  adminNoticeCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#E7EEFF',
+    borderRadius: 12,
+    padding: 12,
+    gap: 10,
+    marginTop: 8,
+  },
+  adminNoticeIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#D8E3FB',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  adminNoticeContent: {
+    flex: 1,
+  },
+  adminNoticeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 2,
+  },
+  adminNoticeTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#111C2D',
+  },
+  govBadge: {
+    backgroundColor: '#CFDAF2',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  govBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#41493E',
+    textTransform: 'uppercase',
+  },
+  adminNoticeText: {
+    fontSize: 11,
+    color: '#41493E',
+    lineHeight: 15,
   },
   officerWarningCard: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: '#FFF3E0',
-    borderColor: '#FFB74D',
-    borderWidth: 1.5,
-    borderRadius: Radii.card,
-    padding: Spacing.three,
-    marginBottom: Spacing.three,
-    gap: Spacing.two,
-  },
-  officerWarningIcon: {
-    fontSize: 24,
-    marginTop: 2,
+    backgroundColor: '#FFDBCF',
+    borderRadius: 12,
+    padding: 12,
+    gap: 10,
+    marginBottom: 8,
   },
   officerWarningContent: {
     flex: 1,
   },
   officerWarningTitle: {
     fontSize: 14,
-    fontWeight: '800',
-    color: '#E65100',
+    fontWeight: '700',
+    color: '#6C2200',
+    marginBottom: 2,
   },
   officerWarningText: {
     fontSize: 12,
-    color: '#5D4037',
-    marginTop: 2,
-    lineHeight: 18,
+    color: '#380D00',
+    lineHeight: 16,
   },
-  errorBox: {
-    backgroundColor: Colors.light.dangerLight,
-    padding: Spacing.three,
-    borderRadius: Radii.medium,
-    marginBottom: Spacing.three,
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFDAD6',
+    borderRadius: 10,
+    padding: 10,
+    gap: 8,
+    marginBottom: 8,
   },
   errorText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: Colors.light.danger,
-  },
-  formCard: {
-    backgroundColor: Colors.light.card,
-    borderRadius: Radii.card,
-    padding: Spacing.four,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-  },
-  inputGroup: {
-    marginBottom: Spacing.three,
-  },
-  labelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'baseline',
-  },
-  inputLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: Colors.light.text,
-    marginBottom: 6,
-  },
-  forgotLink: {
     fontSize: 12,
-    fontWeight: '700',
-    color: Colors.light.primary,
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: TouchTargets.minimum,
-    borderWidth: 1.5,
-    borderColor: Colors.light.border,
-    borderRadius: Radii.medium,
-    backgroundColor: Colors.light.backgroundElement,
-    paddingHorizontal: Spacing.three,
-  },
-  inputIcon: {
-    fontSize: 16,
-    marginRight: 8,
-  },
-  textInput: {
+    color: '#BA1A1A',
     flex: 1,
-    fontSize: 16,
-    color: Colors.light.text,
-    fontWeight: '600',
-  },
-  eyeButton: {
-    padding: 6,
-  },
-  eyeIcon: {
-    fontSize: 16,
-  },
-  submitButton: {
-    height: TouchTargets.primaryButton, // 56dp
-    backgroundColor: Colors.light.primary,
-    borderRadius: Radii.large,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: Spacing.two,
-    ...Shadows.card,
-  },
-  submitButtonPressed: {
-    backgroundColor: Colors.light.primaryHover,
-  },
-  submitButtonDisabled: {
-    opacity: 0.6,
-  },
-  submitButtonText: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
-  secondaryLinks: {
-    alignItems: 'center',
-    marginTop: Spacing.three,
-  },
-  secondaryLinkText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: Colors.light.primaryDark,
-    textAlign: 'center',
   },
   pressed: {
-    opacity: 0.8,
+    opacity: 0.85,
   },
 });

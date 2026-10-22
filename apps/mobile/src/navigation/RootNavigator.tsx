@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import { useAuth } from '@/context/AuthContext';
 import { ROUTES, type RouteName } from './routes';
 import type { SupportedLanguage } from '@/config/constants';
@@ -182,5 +182,15 @@ export function RootNavigator() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    width: '100%',
+    backgroundColor: '#f9f9ff',
+    ...(Platform.OS === 'web'
+      ? {
+          maxWidth: 480,
+          marginHorizontal: 'auto',
+          minHeight: '100%',
+          overflow: 'hidden',
+        }
+      : {}),
   },
 });
