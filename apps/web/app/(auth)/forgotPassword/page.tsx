@@ -1,41 +1,24 @@
 'use client'
 
-import React, { useState, Suspense } from 'react'
+import React, { Suspense } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { LockKeyhole } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { PasswordResetRequestSchema, PhoneUtils } from '@repo/shared'
-import { authService } from '@/services/authService'
+import { useForgotPasswordForm } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Notice } from '@/components/ui/notice'
 
 function ForgotPasswordContent() {
   const t = useTranslations('ForgotPassword')
-  const router = useRouter()
-  const [phoneNumber, setPhoneNumber] = useState('')
-  const [liveError, setLiveError] = useState('')
-  const [generalError, setGeneralError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-
-  const onPhoneChange = (v: string) => {
-    setPhoneNumber(v)
-    const r = PasswordResetRequestSchema.shape.phoneNumber.safeParse(v)
-    setLiveError(r.success ? '' : (r.error.issues[0]?.message ?? ''))
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const parsed = PasswordResetRequestSchema.safeParse({ phoneNumber })
-    if (!parsed.success) { setLiveError(parsed.error.issues[0]?.message ?? 'Invalid phone number.'); return }
-    setIsLoading(true)
-    setGeneralError(null)
-    const result = await authService.requestPasswordReset(parsed.data)
-    setIsLoading(false)
-    if (!result.success) { setGeneralError(result.error || 'Failed to send recovery code.'); return }
-    router.push(`/resetPassword?phone=${encodeURIComponent(PhoneUtils.normalize(parsed.data.phoneNumber))}`)
-  }
+  const {
+    phoneNumber,
+    liveError,
+    generalError,
+    isLoading,
+    onPhoneChange,
+    handleSubmit,
+  } = useForgotPasswordForm()
 
   return (
     <div className="max-w-md w-full mx-auto space-y-6">

@@ -1,9 +1,8 @@
 'use client'
 
-import React, { useState } from 'react'
+import React from 'react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
-import { UsernameSignInSchema } from '@repo/shared'
 import { useSignInForm } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,43 +13,16 @@ export default function SignInPage() {
   const {
     formData,
     fieldErrors,
+    liveErrors,
     generalError,
     isLoading,
     isLockedOut,
     lockoutMinutesRemaining,
-    setField,
+    onUsernameChange,
+    onPasswordChange,
     handleSubmit,
+    canSubmit,
   } = useSignInForm()
-
-  const [liveErrors, setLiveErrors] = useState<Record<string, string>>({})
-
-  const onUsernameChange = (value: string) => {
-    setField('username', value)
-    const r = UsernameSignInSchema.shape.username.safeParse(value)
-    setLiveErrors((prev) => ({
-      ...prev,
-      username: r.success ? '' : (r.error.issues[0]?.message ?? ''),
-    }))
-  }
-
-  const onPasswordChange = (value: string) => {
-    setField('password', value)
-    const r = UsernameSignInSchema.shape.password.safeParse(value)
-    setLiveErrors((prev) => ({
-      ...prev,
-      password: r.success ? '' : (r.error.issues[0]?.message ?? ''),
-    }))
-  }
-
-  const canSubmit =
-    !isLoading &&
-    !isLockedOut &&
-    !!formData.username &&
-    !!formData.password &&
-    !liveErrors.username &&
-    !liveErrors.password &&
-    !fieldErrors.username &&
-    !fieldErrors.password
 
   return (
     <div className="max-w-md w-full mx-auto space-y-6">

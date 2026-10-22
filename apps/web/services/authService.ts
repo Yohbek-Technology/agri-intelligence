@@ -155,4 +155,18 @@ export const authService = {
       return { success: false, error: mapAuthError(err) }
     }
   },
+
+  // ─── Check username availability ───────────────────────────────────────────
+  async isUsernameAvailable(username: string): Promise<ServiceResult<{ available: boolean }>> {
+    return apiFetch<{ available: boolean }>('/api/auth/is-username-available', {
+      method: 'POST',
+      body: JSON.stringify({ username: username.toLowerCase() }),
+    })
+  },
+
+  // ─── Check phone existence ─────────────────────────────────────────────────
+  async checkPhoneExists(phoneNumber: string): Promise<ServiceResult<{ exists: boolean }>> {
+    const normalized = PhoneUtils.normalize(phoneNumber)
+    return apiFetch<{ exists: boolean }>(`/api/v1/auth/check-phone?phone=${encodeURIComponent(normalized)}`)
+  },
 }

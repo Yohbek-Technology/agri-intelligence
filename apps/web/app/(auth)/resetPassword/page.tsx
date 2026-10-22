@@ -1,10 +1,9 @@
 'use client'
 
-import React, { useState, Suspense } from 'react'
+import React, { Suspense } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useTranslations } from 'next-intl'
-import { PasswordResetRequestSchema, PasswordResetConfirmSchema } from '@repo/shared'
 import { usePasswordReset } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,44 +13,22 @@ import { PasswordStrength } from '@/components/ui/passwordStrength'
 function ResetPasswordContent() {
   const t = useTranslations('ResetPassword')
   const {
-    phoneNumber, code, newPassword, confirmPassword,
-    fieldErrors, generalError, successMessage, isLoading,
-    setPhoneNumber, setCode, setNewPassword, setConfirmPassword, handleConfirmSubmit,
+    phoneNumber,
+    code,
+    newPassword,
+    confirmPassword,
+    fieldErrors,
+    liveErrors,
+    generalError,
+    successMessage,
+    isLoading,
+    canSubmit,
+    onPhoneChange,
+    onCodeChange,
+    onNewPasswordChange,
+    onConfirmPasswordChange,
+    handleConfirmSubmit,
   } = usePasswordReset()
-
-  const [liveErrors, setLiveErrors] = useState<Record<string, string>>({})
-
-  const onPhoneChange = (v: string) => {
-    setPhoneNumber(v)
-    const r = PasswordResetRequestSchema.shape.phoneNumber.safeParse(v)
-    setLiveErrors((p) => ({ ...p, phoneNumber: r.success ? '' : (r.error.issues[0]?.message ?? '') }))
-  }
-
-  const onCodeChange = (v: string) => {
-    setCode(v)
-    const valid = v.length === 6 && /^[0-9]{6}$/.test(v)
-    setLiveErrors((p) => ({ ...p, code: valid ? '' : v.length > 0 ? t('codeMustBe6') : '' }))
-  }
-
-  const onNewPasswordChange = (v: string) => {
-    setNewPassword(v)
-    const r = PasswordResetConfirmSchema.shape.newPassword.safeParse(v)
-    setLiveErrors((p) => ({
-      ...p,
-      newPassword: r.success ? '' : (r.error.issues[0]?.message ?? ''),
-      ...(confirmPassword ? { confirmPassword: v === confirmPassword ? '' : t('passwordMismatch') } : {}),
-    }))
-  }
-
-  const onConfirmPasswordChange = (v: string) => {
-    setConfirmPassword(v)
-    setLiveErrors((p) => ({ ...p, confirmPassword: v === newPassword ? '' : v.length > 0 ? t('passwordMismatch') : '' }))
-  }
-
-  const canSubmit =
-    !isLoading && !!phoneNumber && !!code && !!newPassword && !!confirmPassword &&
-    !liveErrors.phoneNumber && !liveErrors.code && !liveErrors.newPassword && !liveErrors.confirmPassword &&
-    !fieldErrors.phoneNumber && !fieldErrors.code && !fieldErrors.newPassword && !fieldErrors.confirmPassword
 
   if (successMessage) {
     return (

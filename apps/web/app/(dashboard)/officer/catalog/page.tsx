@@ -1,21 +1,10 @@
 'use client'
 
-import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslations } from 'next-intl'
-import { useQueryClient } from '@tanstack/react-query'
-import {
-  useCrops,
-  useVarieties,
-  useFertilizerRates,
-  usePests,
-  useChemicals,
-  useRetireChemical,
-  useUnretireChemical,
-} from '@/hooks/useCatalog'
+import { useCatalogPage, type CatalogTab as Tab } from '@/hooks/useCatalog'
 import { DataTable } from '@/components/ui/dataTable'
 import { TableSkeleton } from '@/components/ui/skeleton'
-import { showSuccessToast, showErrorToast } from '@/components/ui/toast'
 import type { ColumnDef } from '@tanstack/react-table'
 import type {
   CropRow,
@@ -27,8 +16,6 @@ import type {
 } from '@repo/shared'
 
 const UI_BORDER = '2px solid var(--color-border-ui)'
-
-type Tab = 'crops' | 'varieties' | 'fertilizer' | 'pests' | 'chemicals'
 
 function StatusBadge({ status }: { status: CatalogStatus }) {
   return (
@@ -43,26 +30,24 @@ function StatusBadge({ status }: { status: CatalogStatus }) {
 }
 
 export default function CatalogPage() {
-  const t  = useTranslations('OfficerPages')
-  const qc = useQueryClient()
+  const t = useTranslations('OfficerPages')
 
-  const [activeTab,      setActiveTab]      = useState<Tab>('crops')
-  const [selectedCropId, setSelectedCropId] = useState('')
-  const [retireTarget,   setRetireTarget]   = useState<string | null>(null)
-
-  const cropsQ    = useCrops()
-  const varietiesQ = useVarieties(selectedCropId || undefined)
-  const ratesQ    = useFertilizerRates()
-  const pestsQ    = usePests()
-  const chemicalsQ  = useChemicals()
-  const retireMut   = useRetireChemical()
-  const unretireMut = useUnretireChemical()
-
-  const cropList     = (cropsQ.data     ?? []) as CropRow[]
-  const varietyList  = (varietiesQ.data ?? []) as VarietyRow[]
-  const rateList     = (ratesQ.data     ?? []) as FertilizerRateRow[]
-  const pestList     = (pestsQ.data     ?? []) as PestRow[]
-  const chemicalList = (chemicalsQ.data ?? []) as ChemicalRow[]
+  const {
+    activeTab,
+    setActiveTab,
+    selectedCropId,
+    setSelectedCropId,
+    retireTarget,
+    setRetireTarget,
+    cropList,
+    varietyList,
+    rateList,
+    pestList,
+    chemicalList,
+    handleRetire,
+    isLoading,
+    isRetiring,
+  } = useCatalogPage()
 
   const TABS: { id: Tab; label: string }[] = [
     { id: 'crops',      label: t('catalog_tab_crops') },
@@ -280,43 +265,7 @@ export default function CatalogPage() {
     },
   ]
 
-  /* ── Retire with undo ────────────────────────────────────────────────── */
-  function handleRetire(id: string) {
-    const snapshot = qc.getQueryData<ChemicalRow[]>(['catalog', 'chemicals'])
-    let undid = false
 
-    retireMut.mutate(id, {
-      onSuccess: () => {
-        if (!undid) {
-          showSuccessToast(t('toast_chemical_retired'), {
-            label: t('undo'),
-            onUndo: () => {
-              undid = true
-              if (snapshot) qc.setQueryData(['catalog', 'chemicals'], snapshot)
-              unretireMut.mutate(id, {
-                onSuccess: () => showSuccessToast('Chemical restored'),
-                onError: (err) => {
-                  void qc.invalidateQueries({ queryKey: ['catalog', 'chemicals'] })
-                  showErrorToast(err instanceof Error ? err.message : 'Could not restore chemical')
-                },
-              })
-            },
-          })
-        }
-      },
-      onError: (err) =>
-        showErrorToast(err instanceof Error ? err.message : 'Failed to retire chemical'),
-    })
-    setRetireTarget(null)
-  }
-
-  const isLoading = {
-    crops: cropsQ.isLoading,
-    varieties: varietiesQ.isLoading,
-    fertilizer: ratesQ.isLoading,
-    pests: pestsQ.isLoading,
-    chemicals: chemicalsQ.isLoading,
-  }[activeTab]
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 w-full space-y-6">
@@ -460,11 +409,11 @@ export default function CatalogPage() {
                 </button>
                 <button
                   type="button"
-                  disabled={retireMut.isPending}
+                  disabled={isRetiring}
                   onClick={() => handleRetire(retireTarget)}
                   className="px-4 py-2 text-sm font-medium text-white bg-danger rounded-xl cursor-pointer hover:bg-danger-subtle disabled:opacity-50 transition-colors"
                 >
-                  {retireMut.isPending ? t('catalog_retiring') : t('catalog_retire')}
+                  {isRetiring ? t('catalog_retiring') : t('catalog_retire')}
                 </button>
               </div>
             </motion.div>

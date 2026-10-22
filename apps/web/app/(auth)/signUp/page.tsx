@@ -1,10 +1,9 @@
 'use client'
 
-import React, { useState, useRef, Suspense } from 'react'
+import React, { Suspense } from 'react'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { PhoneSignUpSchema, type AppLanguage } from '@repo/shared'
+import type { AppLanguage } from '@repo/shared'
 import { useSignUpForm } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,84 +13,29 @@ import { PasswordStrength } from '@/components/ui/passwordStrength'
 
 function SignUpContent() {
   const t = useTranslations('SignUp')
-  const searchParams = useSearchParams()
-  const phoneError = searchParams.get('error') === 'phone_taken' ? t('phoneTaken') : null
-
-  const { formData, fieldErrors, generalError, isLoading, setField, setLanguage, handleSubmit } = useSignUpForm()
-
-  const [liveErrors, setLiveErrors] = useState<Record<string, string>>({})
-  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null)
-  const [usernameChecking, setUsernameChecking] = useState(false)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const onNameChange = (v: string) => {
-    setField('name', v)
-    const r = PhoneSignUpSchema.shape.name.safeParse(v)
-    setLiveErrors((p) => ({ ...p, name: r.success ? '' : (r.error.issues[0]?.message ?? '') }))
-  }
-
-  const onUsernameChange = (v: string) => {
-    const lower = v.toLowerCase()
-    setField('username', lower)
-    setUsernameAvailable(null)
-    const r = PhoneSignUpSchema.shape.username.safeParse(lower)
-    if (!r.success) {
-      setLiveErrors((p) => ({ ...p, username: r.error.issues[0]?.message ?? '' }))
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-      return
-    }
-    setLiveErrors((p) => ({ ...p, username: '' }))
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    if (!lower) return
-    debounceRef.current = setTimeout(async () => {
-      setUsernameChecking(true)
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000'}/api/auth/is-username-available`,
-          { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: lower }) }
-        )
-        const data = await res.json() as { available?: boolean }
-        const available = data?.available ?? false
-        setUsernameAvailable(available)
-        if (!available) setLiveErrors((p) => ({ ...p, username: t('usernameTaken') }))
-      } catch {
-        setUsernameAvailable(null)
-      } finally {
-        setUsernameChecking(false)
-      }
-    }, 400)
-  }
-
-  const onPhoneChange = (v: string) => {
-    setField('phoneNumber', v)
-    const r = PhoneSignUpSchema.shape.phoneNumber.safeParse(v)
-    if (!r.success) { setLiveErrors((p) => ({ ...p, phoneNumber: r.error.issues[0]?.message ?? '' })); return }
-    setLiveErrors((p) => ({ ...p, phoneNumber: '' }))
-    fetch(`${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000'}/api/v1/auth/check-phone?phone=${encodeURIComponent(v)}`)
-      .then((res) => res.json())
-      .then((data: { exists?: boolean }) => {
-        if (data.exists) setLiveErrors((p) => ({ ...p, phoneNumber: t('phoneTakenInline') }))
-      })
-      .catch(() => {})
-  }
-
-  const onPasswordChange = (v: string) => {
-    setField('password', v)
-    const r = PhoneSignUpSchema.shape.password.safeParse(v)
-    setLiveErrors((p) => ({ ...p, password: r.success ? '' : (r.error.issues[0]?.message ?? '') }))
-  }
+  const {
+    formData,
+    fieldErrors,
+    liveErrors,
+    generalError,
+    phoneError,
+    isLoading,
+    usernameAvailable,
+    usernameChecking,
+    onNameChange,
+    onUsernameChange,
+    onPhoneChange,
+    onPasswordChange,
+    setLanguage,
+    handleSubmit,
+    canSubmit,
+  } = useSignUpForm()
 
   const languages: Array<{ value: AppLanguage; label: string }> = [
     { value: 'en', label: t('langEn') },
     { value: 'am', label: t('langAm') },
     { value: 'om', label: t('langOm') },
   ]
-
-  const canSubmit =
-    !isLoading && !usernameChecking && usernameAvailable === true &&
-    !!formData.name && !!formData.username && !!formData.phoneNumber && !!formData.password &&
-    !phoneError && !liveErrors.name && !liveErrors.username && !liveErrors.phoneNumber && !liveErrors.password &&
-    !fieldErrors.name && !fieldErrors.username && !fieldErrors.phoneNumber && !fieldErrors.password
 
   return (
     <div className="max-w-md w-full mx-auto space-y-6">
@@ -100,7 +44,7 @@ function SignUpContent() {
         <p className="text-sm text-text-muted mt-1">{t('subtitle')}</p>
       </div>
 
-      {phoneError && <Notice type="error" message={phoneError} />}
+      {phoneError && <Notice type="error" message={t('phoneTaken')} />}
       {generalError && <Notice type="error" message={generalError} />}
 
       <form onSubmit={handleSubmit} className="space-y-4">

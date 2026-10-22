@@ -1,159 +1,47 @@
 'use client'
 
-import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslations } from 'next-intl'
-import { useQueryClient } from '@tanstack/react-query'
-import {
-  useKebeles,
-  useCreateKebele,
-  useUpdateKebele,
-  useDeleteKebele,
-  useStaff,
-  useCreateStaff,
-  useUpdateStaff,
-  useDeactivateStaff,
-  useReactivateStaff,
-  useRestoreKebele,
-} from '@/hooks/useKebeles'
+import { useKebeleManagement } from '@/hooks/useKebeles'
 import { KebeleDrawer } from '@/components/officer/KebeleDrawer'
-import { StaffDrawer }  from '@/components/officer/StaffDrawer'
+import { StaffDrawer } from '@/components/officer/StaffDrawer'
 import { ListSkeleton } from '@/components/ui/skeleton'
-import { showSuccessToast, showErrorToast } from '@/components/ui/toast'
 import { MapPin, Edit, Trash2, Plus, Users, UserX, UserCheck } from 'lucide-react'
-import type {
-  KebeleRow,
-  StaffRow,
-  CreateKebeleInput,
-  UpdateKebeleInput,
-  CreateStaffInput,
-  UpdateStaffInput,
-} from '@repo/shared'
 
 const UI_BORDER = '2px solid var(--color-border-ui)'
-const SHADOW    = '0 1px 2px rgba(0,0,0,0.03)'
-
-type Tab = 'kebeles' | 'staff'
-
-type KebeleDrawerState =
-  | { open: false }
-  | { open: true; mode: 'create' }
-  | { open: true; mode: 'edit'; row: KebeleRow }
-
-type StaffDrawerState =
-  | { open: false }
-  | { open: true; mode: 'create' }
-  | { open: true; mode: 'edit'; row: StaffRow }
+const SHADOW = '0 1px 2px rgba(0,0,0,0.03)'
 
 const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.055 } } }
-const item    = { hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.22 } } }
+const item = { hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.22 } } }
 
 export default function TerritoryStaffPage() {
-  const t  = useTranslations('OfficerPages')
-  const qc = useQueryClient()
+  const t = useTranslations('OfficerPages')
 
-  const [activeTab, setActiveTab] = useState<Tab>('kebeles')
-
-  /* ── Data ─────────────────────────────────────────────────────────────── */
-  const kebelesQ    = useKebeles()
-  const staffQ      = useStaff()
-  const createKeb   = useCreateKebele()
-  const updateKeb   = useUpdateKebele()
-  const deleteKeb   = useDeleteKebele()
-  const createStaff = useCreateStaff()
-  const updateStaff = useUpdateStaff()
-  const deactivate  = useDeactivateStaff()
-  const reactivate  = useReactivateStaff()
-  const restoreKeb  = useRestoreKebele()
-
-  const kebeles   = kebelesQ.data ?? []
-  const staffList = staffQ.data   ?? []
-
-  /* ── Drawer state ─────────────────────────────────────────────────────── */
-  const [kebeleDrawer, setKebeleDrawer] = useState<KebeleDrawerState>({ open: false })
-  const [staffDrawer,  setStaffDrawer]  = useState<StaffDrawerState>({ open: false })
-
-  /* ── Kebele handlers ──────────────────────────────────────────────────── */
-  async function handleKebeleSubmit(data: CreateKebeleInput | UpdateKebeleInput) {
-    try {
-      if (kebeleDrawer.open && kebeleDrawer.mode === 'edit') {
-        await updateKeb.mutateAsync({ id: kebeleDrawer.row.id, body: data as UpdateKebeleInput })
-        showSuccessToast(t('toast_kebele_updated'))
-      } else {
-        await createKeb.mutateAsync(data as CreateKebeleInput)
-        showSuccessToast(t('toast_kebele_created'))
-      }
-      setKebeleDrawer({ open: false })
-    } catch (err) {
-      showErrorToast(err instanceof Error ? err.message : 'Failed to save kebele')
-    }
-  }
-
-  function handleDeleteKebele(row: KebeleRow) {
-    const snapshot = qc.getQueryData<KebeleRow[]>(['kebeles'])
-    let undid = false
-    deleteKeb.mutate(row.id, {
-      onSuccess: () => {
-        if (!undid) {
-          showSuccessToast(t('toast_kebele_deleted'), {
-            label: t('undo'),
-            onUndo: () => {
-              undid = true
-              if (snapshot) qc.setQueryData(['kebeles'], snapshot)
-              restoreKeb.mutate(row.id, {
-                onSuccess: () => showSuccessToast('Kebele restored'),
-                onError: (err) => {
-                  void qc.invalidateQueries({ queryKey: ['kebeles'] })
-                  showErrorToast(err instanceof Error ? err.message : 'Could not restore kebele')
-                },
-              })
-            },
-          })
-        }
-      },
-      onError: (err) => showErrorToast(err instanceof Error ? err.message : 'Failed to delete'),
-    })
-  }
-
-  /* ── Staff handlers ───────────────────────────────────────────────────── */
-  async function handleStaffSubmit(data: CreateStaffInput | UpdateStaffInput) {
-    try {
-      if (staffDrawer.open && staffDrawer.mode === 'edit') {
-        await updateStaff.mutateAsync({ id: staffDrawer.row.id, body: data as UpdateStaffInput })
-        showSuccessToast(t('toast_staff_updated'))
-      } else {
-        await createStaff.mutateAsync(data as CreateStaffInput)
-        showSuccessToast(t('toast_staff_created'))
-      }
-      setStaffDrawer({ open: false })
-    } catch (err) {
-      showErrorToast(err instanceof Error ? err.message : 'Failed to save staff')
-      throw err
-    }
-  }
-
-  function handleDeactivate(row: StaffRow) {
-    const snapshot = qc.getQueryData<StaffRow[]>(['staff'])
-    let undid = false
-    deactivate.mutate(row.id, {
-      onSuccess: () => {
-        if (!undid) {
-          showSuccessToast(t('toast_staff_deactivated'), {
-            label: t('undo'),
-            onUndo: () => {
-              undid = true
-              if (snapshot) qc.setQueryData(['staff'], snapshot)
-              reactivate.mutate(row.id, {
-                onSuccess: () => showSuccessToast('Staff member reactivated'),
-                onError: () => { void qc.invalidateQueries({ queryKey: ['staff'] }); showErrorToast('Could not reactivate') },
-              })
-            },
-          })
-        }
-      },
-      onError: (err) => showErrorToast(err instanceof Error ? err.message : 'Failed to deactivate'),
-    })
-  }
+  const {
+    activeTab,
+    setActiveTab,
+    kebeles,
+    staffList,
+    kebelesLoading,
+    staffLoading,
+    kebelesError,
+    staffError,
+    kebeleDrawer,
+    staffDrawer,
+    setKebeleDrawer,
+    setStaffDrawer,
+    handleKebeleSubmit,
+    handleDeleteKebele,
+    handleStaffSubmit,
+    handleDeactivate,
+    handleReactivate,
+    isReactivating,
+    isDeactivating,
+    isKebeleSubmitting,
+    isStaffSubmitting,
+    kebeleDrawerError,
+    staffDrawerError,
+  } = useKebeleManagement()
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 w-full space-y-6">
@@ -177,7 +65,7 @@ export default function TerritoryStaffPage() {
         style={{ borderBottom: UI_BORDER }}
       >
         <div className="flex gap-1">
-          {(['kebeles', 'staff'] as Tab[]).map((tab) => (
+          {(['kebeles', 'staff'] as const).map((tab) => (
             <button
               key={tab}
               type="button"
@@ -226,9 +114,9 @@ export default function TerritoryStaffPage() {
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.2 }}
           >
-            {kebelesQ.error && (
+            {kebelesError && (
               <div className="p-4 bg-danger-light rounded-xl text-sm text-danger mb-4" style={{ border: UI_BORDER }}>
-                {kebelesQ.error.message}
+                {kebelesError}
               </div>
             )}
 
@@ -238,12 +126,12 @@ export default function TerritoryStaffPage() {
             >
               <div className="px-5 py-3.5" style={{ borderBottom: UI_BORDER }}>
                 <span className="text-sm font-semibold text-text-primary">
-                  {kebelesQ.isLoading ? '—' : `${kebeles.length} kebele${kebeles.length !== 1 ? 's' : ''}`}
+                  {kebelesLoading ? '—' : `${kebeles.length} kebele${kebeles.length !== 1 ? 's' : ''}`}
                 </span>
               </div>
 
               <div className="p-4">
-                {kebelesQ.isLoading ? (
+                {kebelesLoading ? (
                   <ListSkeleton rows={5} />
                 ) : kebeles.length === 0 ? (
                   <motion.div
@@ -298,7 +186,7 @@ export default function TerritoryStaffPage() {
                           <button
                             type="button"
                             onClick={() => handleDeleteKebele(k)}
-                            disabled={deleteKeb.isPending}
+                            disabled={isKebeleSubmitting}
                             className="w-8 h-8 flex items-center justify-center rounded-lg text-text-muted hover:text-danger hover:bg-danger-light transition-colors cursor-pointer disabled:opacity-40"
                             aria-label="Delete kebele"
                           >
@@ -323,9 +211,9 @@ export default function TerritoryStaffPage() {
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.2 }}
           >
-            {staffQ.error && (
+            {staffError && (
               <div className="p-4 bg-danger-light rounded-xl text-sm text-danger mb-4" style={{ border: UI_BORDER }}>
-                {staffQ.error.message}
+                {staffError}
               </div>
             )}
 
@@ -335,12 +223,12 @@ export default function TerritoryStaffPage() {
             >
               <div className="px-5 py-3.5" style={{ borderBottom: UI_BORDER }}>
                 <span className="text-sm font-semibold text-text-primary">
-                  {staffQ.isLoading ? '—' : `${staffList.length} member${staffList.length !== 1 ? 's' : ''}`}
+                  {staffLoading ? '—' : `${staffList.length} member${staffList.length !== 1 ? 's' : ''}`}
                 </span>
               </div>
 
               <div className="p-4">
-                {staffQ.isLoading ? (
+                {staffLoading ? (
                   <ListSkeleton rows={5} />
                 ) : staffList.length === 0 ? (
                   <motion.div
@@ -405,11 +293,8 @@ export default function TerritoryStaffPage() {
                           {m.banned ? (
                             <button
                               type="button"
-                              onClick={() => reactivate.mutate(m.id, {
-                                onSuccess: () => showSuccessToast('Staff member reactivated'),
-                                onError: (e) => showErrorToast(e instanceof Error ? e.message : 'Failed'),
-                              })}
-                              disabled={reactivate.isPending}
+                              onClick={() => handleReactivate(m.id)}
+                              disabled={isReactivating}
                               className="w-8 h-8 flex items-center justify-center rounded-lg text-text-muted hover:text-success hover:bg-success-light transition-colors cursor-pointer disabled:opacity-40"
                               aria-label="Reactivate"
                             >
@@ -419,7 +304,7 @@ export default function TerritoryStaffPage() {
                             <button
                               type="button"
                               onClick={() => handleDeactivate(m)}
-                              disabled={deactivate.isPending}
+                              disabled={isDeactivating}
                               className="w-8 h-8 flex items-center justify-center rounded-lg text-text-muted hover:text-danger hover:bg-danger-light transition-colors cursor-pointer disabled:opacity-40"
                               aria-label="Deactivate"
                             >
@@ -445,8 +330,8 @@ export default function TerritoryStaffPage() {
             initial={kebeleDrawer.mode === 'edit' ? kebeleDrawer.row : null}
             onClose={() => setKebeleDrawer({ open: false })}
             onSubmit={handleKebeleSubmit}
-            isSubmitting={createKeb.isPending || updateKeb.isPending}
-            error={kebeleDrawer.mode === 'edit' ? (updateKeb.error?.message ?? null) : (createKeb.error?.message ?? null)}
+            isSubmitting={isKebeleSubmitting}
+            error={kebeleDrawerError}
           />
         )}
       </AnimatePresence>
@@ -459,8 +344,8 @@ export default function TerritoryStaffPage() {
             kebeles={kebeles}
             onClose={() => setStaffDrawer({ open: false })}
             onSubmit={handleStaffSubmit}
-            isSubmitting={createStaff.isPending || updateStaff.isPending}
-            error={staffDrawer.mode === 'edit' ? (updateStaff.error?.message ?? null) : (createStaff.error?.message ?? null)}
+            isSubmitting={isStaffSubmitting}
+            error={staffDrawerError}
           />
         )}
       </AnimatePresence>

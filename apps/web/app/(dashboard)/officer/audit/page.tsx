@@ -3,128 +3,65 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslations } from 'next-intl'
-import { useAuditLog } from '@/hooks/useAuditLog'
+import { useAuditLog, parseAuditChanges, getActionBadgeColor } from '@/hooks/useAuditLog'
 import { TableSkeleton } from '@/components/ui/skeleton'
 import type { AuditLogRow } from '@/services/officerService'
 
 const UI_BORDER = '2px solid var(--color-border-ui)'
 const SHADOW    = '0 1px 2px rgba(0,0,0,0.03)'
 
-// Human-readable labels for dotted office parameter keys
-const PARAM_LABELS: Record<string, string> = {
-  'land_unit.timad_to_ha':             'Timad → Hectare',
-  'land_unit.kert_to_ha':              'Kert → Hectare',
-  'land_unit.hectare_to_ha':           'Hectare → Hectare',
-  'agro_zone.kolla_max_m':             'Kolla Max Elevation (m)',
-  'agro_zone.dega_min_m':              'Dega Min Elevation (m)',
-  'voice.intent_confidence_threshold': 'Voice Confidence Threshold',
-  'weather.spray_wind_max_kmh':        'Spray Wind Max (km/h)',
-  'weather.spray_washoff_hours':       'Spray Washoff (hrs)',
-  'weather.harvest_rain_prob_max_pct': 'Harvest Rain Prob Max (%)',
-  'weather.frost_min_c':               'Frost Min (°C)',
-  'weather.downpour_mm_per_day':       'Downpour Threshold (mm/day)',
-  'weather.dry_spell_days':            'Dry Spell Days',
-  'rain_onset.accumulation_mm':        'Rain Onset Accumulation (mm)',
-  'rain_onset.window_days':            'Rain Onset Window (days)',
-  'yield.cohort_min_size':             'Yield Cohort Min Size',
-  'diagnosis.low_confidence':          'Diagnosis Low Confidence',
-  'outbreak.radius_km':                'Outbreak Radius (km)',
-  'outbreak.window_days':              'Outbreak Window (days)',
-  'outbreak.min_cases':                'Outbreak Min Cases',
-  'triage.overdue_hours':              'Triage Overdue (hrs)',
-  'demand.critical_gap_pct':           'Demand Critical Gap (%)',
-  'demand.max_margin_pct':             'Demand Max Margin (%)',
-  'market.stale_days':                 'Market Stale Days',
-  'market.plausibility_band_pct':      'Market Plausibility Band (%)',
-  'broadcast.sms_fallback_minutes':    'SMS Fallback (min)',
-  'ai.daily_call_quota':               'AI Daily Call Quota',
-}
-
-function labelFor(key: string): string {
-  return PARAM_LABELS[key] ?? key.replace(/_/g, ' ').replace(/\./g, ' › ')
-}
-
-// Render changesJson in a human-readable way
 function ChangesCell({ value }: { value: unknown }) {
-  if (value === null || value === undefined) {
+  const parsed = parseAuditChanges(value)
+
+  if (parsed.type === 'empty') {
     return <span className="text-text-faint text-xs">—</span>
   }
 
-  // Office parameter update: { before: {...}, after: {...} }
-  if (
-    typeof value === 'object' &&
-    !Array.isArray(value) &&
-    ('before' in (value as object) || 'after' in (value as object))
-  ) {
-    const obj = value as { before?: Record<string, unknown>; after?: Record<string, unknown> }
-    const after  = obj.after  ?? {}
-    const before = obj.before ?? {}
-    const keys   = Array.from(new Set([...Object.keys(before), ...Object.keys(after)]))
-
-    if (keys.length === 0) return <span className="text-text-faint text-xs">—</span>
-
+  if (parsed.type === 'diff' && parsed.diffs) {
     return (
       <div className="space-y-1.5 max-w-sm">
-        {keys.map((k) => {
-          const prev = before[k]
-          const next = after[k]
-          const changed = JSON.stringify(prev) !== JSON.stringify(next)
-          return (
-            <div key={k} className="text-xs">
-              <span className="text-text-faint font-mono">{labelFor(k)}</span>
-              <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                {prev !== undefined && (
-                  <span className="font-mono text-danger bg-danger-light px-1.5 py-0.5 rounded text-[10px]">
-                    {String(prev)}
-                  </span>
-                )}
-                {changed && prev !== undefined && next !== undefined && (
-                  <span className="text-text-faint text-[10px]">→</span>
-                )}
-                {next !== undefined && (
-                  <span className="font-mono text-success bg-success-light px-1.5 py-0.5 rounded text-[10px]">
-                    {String(next)}
-                  </span>
-                )}
-              </div>
+        {parsed.diffs.map((d) => (
+          <div key={d.key} className="text-xs">
+            <span className="text-text-faint font-mono">{d.label}</span>
+            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+              {d.prev !== undefined && (
+                <span className="font-mono text-danger bg-danger-light px-1.5 py-0.5 rounded text-[10px]">
+                  {d.prev}
+                </span>
+              )}
+              {d.changed && d.prev !== undefined && d.next !== undefined && (
+                <span className="text-text-faint text-[10px]">→</span>
+              )}
+              {d.next !== undefined && (
+                <span className="font-mono text-success bg-success-light px-1.5 py-0.5 rounded text-[10px]">
+                  {d.next}
+                </span>
+              )}
             </div>
-          )
-        })}
-      </div>
-    )
-  }
-
-  // Simple flat object (e.g. { banned: true })
-  if (typeof value === 'object' && !Array.isArray(value)) {
-    const entries = Object.entries(value as Record<string, unknown>)
-    if (entries.length === 0) return <span className="text-text-faint text-xs">—</span>
-    return (
-      <div className="space-y-1 max-w-sm">
-        {entries.map(([k, v]) => (
-          <div key={k} className="flex items-center gap-2 text-xs">
-            <span className="text-text-faint font-mono">{labelFor(k)}</span>
-            <span className="font-mono font-medium text-text-primary">{String(v)}</span>
           </div>
         ))}
       </div>
     )
   }
 
-  // Fallback for unexpected shapes
-  return (
-    <span className="font-mono text-xs text-text-muted">{String(value)}</span>
-  )
+  if (parsed.type === 'flat' && parsed.entries) {
+    return (
+      <div className="space-y-1 max-w-sm">
+        {parsed.entries.map((e) => (
+          <div key={e.label} className="flex items-center gap-2 text-xs">
+            <span className="text-text-faint font-mono">{e.label}</span>
+            <span className="font-mono font-medium text-text-primary">{e.value}</span>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  return <span className="font-mono text-xs text-text-muted">{parsed.fallback}</span>
 }
 
 function ActionBadge({ action }: { action: string }) {
-  const color =
-    action.includes('deactivate') || action.includes('retire')
-      ? 'bg-danger-light text-danger'
-      : action.includes('create') || action.includes('verify')
-      ? 'bg-success-light text-success'
-      : action.includes('update') || action.includes('correct') || action.includes('parameters')
-      ? 'bg-accent-light text-accent'
-      : 'bg-surface-subtle text-text-muted'
+  const color = getActionBadgeColor(action)
   return (
     <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-mono font-medium whitespace-nowrap ${color}`}>
       {action}

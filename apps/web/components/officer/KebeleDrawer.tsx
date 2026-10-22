@@ -1,11 +1,10 @@
 'use client'
 
-import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslations } from 'next-intl'
 import { X } from 'lucide-react'
-import { createKebeleSchema, updateKebeleSchema } from '@repo/shared'
 import type { KebeleRow, CreateKebeleInput, UpdateKebeleInput } from '@repo/shared'
+import { useKebeleForm } from '@/hooks/useKebeles'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Notice } from '@/components/ui/notice'
@@ -34,115 +33,24 @@ export function KebeleDrawer({
 }: KebeleDrawerProps) {
   const t = useTranslations('OfficerPages')
 
-  const [name, setName]                       = useState(initial?.name ?? '')
-  const [boundaryType, setBoundaryType]       = useState<BoundaryType>('centroid')
-  const [lat, setLat]                         = useState(initial?.centroidLatitude ?? '')
-  const [lng, setLng]                         = useState(initial?.centroidLongitude ?? '')
-  const [radius, setRadius]                   = useState(String(initial?.radiusMeters ?? ''))
-  const [geojsonText, setGeojsonText]         = useState('')
-  const [validationError, setValidationError] = useState<string | null>(null)
-  const [fieldErrors, setFieldErrors]         = useState<Record<string, string>>({})
-
-  const onNameChange = (val: string) => {
-    setName(val)
-    if (fieldErrors.name) setFieldErrors((p) => ({ ...p, name: '' }))
-  }
-
-  const onLatChange = (val: string) => {
-    setLat(val)
-    if (fieldErrors.lat) setFieldErrors((p) => ({ ...p, lat: '' }))
-  }
-
-  const onLngChange = (val: string) => {
-    setLng(val)
-    if (fieldErrors.lng) setFieldErrors((p) => ({ ...p, lng: '' }))
-  }
-
-  const onRadiusChange = (val: string) => {
-    setRadius(val)
-    if (fieldErrors.radius) setFieldErrors((p) => ({ ...p, radius: '' }))
-  }
-
-  const onGeojsonChange = (val: string) => {
-    setGeojsonText(val)
-    if (fieldErrors.geojson) setFieldErrors((p) => ({ ...p, geojson: '' }))
-  }
-
-  const handleSubmit = useCallback(async () => {
-    setValidationError(null)
-    const errs: Record<string, string> = {}
-
-    if (!name.trim() || name.trim().length < 2) {
-      errs.name = 'Kebele name must be at least 2 characters.'
-    } else if (name.trim().length > 120) {
-      errs.name = 'Kebele name must be 120 characters or less.'
-    }
-
-    const raw: Record<string, unknown> = { name: name.trim() }
-
-    if (boundaryType === 'centroid') {
-      const parsedLat = parseFloat(lat as string)
-      const parsedLng = parseFloat(lng as string)
-      const parsedRadius = parseInt(radius, 10)
-
-      if (lat === '' || isNaN(parsedLat)) {
-        errs.lat = 'Latitude is required.'
-      } else if (parsedLat < -90 || parsedLat > 90) {
-        errs.lat = 'Latitude must be between -90 and 90.'
-      }
-
-      if (lng === '' || isNaN(parsedLng)) {
-        errs.lng = 'Longitude is required.'
-      } else if (parsedLng < -180 || parsedLng > 180) {
-        errs.lng = 'Longitude must be between -180 and 180.'
-      }
-
-      if (radius === '' || isNaN(parsedRadius)) {
-        errs.radius = 'Radius is required.'
-      } else if (parsedRadius <= 0) {
-        errs.radius = 'Radius must be a positive integer in meters.'
-      }
-
-      if (Object.keys(errs).length > 0) {
-        setFieldErrors(errs)
-        setValidationError('Please correct the highlighted fields.')
-        return
-      }
-
-      raw.centroidLatitude  = parsedLat
-      raw.centroidLongitude = parsedLng
-      raw.radiusMeters      = parsedRadius
-    } else {
-      if (!geojsonText.trim()) {
-        errs.geojson = 'GeoJSON boundary is required.'
-        setFieldErrors(errs)
-        setValidationError('Please provide a valid GeoJSON boundary.')
-        return
-      }
-      try {
-        const parsedGeo = JSON.parse(geojsonText)
-        if (!parsedGeo || typeof parsedGeo !== 'object') {
-          throw new Error('Not an object')
-        }
-        raw.boundary = parsedGeo
-      } catch {
-        errs.geojson = t('kebele_geojson_invalid')
-        setFieldErrors(errs)
-        setValidationError(t('kebele_geojson_invalid'))
-        return
-      }
-    }
-
-    const schema = mode === 'create' ? createKebeleSchema : updateKebeleSchema
-    const parsed = schema.safeParse(raw)
-    if (!parsed.success) {
-      const firstIssue = parsed.error.issues[0]
-      setValidationError(firstIssue?.message ?? 'Validation failed')
-      return
-    }
-
-    await onSubmit(parsed.data)
-  }, [name, boundaryType, lat, lng, radius, geojsonText, mode, onSubmit, t])
+  const {
+    name,
+    boundaryType,
+    lat,
+    lng,
+    radius,
+    geojsonText,
+    validationError,
+    fieldErrors,
+    setBoundaryType,
+    onBoundaryTypeChange,
+    onNameChange,
+    onLatChange,
+    onLngChange,
+    onRadiusChange,
+    onGeojsonChange,
+    handleSubmit,
+  } = useKebeleForm({ mode, initial, onSubmit })
 
   const displayError = error ?? validationError
 
@@ -224,11 +132,7 @@ export function KebeleDrawer({
                   <button
                     key={type}
                     type="button"
-                    onClick={() => {
-                      setBoundaryType(type)
-                      setFieldErrors({})
-                      setValidationError(null)
-                    }}
+                    onClick={() => onBoundaryTypeChange(type)}
                     className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer whitespace-nowrap"
                     style={{
                       background: boundaryType === type ? 'var(--color-primary)' : 'var(--color-surface-subtle)',

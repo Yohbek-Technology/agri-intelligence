@@ -75,6 +75,7 @@ export function useSignInForm() {
     password: '',
   })
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof UsernameSignIn, string>>>({})
+  const [liveErrors, setLiveErrors] = useState<Record<string, string>>({})
   const [generalError, setGeneralError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [failedAttempts, setFailedAttempts] = useState<number>(0)
@@ -102,6 +103,24 @@ export function useSignInForm() {
     },
     []
   )
+
+  const onUsernameChange = useCallback((value: string) => {
+    setField('username', value)
+    const r = UsernameSignInSchema.shape.username.safeParse(value)
+    setLiveErrors((prev) => ({
+      ...prev,
+      username: r.success ? '' : (r.error.issues[0]?.message ?? ''),
+    }))
+  }, [setField])
+
+  const onPasswordChange = useCallback((value: string) => {
+    setField('password', value)
+    const r = UsernameSignInSchema.shape.password.safeParse(value)
+    setLiveErrors((prev) => ({
+      ...prev,
+      password: r.success ? '' : (r.error.issues[0]?.message ?? ''),
+    }))
+  }, [setField])
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -159,20 +178,36 @@ export function useSignInForm() {
   const isLockedOut = lockoutSecondsRemaining > 0
   const lockoutMinutesRemaining = Math.ceil(lockoutSecondsRemaining / 60)
 
+  const canSubmit =
+    !isLoading &&
+    !isLockedOut &&
+    !!formData.username &&
+    !!formData.password &&
+    !liveErrors.username &&
+    !liveErrors.password &&
+    !fieldErrors.username &&
+    !fieldErrors.password
+
   return {
     formData,
     fieldErrors,
+    liveErrors,
     generalError,
     isLoading,
     isLockedOut,
     lockoutMinutesRemaining,
     setField,
+    onUsernameChange,
+    onPasswordChange,
     handleSubmit,
+    canSubmit,
   }
 }
 
 export function useSignUpForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const phoneErrorParam = searchParams.get('error') === 'phone_taken'
 
   const [formData, setFormData] = useState<PhoneSignUp>({
     phoneNumber: '',
@@ -182,8 +217,15 @@ export function useSignUpForm() {
     username: '',
   })
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof PhoneSignUp, string>>>({})
+  const [liveErrors, setLiveErrors] = useState<Record<string, string>>({})
   const [generalError, setGeneralError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null)
+  const [usernameChecking, setUsernameChecking] = useState<boolean>(false)
+  const [phoneChecking, setPhoneChecking] = useState<boolean>(false)
+
+  const usernameDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const phoneDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const setField = useCallback(
     (field: keyof PhoneSignUp, value: string) => {
@@ -193,6 +235,76 @@ export function useSignUpForm() {
     },
     []
   )
+
+  const onNameChange = useCallback((v: string) => {
+    setField('name', v)
+    const r = PhoneSignUpSchema.shape.name.safeParse(v)
+    setLiveErrors((p) => ({ ...p, name: r.success ? '' : (r.error.issues[0]?.message ?? '') }))
+  }, [setField])
+
+  const onUsernameChange = useCallback((v: string) => {
+    const lower = v.toLowerCase().replace(/[^a-z0-9_]/g, '')
+    setField('username', lower)
+    setUsernameAvailable(null)
+
+    const r = PhoneSignUpSchema.shape.username.safeParse(lower)
+    if (!r.success) {
+      setLiveErrors((p) => ({ ...p, username: r.error.issues[0]?.message ?? '' }))
+      if (usernameDebounceRef.current) clearTimeout(usernameDebounceRef.current)
+      return
+    }
+
+    setLiveErrors((p) => ({ ...p, username: '' }))
+    if (usernameDebounceRef.current) clearTimeout(usernameDebounceRef.current)
+    if (!lower) return
+
+    usernameDebounceRef.current = setTimeout(async () => {
+      setUsernameChecking(true)
+      try {
+        const res = await authService.isUsernameAvailable(lower)
+        const available = res.data?.available ?? false
+        setUsernameAvailable(available)
+        if (!available) {
+          setLiveErrors((p) => ({ ...p, username: 'Username is already taken' }))
+        }
+      } catch {
+        setUsernameAvailable(null)
+      } finally {
+        setUsernameChecking(false)
+      }
+    }, 400)
+  }, [setField])
+
+  const onPhoneChange = useCallback((v: string) => {
+    setField('phoneNumber', v)
+    const r = PhoneSignUpSchema.shape.phoneNumber.safeParse(v)
+    if (!r.success) {
+      setLiveErrors((p) => ({ ...p, phoneNumber: r.error.issues[0]?.message ?? '' }))
+      return
+    }
+    setLiveErrors((p) => ({ ...p, phoneNumber: '' }))
+
+    if (phoneDebounceRef.current) clearTimeout(phoneDebounceRef.current)
+    phoneDebounceRef.current = setTimeout(async () => {
+      setPhoneChecking(true)
+      try {
+        const res = await authService.checkPhoneExists(v)
+        if (res.data?.exists) {
+          setLiveErrors((p) => ({ ...p, phoneNumber: 'Phone number is already registered' }))
+        }
+      } catch {
+        // network error handled on submit
+      } finally {
+        setPhoneChecking(false)
+      }
+    }, 350)
+  }, [setField])
+
+  const onPasswordChange = useCallback((v: string) => {
+    setField('password', v)
+    const r = PhoneSignUpSchema.shape.password.safeParse(v)
+    setLiveErrors((p) => ({ ...p, password: r.success ? '' : (r.error.issues[0]?.message ?? '') }))
+  }, [setField])
 
   const setLanguage = useCallback((lang: AppLanguage) => {
     setFormData((prev) => ({ ...prev, preferredLanguage: lang }))
@@ -239,13 +351,85 @@ export function useSignUpForm() {
     [formData, router]
   )
 
+  const canSubmit =
+    !isLoading &&
+    !usernameChecking &&
+    !phoneChecking &&
+    usernameAvailable === true &&
+    !!formData.name &&
+    !!formData.username &&
+    !!formData.phoneNumber &&
+    !!formData.password &&
+    !phoneErrorParam &&
+    !liveErrors.name &&
+    !liveErrors.username &&
+    !liveErrors.phoneNumber &&
+    !liveErrors.password &&
+    !fieldErrors.name &&
+    !fieldErrors.username &&
+    !fieldErrors.phoneNumber &&
+    !fieldErrors.password
+
   return {
     formData,
     fieldErrors,
+    liveErrors,
+    generalError,
+    phoneError: phoneErrorParam,
+    isLoading,
+    usernameAvailable,
+    usernameChecking,
+    phoneChecking,
+    onNameChange,
+    onUsernameChange,
+    onPhoneChange,
+    onPasswordChange,
+    setLanguage,
+    handleSubmit,
+    canSubmit,
+  }
+}
+
+export function useForgotPasswordForm() {
+  const router = useRouter()
+  const [phoneNumber, setPhoneNumber] = useState('')
+  const [liveError, setLiveError] = useState('')
+  const [generalError, setGeneralError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+
+  const onPhoneChange = useCallback((v: string) => {
+    setPhoneNumber(v)
+    const r = PasswordResetRequestSchema.shape.phoneNumber.safeParse(v)
+    setLiveError(r.success ? '' : (r.error.issues[0]?.message ?? ''))
+  }, [])
+
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault()
+      const parsed = PasswordResetRequestSchema.safeParse({ phoneNumber })
+      if (!parsed.success) {
+        setLiveError(parsed.error.issues[0]?.message ?? 'Invalid phone number.')
+        return
+      }
+      setIsLoading(true)
+      setGeneralError(null)
+      const result = await authService.requestPasswordReset(parsed.data)
+      setIsLoading(false)
+      if (!result.success) {
+        setGeneralError(result.error || 'Failed to send recovery code.')
+        return
+      }
+      router.push(`/resetPassword?phone=${encodeURIComponent(PhoneUtils.normalize(parsed.data.phoneNumber))}`)
+    },
+    [phoneNumber, router]
+  )
+
+  return {
+    phoneNumber,
+    liveError,
     generalError,
     isLoading,
-    setField,
-    setLanguage,
+    onPhoneChange,
     handleSubmit,
   }
 }
@@ -476,9 +660,37 @@ export function usePasswordReset() {
   const [newPassword, setNewPassword] = useState<string>('')
   const [confirmPassword, setConfirmPassword] = useState<string>('')
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const [liveErrors, setLiveErrors] = useState<Record<string, string>>({})
   const [generalError, setGeneralError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(false)
+
+  const onPhoneChange = useCallback((v: string) => {
+    setPhoneNumber(v)
+    const r = PasswordResetRequestSchema.shape.phoneNumber.safeParse(v)
+    setLiveErrors((p) => ({ ...p, phoneNumber: r.success ? '' : (r.error.issues[0]?.message ?? '') }))
+  }, [])
+
+  const onCodeChange = useCallback((v: string) => {
+    setCode(v)
+    const valid = v.length === 6 && /^[0-9]{6}$/.test(v)
+    setLiveErrors((p) => ({ ...p, code: valid ? '' : v.length > 0 ? 'Verification code must be 6 digits' : '' }))
+  }, [])
+
+  const onNewPasswordChange = useCallback((v: string) => {
+    setNewPassword(v)
+    const r = PasswordResetConfirmSchema.shape.newPassword.safeParse(v)
+    setLiveErrors((p) => ({
+      ...p,
+      newPassword: r.success ? '' : (r.error.issues[0]?.message ?? ''),
+      ...(confirmPassword ? { confirmPassword: v === confirmPassword ? '' : 'Passwords do not match' } : {}),
+    }))
+  }, [confirmPassword])
+
+  const onConfirmPasswordChange = useCallback((v: string) => {
+    setConfirmPassword(v)
+    setLiveErrors((p) => ({ ...p, confirmPassword: v === newPassword ? '' : v.length > 0 ? 'Passwords do not match' : '' }))
+  }, [newPassword])
 
   const handleRequestSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -554,6 +766,11 @@ export function usePasswordReset() {
     [phoneNumber, code, newPassword, confirmPassword, router]
   )
 
+  const canSubmit =
+    !isLoading && !!phoneNumber && !!code && !!newPassword && !!confirmPassword &&
+    !liveErrors.phoneNumber && !liveErrors.code && !liveErrors.newPassword && !liveErrors.confirmPassword &&
+    !fieldErrors.phoneNumber && !fieldErrors.code && !fieldErrors.newPassword && !fieldErrors.confirmPassword
+
   return {
     step,
     phoneNumber,
@@ -561,13 +778,19 @@ export function usePasswordReset() {
     newPassword,
     confirmPassword,
     fieldErrors,
+    liveErrors,
     generalError,
     successMessage,
     isLoading,
+    canSubmit,
     setPhoneNumber,
     setCode,
     setNewPassword,
     setConfirmPassword,
+    onPhoneChange,
+    onCodeChange,
+    onNewPasswordChange,
+    onConfirmPasswordChange,
     setStep,
     handleRequestSubmit,
     handleConfirmSubmit,

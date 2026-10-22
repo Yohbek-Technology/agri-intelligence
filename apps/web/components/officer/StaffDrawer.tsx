@@ -1,28 +1,24 @@
 'use client'
 
-import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslations } from 'next-intl'
 import { X, ArrowLeft, ShieldCheck, RefreshCw } from 'lucide-react'
-import { createStaffSchema, updateStaffSchema, PhoneUtils } from '@repo/shared'
+import { PhoneUtils } from '@repo/shared'
 import type {
   KebeleRow,
   StaffRow,
   CreateStaffInput,
   UpdateStaffInput,
 } from '@repo/shared'
+import { useStaffForm } from '@/hooks/useKebeles'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Select } from '@/components/ui/select'
 import { Notice } from '@/components/ui/notice'
-import { authService } from '@/services/authService'
 
 const UI_BORDER = '2px solid var(--color-border-ui)'
-const ETHIOPIAN_PHONE_REGEX = /^(?:\+251|251|0)[79][0-9]{8}$/
-const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,30}$/
 
 type DrawerMode = 'create' | 'edit'
-type Step = 'details' | 'verify_otp'
 
 interface StaffDrawerProps {
   mode: DrawerMode
@@ -45,252 +41,36 @@ export function StaffDrawer({
 }: StaffDrawerProps) {
   const t = useTranslations('OfficerPages')
 
-  // Steps
-  const [step, setStep] = useState<Step>('details')
-
-  // Form fields
-  const [name, setName] = useState(initial?.name ?? '')
-  const [username, setUsername] = useState('')
-  const [phone, setPhone] = useState(initial?.phoneNumber ?? '')
-  const [role, setRole] = useState<'da' | 'officer'>(initial?.role ?? 'da')
-  const [lang, setLang] = useState(initial?.preferredLanguage ?? 'am')
-  const [password, setPassword] = useState('')
-  const [assignedIds, setAssignedIds] = useState<string[]>(initial?.assignedKebeleIds ?? [])
-
-  // OTP Verification state
-  const [otpCode, setOtpCode] = useState('')
-  const [isSendingOtp, setIsSendingOtp] = useState(false)
-  const [resendCooldown, setResendCooldown] = useState(0)
-
-  // Validation & Live checks
-  const [validationError, setValidationError] = useState<string | null>(null)
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
-  const [usernameChecking, setUsernameChecking] = useState(false)
-  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null)
-  const [phoneChecking, setPhoneChecking] = useState(false)
-  const [phoneAvailable, setPhoneAvailable] = useState<boolean | null>(null)
-
-  const usernameDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const phoneDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  // Resend cooldown timer
-  useEffect(() => {
-    if (resendCooldown <= 0) return
-    const timer = setInterval(() => {
-      setResendCooldown((p) => (p <= 1 ? 0 : p - 1))
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [resendCooldown])
-
-
-
-  // Live username availability check
-  const handleUsernameChange = useCallback((val: string) => {
-    const clean = val.toLowerCase().replace(/[^a-z0-9_]/g, '')
-    setUsername(clean)
-    setUsernameAvailable(null)
-
-    if (fieldErrors.username) {
-      setFieldErrors((p) => ({ ...p, username: '' }))
-    }
-
-    if (!clean) return
-
-    if (!USERNAME_REGEX.test(clean)) {
-      setFieldErrors((p) => ({
-        ...p,
-        username: 'Username must be 3-30 characters with letters, numbers, or underscores.',
-      }))
-      if (usernameDebounceRef.current) clearTimeout(usernameDebounceRef.current)
-      return
-    }
-
-    if (usernameDebounceRef.current) clearTimeout(usernameDebounceRef.current)
-    usernameDebounceRef.current = setTimeout(async () => {
-      setUsernameChecking(true)
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000'}/api/auth/is-username-available`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: clean }),
-          }
-        )
-        const data = (await res.json()) as { available?: boolean }
-        const avail = data?.available ?? false
-        setUsernameAvailable(avail)
-        if (!avail) {
-          setFieldErrors((p) => ({ ...p, username: 'Username is already taken.' }))
-        } else {
-          setFieldErrors((p) => ({ ...p, username: '' }))
-        }
-      } catch {
-        setUsernameAvailable(null)
-      } finally {
-        setUsernameChecking(false)
-      }
-    }, 350)
-  }, [fieldErrors.username])
-
-  // Live phone check & normalization
-  const handlePhoneChange = useCallback((val: string) => {
-    setPhone(val)
-    setPhoneAvailable(null)
-
-    if (fieldErrors.phone) {
-      setFieldErrors((p) => ({ ...p, phone: '' }))
-    }
-
-    const clean = val.trim()
-    if (!clean) return
-
-    if (!ETHIOPIAN_PHONE_REGEX.test(clean)) {
-      setFieldErrors((p) => ({
-        ...p,
-        phone: 'Enter a valid Ethiopian phone number (e.g. 0911223344 or +251911223344).',
-      }))
-      if (phoneDebounceRef.current) clearTimeout(phoneDebounceRef.current)
-      return
-    }
-
-    const normalized = PhoneUtils.normalize(clean)
-
-    if (phoneDebounceRef.current) clearTimeout(phoneDebounceRef.current)
-    phoneDebounceRef.current = setTimeout(async () => {
-      setPhoneChecking(true)
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000'}/api/v1/auth/check-phone?phone=${encodeURIComponent(normalized)}`
-        )
-        const data = (await res.json()) as { exists?: boolean }
-        if (data.exists) {
-          setPhoneAvailable(false)
-          setFieldErrors((p) => ({ ...p, phone: 'This phone number is already registered in the system.' }))
-        } else {
-          setPhoneAvailable(true)
-          setFieldErrors((p) => ({ ...p, phone: '' }))
-        }
-      } catch {
-        setPhoneAvailable(null)
-      } finally {
-        setPhoneChecking(false)
-      }
-    }, 350)
-  }, [fieldErrors.phone])
-
-  // Dispatch SMS OTP
-  const handleRequestOtp = useCallback(async () => {
-    setValidationError(null)
-    const errs: Record<string, string> = {}
-
-    if (!name.trim() || name.trim().length < 2) {
-      errs.name = 'Full name must be at least 2 characters.'
-    }
-
-    if (mode === 'create') {
-      if (!username.trim() || !USERNAME_REGEX.test(username)) {
-        errs.username = 'Valid username is required (3-30 letters, numbers, or underscores).'
-      } else if (usernameAvailable === false) {
-        errs.username = 'Username is already taken.'
-      }
-
-      if (!password || password.length < 10) {
-        errs.password = 'Temporary password must be at least 10 characters.'
-      }
-    }
-
-    const cleanPhone = phone.trim()
-    if (!cleanPhone || !ETHIOPIAN_PHONE_REGEX.test(cleanPhone)) {
-      errs.phone = 'Valid Ethiopian phone number is required (+2519... or 09...).'
-    } else if (phoneAvailable === false) {
-      errs.phone = 'This phone number is already registered.'
-    }
-
-    if (Object.keys(errs).length > 0) {
-      setFieldErrors(errs)
-      setValidationError('Please fix the highlighted errors before proceeding.')
-      return
-    }
-
-    const normalizedPhone = PhoneUtils.normalize(cleanPhone)
-
-    // Request OTP via auth service
-    setIsSendingOtp(true)
-    try {
-      const res = await authService.requestOtp({ phoneNumber: normalizedPhone })
-      if (!res.success) {
-        setValidationError(res.error || 'Failed to dispatch verification SMS. Please check the phone number.')
-        return
-      }
-
-      setStep('verify_otp')
-      setResendCooldown(60)
-      setOtpCode('')
-    } catch (err: any) {
-      setValidationError(err?.message || 'Error sending SMS OTP.')
-    } finally {
-      setIsSendingOtp(false)
-    }
-  }, [name, username, usernameAvailable, password, phone, phoneAvailable, mode])
-
-  // Final submit
-  const handleFinalSubmit = useCallback(async () => {
-    setValidationError(null)
-    const cleanPhone = phone.trim()
-    const normalizedPhone = PhoneUtils.normalize(cleanPhone)
-
-    if (mode === 'create') {
-      if (!otpCode || !/^[0-9]{6}$/.test(otpCode)) {
-        setValidationError('Please enter the 6-digit SMS verification code.')
-        return
-      }
-
-      const payload: CreateStaffInput = {
-        name: name.trim(),
-        username: username.toLowerCase().trim(),
-        phoneNumber: normalizedPhone,
-        otpCode,
-        role,
-        preferredLanguage: lang as any,
-        assignedKebeleIds: role === 'da' ? assignedIds : [],
-        password,
-      }
-
-      const parsed = createStaffSchema.safeParse(payload)
-      if (!parsed.success) {
-        setValidationError(parsed.error.issues[0]?.message ?? 'Validation failed')
-        return
-      }
-
-      try {
-        await onSubmit(parsed.data)
-      } catch (err: any) {
-        setValidationError(err?.message || 'Failed to create staff member.')
-      }
-    } else {
-      // Edit mode: directly submit update
-      const payload: UpdateStaffInput = {
-        name: name.trim() || undefined,
-        phoneNumber: cleanPhone ? normalizedPhone : undefined,
-        role,
-        preferredLanguage: lang as any,
-        assignedKebeleIds: role === 'da' ? assignedIds : [],
-      }
-
-      const parsed = updateStaffSchema.safeParse(payload)
-      if (!parsed.success) {
-        setValidationError(parsed.error.issues[0]?.message ?? 'Validation failed')
-        return
-      }
-
-      try {
-        await onSubmit(parsed.data)
-      } catch (err: any) {
-        setValidationError(err?.message || 'Failed to update staff member.')
-      }
-    }
-  }, [name, username, phone, otpCode, role, lang, assignedIds, password, mode, onSubmit])
+  const {
+    step,
+    setStep,
+    name,
+    username,
+    phone,
+    role,
+    lang,
+    password,
+    assignedIds,
+    otpCode,
+    isSendingOtp,
+    resendCooldown,
+    validationError,
+    fieldErrors,
+    usernameChecking,
+    usernameAvailable,
+    phoneChecking,
+    phoneAvailable,
+    setRole,
+    setLang,
+    setOtpCode,
+    setAssignedIds,
+    handleNameChange,
+    handlePasswordChange,
+    handleUsernameChange,
+    handlePhoneChange,
+    handleRequestOtp,
+    handleFinalSubmit,
+  } = useStaffForm({ mode, initial, kebeles, onSubmit })
 
   const displayError = error ?? validationError
 
@@ -372,10 +152,7 @@ export function StaffDrawer({
                 <Input
                   label={t('staff_full_name')}
                   value={name}
-                  onChange={(e) => {
-                    setName(e.target.value)
-                    if (fieldErrors.name) setFieldErrors((p) => ({ ...p, name: '' }))
-                  }}
+                  onChange={(e) => handleNameChange(e.target.value)}
                   placeholder="Abebe Kebede"
                   error={fieldErrors.name}
                 />
@@ -451,10 +228,7 @@ export function StaffDrawer({
                     label={t('staff_password')}
                     type="password"
                     value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value)
-                      if (fieldErrors.password) setFieldErrors((p) => ({ ...p, password: '' }))
-                    }}
+                    onChange={(e) => handlePasswordChange(e.target.value)}
                     hint={t('staff_password_hint')}
                     placeholder="••••••••••"
                     error={fieldErrors.password}

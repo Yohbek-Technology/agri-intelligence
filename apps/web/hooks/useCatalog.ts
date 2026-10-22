@@ -1,8 +1,15 @@
 'use client'
 
+import { useState, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslations } from 'next-intl'
 import { officerService } from '@/services/officerService'
+import { showSuccessToast, showErrorToast } from '@/components/ui/toast'
 import type {
+  CropRow,
+  VarietyRow,
+  FertilizerRateRow,
+  PestRow,
   ChemicalRow,
   CreateCropInput,
   UpdateCropInput,
@@ -229,4 +236,88 @@ export function useUnretireChemical() {
     },
     onSettled: () => void qc.invalidateQueries({ queryKey: ['catalog', 'chemicals'] }),
   })
+}
+
+// ─── Catalog Page Orchestration Hook ─────────────────────────────────────────
+
+export type CatalogTab = 'crops' | 'varieties' | 'fertilizer' | 'pests' | 'chemicals'
+
+export function useCatalogPage() {
+  const t = useTranslations('OfficerPages')
+  const qc = useQueryClient()
+
+  const [activeTab, setActiveTab] = useState<CatalogTab>('crops')
+  const [selectedCropId, setSelectedCropId] = useState('')
+  const [retireTarget, setRetireTarget] = useState<string | null>(null)
+
+  const cropsQ = useCrops()
+  const varietiesQ = useVarieties(selectedCropId || undefined)
+  const ratesQ = useFertilizerRates()
+  const pestsQ = usePests()
+  const chemicalsQ = useChemicals()
+  const retireMut = useRetireChemical()
+  const unretireMut = useUnretireChemical()
+
+  const cropList = (cropsQ.data ?? []) as CropRow[]
+  const varietyList = (varietiesQ.data ?? []) as VarietyRow[]
+  const rateList = (ratesQ.data ?? []) as FertilizerRateRow[]
+  const pestList = (pestsQ.data ?? []) as PestRow[]
+  const chemicalList = (chemicalsQ.data ?? []) as ChemicalRow[]
+
+  const handleRetire = useCallback(
+    (id: string) => {
+      const snapshot = qc.getQueryData<ChemicalRow[]>(['catalog', 'chemicals'])
+      let undid = false
+
+      retireMut.mutate(id, {
+        onSuccess: () => {
+          if (!undid) {
+            showSuccessToast(t('toast_chemical_retired'), {
+              label: t('undo'),
+              onUndo: () => {
+                undid = true
+                if (snapshot) qc.setQueryData(['catalog', 'chemicals'], snapshot)
+                unretireMut.mutate(id, {
+                  onSuccess: () => showSuccessToast('Chemical restored'),
+                  onError: (err) => {
+                    void qc.invalidateQueries({ queryKey: ['catalog', 'chemicals'] })
+                    showErrorToast(err instanceof Error ? err.message : 'Could not restore chemical')
+                  },
+                })
+              },
+            })
+          }
+        },
+        onError: (err) =>
+          showErrorToast(err instanceof Error ? err.message : 'Failed to retire chemical'),
+      })
+      setRetireTarget(null)
+    },
+    [qc, retireMut, unretireMut, t]
+  )
+
+  const isLoading = {
+    crops: cropsQ.isLoading,
+    varieties: varietiesQ.isLoading,
+    fertilizer: ratesQ.isLoading,
+    pests: pestsQ.isLoading,
+    chemicals: chemicalsQ.isLoading,
+  }[activeTab]
+
+  return {
+    activeTab,
+    setActiveTab,
+    selectedCropId,
+    setSelectedCropId,
+    retireTarget,
+    setRetireTarget,
+    cropList,
+    varietyList,
+    rateList,
+    pestList,
+    chemicalList,
+    handleRetire,
+    isLoading,
+    isRetiring: retireMut.isPending,
+  }
 }
