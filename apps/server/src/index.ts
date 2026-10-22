@@ -1,29 +1,16 @@
 import { serve } from '@hono/node-server'
-import type { ServerType } from '@hono/node-server'
-import type { Server as HttpServer } from 'http'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { requestId } from 'hono/request-id'
 import { auth } from '@/config/auth.js'
-import { initSocket } from '@/config/socket.js'
+import { pool } from '@/config/db.js'
 import { officeRouter } from '@/routes/office.js'
 import { authExtraRouter } from '@/routes/auth-extra.js'
 import { mobileAuthRouter } from '@/routes/mobile-auth.js'
-import { farmersRouter } from '@/routes/farmers.js'
-import { plotsRouter } from '@/routes/plots.js'
-import { cropCyclesRouter } from '@/routes/crop-cycles.js'
-import { daTasksRouter } from '@/routes/da-tasks.js'
-import { diagnosticsRouter } from '@/routes/diagnostics.js'
-// import { catalogRouter } from '@/routes/catalog.js'
-import { yieldGapRouter } from '@/routes/yield-gap.js'
-import { weatherRouter } from '@/routes/weather.js'
-import { grievancesRouter } from '@/routes/grievances.js'
-import { syncRouter, devicesRouter, appVersionRouter } from '@/routes/sync.js'
 import { kebelesPublicRouter, officeKebeleRouter } from '@/routes/kebele.js'
 import { staffRouter } from '@/routes/staff.js'
 import { catalogPublicRouter, officeCatalogRouter } from '@/routes/catalog.js'
 import { auditRouter } from '@/routes/audit.js'
-import { pool } from '@/config/db.js'
 
 const app = new Hono()
 
@@ -46,52 +33,56 @@ app.use(
     exposeHeaders: ['Content-Length'],
     maxAge: 600,
     credentials: true,
-  })
+  }),
 )
 
-// Mobile & OpenAPI Auth Router (handles /api/auth/sign-in/phone, verify-otp, etc. with MOB-3 guard)
+// ── Auth ──────────────────────────────────────────────────────────────────────
+// Mobile/web auth adapter (sign-in, sign-up, OTP, password reset, session, sign-out)
 app.route('/api/auth', mobileAuthRouter)
 
 // Better Auth core handler fallback
 app.on(['POST', 'GET'], '/api/auth/*', (c) => auth.handler(c.req.raw))
 
-// Domain v1 routes
-app.route('/api/v1/offices', officeRouter)
+// Extra auth utilities (check-phone availability for sign-up)
 app.route('/api/v1/auth', authExtraRouter)
-app.route('/api/v1/farmers', farmersRouter)
-app.route('/api/v1/plots', plotsRouter)
-app.route('/api/v1/cycles', cropCyclesRouter)
-app.route('/api/v1/da/tasks', daTasksRouter)
-app.route('/api/v1/diagnoses', diagnosticsRouter)
-// app.route('/api/v1/catalog', catalogRouter)
-app.route('/api/v1/yield-gap', yieldGapRouter)
-app.route('/api/v1/weather', weatherRouter)
-app.route('/api/v1/grievances', grievancesRouter)
-app.route('/api/v1/sync', syncRouter)
-app.route('/api/v1/devices', devicesRouter)
-app.route('/api/v1/app', appVersionRouter)
 
-// Kebele public reads
+// ── Office ────────────────────────────────────────────────────────────────────
+// GET /me, GET /me/config, PATCH /me
+app.route('/api/v1/offices', officeRouter)
+
+// ── Kebeles ───────────────────────────────────────────────────────────────────
+// GET /api/v1/kebeles  (any authenticated user)
 app.route('/api/v1/kebeles', kebelesPublicRouter)
 
-// Catalog public reads
-app.route('/api/v1/catalog', catalogPublicRouter)
-
-// Office management router (officer-only writes)
+// ── Office management (officer-only writes) ───────────────────────────────────
 const officeManagementRouter = new Hono()
+
+// POST/PATCH/DELETE /api/v1/office/kebeles
 officeManagementRouter.route('/kebeles', officeKebeleRouter)
+
+// GET/POST/PATCH /api/v1/office/users  +  POST /:id/deactivate  +  POST /:id/reactivate
 officeManagementRouter.route('/users', staffRouter)
+
+// GET/POST/PATCH /api/v1/office/catalog/crops|varieties|fertilizer-rates|pests|chemicals
 officeManagementRouter.route('/catalog', officeCatalogRouter)
+
+// GET /api/v1/office/audit-logs
 officeManagementRouter.route('/audit-logs', auditRouter)
+
 app.route('/api/v1/office', officeManagementRouter)
 
+// ── Catalog public reads ──────────────────────────────────────────────────────
+// GET /api/v1/catalog/crops|varieties|pests|chemicals|fertilizer-rates
+app.route('/api/v1/catalog', catalogPublicRouter)
+
+// ── Health ────────────────────────────────────────────────────────────────────
 app.get('/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOString() }))
 app.get('/', (c) => c.text('Agricultural Intelligence API is operational'))
 
+// ── Server ────────────────────────────────────────────────────────────────────
 const port = process.env.PORT ? parseInt(process.env.PORT) : 5000
 
-const httpServer: ServerType = serve({ fetch: app.fetch, port }, (info) => {
-  initSocket(httpServer as HttpServer)
+serve({ fetch: app.fetch, port }, (info) => {
   console.log(`[server] Running on http://localhost:${info.port}`)
 })
 

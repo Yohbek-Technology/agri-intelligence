@@ -108,7 +108,7 @@ export function DataTable<TData>({
   return (
     <div
       className={`bg-surface rounded-xl overflow-hidden ${className}`}
-      style={{ border: UI_BORDER, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
+      style={{ border: UI_BORDER, boxShadow: '0 1px 2px rgba(0,0,0,0.03)' }}
     >
       {/* Selection action bar */}
       {enableSelection && selectedCount > 0 && (

@@ -20,39 +20,16 @@ import { apiFetch, type ServiceResult } from '@/lib/apiFetch'
 export type { ServiceResult } from '@/lib/apiFetch'
 
 export const authService = {
+  // ─── Sign-in by phone number + password ───────────────────────────────────
   async signIn(input: PhoneSignIn): Promise<ServiceResult> {
-    const parseResult = PhoneSignInSchema.safeParse(input)
-    if (!parseResult.success) {
-      return { success: false, error: parseResult.error.issues[0]?.message }
-    }
+    const parsed = PhoneSignInSchema.safeParse(input)
+    if (!parsed.success) return { success: false, error: parsed.error.issues[0]?.message }
 
-    const normalizedPhone = PhoneUtils.normalize(parseResult.data.phoneNumber)
-
+    const normalizedPhone = PhoneUtils.normalize(parsed.data.phoneNumber)
     try {
       const res = await authClient.signIn.phoneNumber({
         phoneNumber: normalizedPhone,
-        password: parseResult.data.password,
-      })
-
-      if (res.error) {
-        return { success: false, error: mapAuthError(res.error) }
-      }
-
-      return { success: true, data: res.data }
-    } catch (err) {
-      return { success: false, error: mapAuthError(err) }
-    }
-  },
-
-  async signInWithUsername(input: UsernameSignIn): Promise<ServiceResult> {
-    const parseResult = UsernameSignInSchema.safeParse(input)
-    if (!parseResult.success) {
-      return { success: false, error: parseResult.error.issues[0]?.message }
-    }
-    try {
-      const res = await authClient.signIn.username({
-        username: parseResult.data.username.toLowerCase(),
-        password: parseResult.data.password,
+        password: parsed.data.password,
       })
       if (res.error) return { success: false, error: mapAuthError(res.error) }
       return { success: true, data: res.data }
@@ -61,63 +38,67 @@ export const authService = {
     }
   },
 
-  async requestOtp(input: PhoneOtpRequest): Promise<ServiceResult> {
-    const parseResult = PhoneOtpRequestSchema.safeParse(input)
-    if (!parseResult.success) {
-      return { success: false, error: parseResult.error.issues[0]?.message }
-    }
-
-    const normalizedPhone = PhoneUtils.normalize(parseResult.data.phoneNumber)
-
+  // ─── Sign-in by username + password ───────────────────────────────────────
+  // Better Auth username plugin hits /api/auth/sign-in/username natively.
+  // The server's Better Auth handler returns { user, session } which the SDK
+  // wraps as result.data = { user, session }.
+  async signInWithUsername(input: UsernameSignIn): Promise<ServiceResult> {
+    const parsed = UsernameSignInSchema.safeParse(input)
+    if (!parsed.success) return { success: false, error: parsed.error.issues[0]?.message }
     try {
-      const res = await authClient.phoneNumber.sendOtp({
-        phoneNumber: normalizedPhone,
+      const res = await authClient.signIn.username({
+        username: parsed.data.username.toLowerCase(),
+        password: parsed.data.password,
       })
-
-      if (res.error) {
-        return { success: false, error: mapAuthError(res.error) }
-      }
-
+      if (res.error) return { success: false, error: mapAuthError(res.error) }
       return { success: true, data: res.data }
     } catch (err) {
       return { success: false, error: mapAuthError(err) }
     }
   },
 
-  async verifyOtpAndSignUp(input: PhoneOtpVerify): Promise<ServiceResult> {
-    const parseResult = PhoneOtpVerifySchema.safeParse(input)
-    if (!parseResult.success) {
-      return { success: false, error: parseResult.error.issues[0]?.message }
-    }
+  // ─── Request phone OTP (sign-up step 1) ───────────────────────────────────
+  async requestOtp(input: PhoneOtpRequest): Promise<ServiceResult> {
+    const parsed = PhoneOtpRequestSchema.safeParse(input)
+    if (!parsed.success) return { success: false, error: parsed.error.issues[0]?.message }
 
-    const normalizedPhone = PhoneUtils.normalize(parseResult.data.phoneNumber)
-
+    const normalizedPhone = PhoneUtils.normalize(parsed.data.phoneNumber)
     try {
-      // Do NOT pass username in the verify payload — the username plugin's
-      // createUser hook intercepts it and throws a uniqueness conflict.
-      // We update the username separately after verification succeeds.
+      const res = await authClient.phoneNumber.sendOtp({ phoneNumber: normalizedPhone })
+      if (res.error) return { success: false, error: mapAuthError(res.error) }
+      return { success: true, data: res.data }
+    } catch (err) {
+      return { success: false, error: mapAuthError(err) }
+    }
+  },
+
+  // ─── Verify OTP + complete sign-up ────────────────────────────────────────
+  async verifyOtpAndSignUp(input: PhoneOtpVerify): Promise<ServiceResult> {
+    const parsed = PhoneOtpVerifySchema.safeParse(input)
+    if (!parsed.success) return { success: false, error: parsed.error.issues[0]?.message }
+
+    const normalizedPhone = PhoneUtils.normalize(parsed.data.phoneNumber)
+    try {
+      // Do NOT pass username in the verify call — the phoneNumber plugin's
+      // signUpOnVerification flow creates the user; we set username separately.
       const verifyPayload = {
-        phoneNumber: normalizedPhone,
-        code: parseResult.data.code,
-        password: parseResult.data.password,
-        name: parseResult.data.name,
-        preferredLanguage: parseResult.data.preferredLanguage,
+        phoneNumber:       normalizedPhone,
+        code:              parsed.data.code,
+        password:          parsed.data.password,
+        name:              parsed.data.name,
+        preferredLanguage: parsed.data.preferredLanguage,
       } as unknown as Parameters<typeof authClient.phoneNumber.verify>[0]
 
       const res = await authClient.phoneNumber.verify(verifyPayload)
+      if (res.error) return { success: false, error: mapAuthError(res.error) }
 
-      if (res.error) {
-        return { success: false, error: mapAuthError(res.error) }
-      }
-
-      // Now set the username separately after the user is created & session established
-      if (parseResult.data.username) {
+      // Update username after the account is created and the session is live
+      if (parsed.data.username) {
         const updateRes = await authClient.updateUser({
-          username: parseResult.data.username.toLowerCase(),
+          username: parsed.data.username.toLowerCase(),
         } as Parameters<typeof authClient.updateUser>[0])
         if (updateRes.error) {
-          // Username update failed — still return success so user gets in,
-          // but surface the username error as a soft warning
+          // Non-fatal: user is in, just couldn't set username
           return { success: true, data: res.data, error: mapAuthError(updateRes.error) }
         }
       }
@@ -128,34 +109,33 @@ export const authService = {
     }
   },
 
+  // ─── Request password reset OTP ───────────────────────────────────────────
   async requestPasswordReset(input: PasswordResetRequest): Promise<ServiceResult> {
-    const parseResult = PasswordResetRequestSchema.safeParse(input)
-    if (!parseResult.success) {
-      return { success: false, error: parseResult.error.issues[0]?.message }
-    }
-    const normalizedPhone = PhoneUtils.normalize(parseResult.data.phoneNumber)
+    const parsed = PasswordResetRequestSchema.safeParse(input)
+    if (!parsed.success) return { success: false, error: parsed.error.issues[0]?.message }
+    const normalizedPhone = PhoneUtils.normalize(parsed.data.phoneNumber)
     return apiFetch('/api/auth/phone-number/request-password-reset', {
       method: 'POST',
       body: JSON.stringify({ phoneNumber: normalizedPhone }),
     })
   },
 
+  // ─── Confirm password reset ───────────────────────────────────────────────
   async resetPassword(input: PasswordResetConfirm): Promise<ServiceResult> {
-    const parseResult = PasswordResetConfirmSchema.safeParse(input)
-    if (!parseResult.success) {
-      return { success: false, error: parseResult.error.issues[0]?.message }
-    }
-    const normalizedPhone = PhoneUtils.normalize(parseResult.data.phoneNumber)
+    const parsed = PasswordResetConfirmSchema.safeParse(input)
+    if (!parsed.success) return { success: false, error: parsed.error.issues[0]?.message }
+    const normalizedPhone = PhoneUtils.normalize(parsed.data.phoneNumber)
     return apiFetch('/api/auth/phone-number/reset-password', {
       method: 'POST',
       body: JSON.stringify({
         phoneNumber: normalizedPhone,
-        otp: parseResult.data.code,
-        newPassword: parseResult.data.newPassword,
+        otp:         parsed.data.code,
+        newPassword: parsed.data.newPassword,
       }),
     })
   },
 
+  // ─── Sign-out ─────────────────────────────────────────────────────────────
   async signOut(): Promise<ServiceResult> {
     try {
       await authClient.signOut()
@@ -165,12 +145,11 @@ export const authService = {
     }
   },
 
+  // ─── Get current session ──────────────────────────────────────────────────
   async getSession(): Promise<ServiceResult> {
     try {
       const res = await authClient.getSession()
-      if (res.error) {
-        return { success: false, error: mapAuthError(res.error) }
-      }
+      if (res.error) return { success: false, error: mapAuthError(res.error) }
       return { success: true, data: res.data }
     } catch (err) {
       return { success: false, error: mapAuthError(err) }

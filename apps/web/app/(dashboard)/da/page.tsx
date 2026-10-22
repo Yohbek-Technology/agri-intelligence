@@ -26,7 +26,7 @@ export default function DaOverviewPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="w-full p-4 sm:p-6 lg:p-8">
       <h1 className="text-3xl font-bold text-text-primary">
         {t('overview_greeting', { name: user?.name ?? 'DA' })}
       </h1>

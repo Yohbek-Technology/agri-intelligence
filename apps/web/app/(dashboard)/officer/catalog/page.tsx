@@ -317,7 +317,7 @@ export default function CatalogPage() {
   }[activeTab]
 
   return (
-    <div className="p-3 sm:p-6 max-w-7xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 w-full space-y-6">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -438,8 +438,8 @@ export default function CatalogPage() {
               onClick={() => setRetireTarget(null)}
             />
             <motion.div
-              className="relative z-10 bg-surface rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-2xl mx-4"
-              style={{ border: UI_BORDER }}
+              className="relative z-10 bg-surface rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-md mx-4"
+              style={{ border: UI_BORDER, boxShadow: '0 4px 12px rgba(0,0,0,0.06)' }}
               initial={{ scale: 0.92, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.92, y: 20 }}

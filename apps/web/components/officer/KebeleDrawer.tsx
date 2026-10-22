@@ -41,26 +41,93 @@ export function KebeleDrawer({
   const [radius, setRadius]                   = useState(String(initial?.radiusMeters ?? ''))
   const [geojsonText, setGeojsonText]         = useState('')
   const [validationError, setValidationError] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors]         = useState<Record<string, string>>({})
+
+  const onNameChange = (val: string) => {
+    setName(val)
+    if (fieldErrors.name) setFieldErrors((p) => ({ ...p, name: '' }))
+  }
+
+  const onLatChange = (val: string) => {
+    setLat(val)
+    if (fieldErrors.lat) setFieldErrors((p) => ({ ...p, lat: '' }))
+  }
+
+  const onLngChange = (val: string) => {
+    setLng(val)
+    if (fieldErrors.lng) setFieldErrors((p) => ({ ...p, lng: '' }))
+  }
+
+  const onRadiusChange = (val: string) => {
+    setRadius(val)
+    if (fieldErrors.radius) setFieldErrors((p) => ({ ...p, radius: '' }))
+  }
+
+  const onGeojsonChange = (val: string) => {
+    setGeojsonText(val)
+    if (fieldErrors.geojson) setFieldErrors((p) => ({ ...p, geojson: '' }))
+  }
 
   const handleSubmit = useCallback(async () => {
     setValidationError(null)
+    const errs: Record<string, string> = {}
 
-    const raw: Record<string, unknown> = { name }
+    if (!name.trim() || name.trim().length < 2) {
+      errs.name = 'Kebele name must be at least 2 characters.'
+    } else if (name.trim().length > 120) {
+      errs.name = 'Kebele name must be 120 characters or less.'
+    }
+
+    const raw: Record<string, unknown> = { name: name.trim() }
+
     if (boundaryType === 'centroid') {
       const parsedLat = parseFloat(lat as string)
       const parsedLng = parseFloat(lng as string)
       const parsedRadius = parseInt(radius, 10)
-      if (isNaN(parsedLat) || isNaN(parsedLng)) {
-        setValidationError('Latitude and longitude are required numbers.')
+
+      if (lat === '' || isNaN(parsedLat)) {
+        errs.lat = 'Latitude is required.'
+      } else if (parsedLat < -90 || parsedLat > 90) {
+        errs.lat = 'Latitude must be between -90 and 90.'
+      }
+
+      if (lng === '' || isNaN(parsedLng)) {
+        errs.lng = 'Longitude is required.'
+      } else if (parsedLng < -180 || parsedLng > 180) {
+        errs.lng = 'Longitude must be between -180 and 180.'
+      }
+
+      if (radius === '' || isNaN(parsedRadius)) {
+        errs.radius = 'Radius is required.'
+      } else if (parsedRadius <= 0) {
+        errs.radius = 'Radius must be a positive integer in meters.'
+      }
+
+      if (Object.keys(errs).length > 0) {
+        setFieldErrors(errs)
+        setValidationError('Please correct the highlighted fields.')
         return
       }
+
       raw.centroidLatitude  = parsedLat
       raw.centroidLongitude = parsedLng
-      if (!isNaN(parsedRadius)) raw.radiusMeters = parsedRadius
+      raw.radiusMeters      = parsedRadius
     } else {
+      if (!geojsonText.trim()) {
+        errs.geojson = 'GeoJSON boundary is required.'
+        setFieldErrors(errs)
+        setValidationError('Please provide a valid GeoJSON boundary.')
+        return
+      }
       try {
-        raw.boundary = JSON.parse(geojsonText)
+        const parsedGeo = JSON.parse(geojsonText)
+        if (!parsedGeo || typeof parsedGeo !== 'object') {
+          throw new Error('Not an object')
+        }
+        raw.boundary = parsedGeo
       } catch {
+        errs.geojson = t('kebele_geojson_invalid')
+        setFieldErrors(errs)
         setValidationError(t('kebele_geojson_invalid'))
         return
       }
@@ -69,7 +136,8 @@ export function KebeleDrawer({
     const schema = mode === 'create' ? createKebeleSchema : updateKebeleSchema
     const parsed = schema.safeParse(raw)
     if (!parsed.success) {
-      setValidationError(parsed.error.issues[0]?.message ?? 'Validation failed')
+      const firstIssue = parsed.error.issues[0]
+      setValidationError(firstIssue?.message ?? 'Validation failed')
       return
     }
 
@@ -100,7 +168,7 @@ export function KebeleDrawer({
 
         {/* Panel */}
         <motion.aside
-          className="relative z-10 w-full max-w-lg bg-surface h-full shadow-2xl flex flex-col"
+          className="relative z-10 w-full max-w-lg bg-surface h-full shadow-lg flex flex-col"
           initial={{ x: '100%' }}
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
@@ -141,8 +209,9 @@ export function KebeleDrawer({
             <Input
               label={t('kebele_name')}
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => onNameChange(e.target.value)}
               placeholder="e.g. Kebele 01"
+              error={fieldErrors.name}
             />
 
             {/* Boundary type toggle */}
@@ -155,12 +224,16 @@ export function KebeleDrawer({
                   <button
                     key={type}
                     type="button"
-                    onClick={() => setBoundaryType(type)}
+                    onClick={() => {
+                      setBoundaryType(type)
+                      setFieldErrors({})
+                      setValidationError(null)
+                    }}
                     className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer whitespace-nowrap"
                     style={{
                       background: boundaryType === type ? 'var(--color-primary)' : 'var(--color-surface-subtle)',
                       color: boundaryType === type ? '#fff' : 'var(--color-text-muted)',
-                      border: boundaryType === type ? '1.5px solid var(--color-primary)' : UI_BORDER,
+                      border: boundaryType === type ? '2px solid var(--color-primary)' : UI_BORDER,
                     }}
                   >
                     {type === 'centroid' ? t('kebele_centroid') : t('kebele_geojson')}
@@ -184,16 +257,18 @@ export function KebeleDrawer({
                     type="number"
                     min={-90} max={90} step={0.0001}
                     value={lat}
-                    onChange={(e) => setLat(e.target.value)}
+                    onChange={(e) => onLatChange(e.target.value)}
                     placeholder="8.5411"
+                    error={fieldErrors.lat}
                   />
                   <Input
                     label={t('kebele_longitude')}
                     type="number"
                     min={-180} max={180} step={0.0001}
                     value={lng}
-                    onChange={(e) => setLng(e.target.value)}
+                    onChange={(e) => onLngChange(e.target.value)}
                     placeholder="39.2704"
+                    error={fieldErrors.lng}
                   />
                   <div className="col-span-2">
                     <Input
@@ -201,8 +276,9 @@ export function KebeleDrawer({
                       type="number"
                       min={100}
                       value={radius}
-                      onChange={(e) => setRadius(e.target.value)}
+                      onChange={(e) => onRadiusChange(e.target.value)}
                       placeholder="5000"
+                      error={fieldErrors.radius}
                     />
                   </div>
                 </motion.div>
@@ -213,18 +289,26 @@ export function KebeleDrawer({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
                   transition={{ duration: 0.18 }}
+                  className="space-y-1.5"
                 >
-                  <label className="block text-xs font-semibold text-text-primary uppercase tracking-wider font-mono mb-1.5">
+                  <label className="block text-xs font-semibold text-text-primary uppercase tracking-wider font-mono">
                     GeoJSON MultiPolygon
                   </label>
                   <textarea
-                    className="w-full bg-surface text-text-primary text-xs rounded-xl p-3 min-h-[200px] focus:outline-none focus:ring-2 focus:ring-primary/15 font-mono resize-none"
-                    style={{ border: UI_BORDER }}
+                    className={`w-full bg-surface text-text-primary text-xs rounded-xl p-3 min-h-[200px] focus:outline-none focus:ring-2 font-mono resize-none ${
+                      fieldErrors.geojson ? 'border-2 border-danger focus:ring-danger/20' : 'focus:ring-primary/15'
+                    }`}
+                    style={{ border: fieldErrors.geojson ? undefined : UI_BORDER }}
                     value={geojsonText}
-                    onChange={(e) => setGeojsonText(e.target.value)}
+                    onChange={(e) => onGeojsonChange(e.target.value)}
                     placeholder={t('kebele_geojson_placeholder')}
                     aria-label="GeoJSON MultiPolygon"
                   />
+                  {fieldErrors.geojson && (
+                    <p className="text-xs font-medium text-danger flex items-center gap-1 font-mono">
+                      <span>⚠</span> {fieldErrors.geojson}
+                    </p>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -247,3 +331,4 @@ export function KebeleDrawer({
     </AnimatePresence>
   )
 }
+

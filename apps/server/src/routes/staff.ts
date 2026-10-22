@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { sessionGuard, tenantGuard, requireAdminOrOfficer, assertTenantMatch } from '@/middlewares/index.js'
-import { listStaff, createStaff, updateStaff, deactivateStaff } from '@/services/staff.js'
+import { listStaff, createStaff, updateStaff, deactivateStaff, reactivateStaff } from '@/services/staff.js'
 import { createStaffSchema, updateStaffSchema } from '@repo/shared'
 
 export const staffRouter = new Hono()
@@ -30,6 +30,15 @@ staffRouter.post('/', async (c) => {
   }
 
   const result = await createStaff(parsed.data, user.cityOfficeId)
+
+  if (result.error) {
+    return c.json({
+      error: {
+        code: result.error,
+        message: result.message || 'Failed to create staff member.',
+      },
+    }, 422)
+  }
 
   if ('invalidKebeleIds' in result && result.invalidKebeleIds) {
     return c.json({
@@ -88,6 +97,22 @@ staffRouter.post('/:id/deactivate', async (c) => {
 
   const id = c.req.param('id')
   const result = await deactivateStaff(id, user.cityOfficeId)
+
+  if ('error' in result) {
+    return c.json({ error: { code: 'not_found', message: 'Staff member not found.' } }, 404)
+  }
+
+  return c.json({ data: { success: true } })
+})
+
+staffRouter.post('/:id/reactivate', async (c) => {
+  const user = c.get('user')
+  if (!user.cityOfficeId) {
+    return c.json({ error: { code: 'forbidden', message: 'No city office assigned.' } }, 403)
+  }
+
+  const id = c.req.param('id')
+  const result = await reactivateStaff(id, user.cityOfficeId)
 
   if ('error' in result) {
     return c.json({ error: { code: 'not_found', message: 'Staff member not found.' } }, 404)

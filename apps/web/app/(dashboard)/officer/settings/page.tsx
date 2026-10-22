@@ -25,7 +25,7 @@ function ParameterSection({ title, children, index = 0 }: ParameterSectionProps)
   return (
     <motion.section
       className="bg-surface rounded-2xl p-6 space-y-4"
-      style={{ border: UI_BORDER }}
+      style={{ border: UI_BORDER, boxShadow: '0 1px 2px rgba(0,0,0,0.03)' }}
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28, delay: 0.06 + index * 0.05 }}
@@ -109,7 +109,7 @@ export default function SettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="max-w-4xl mx-auto p-3 sm:p-6 space-y-6">
+      <div className="w-full p-4 sm:p-6 lg:p-8 space-y-6">
         <div className="space-y-2">
           <div className="h-7 w-48 rounded-lg bg-surface-subtle animate-pulse" />
           <div className="h-4 w-64 rounded-lg bg-surface-subtle animate-pulse" />
@@ -200,7 +200,7 @@ export default function SettingsPage() {
   ]
 
   return (
-    <div className="max-w-4xl mx-auto pb-32 space-y-6 p-3 sm:p-6">
+    <div className="w-full pb-32 space-y-6 p-4 sm:p-6 lg:p-8">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -231,13 +231,17 @@ export default function SettingsPage() {
         </ParameterSection>
       ))}
 
-      {/* Save bar */}
+      {/* Save bar — fixed at bottom of screen, positioned to the right of the sidebar, visible at all times */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-10 bg-surface px-6 py-4 space-y-2"
-        style={{ borderTop: UI_BORDER }}
+        className="fixed bottom-0 right-0 z-20 bg-surface/95 backdrop-blur-md px-4 sm:px-6 py-3.5 space-y-2 transition-[left] duration-[230ms] ease-in-out"
+        style={{
+          left: 'var(--sidebar-w, 0px)',
+          borderTop: UI_BORDER,
+          boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.04)',
+        }}
       >
         {generalError && <Notice type="error" message={generalError} />}
-        <div className="flex items-center justify-between gap-4 max-w-4xl mx-auto">
+        <div className="flex items-center justify-between gap-4 w-full">
           <motion.p
             key={isDirty ? 'dirty' : 'clean'}
             initial={{ opacity: 0 }}

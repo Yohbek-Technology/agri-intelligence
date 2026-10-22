@@ -8,7 +8,7 @@ import { TableSkeleton } from '@/components/ui/skeleton'
 import type { AuditLogRow } from '@/services/officerService'
 
 const UI_BORDER = '1.5px solid var(--color-border-ui)'
-const SHADOW    = '0 1px 4px rgba(0,0,0,0.06)'
+const SHADOW    = '0 1px 2px rgba(0,0,0,0.03)'
 
 // Human-readable labels for dotted office parameter keys
 const PARAM_LABELS: Record<string, string> = {
@@ -160,7 +160,7 @@ export default function AuditPage() {
   const typedLogs = logs as AuditLogRow[]
 
   return (
-    <div className="p-3 sm:p-6 max-w-7xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 w-full space-y-6">
 
       {/* Header */}
       <motion.div

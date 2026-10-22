@@ -15,10 +15,10 @@ export function Card({
   ...props
 }: CardProps) {
   const variantStyles = {
-    default:  'bg-surface shadow-md rounded-2xl',
+    default:  'bg-surface shadow-[0_1px_2px_rgba(0,0,0,0.03)] rounded-2xl',
     subtle:   'bg-surface-subtle rounded-2xl',
-    elevated: 'bg-white shadow-xl rounded-3xl',
-    glass:    'glass-panel border border-white/60 shadow-xl rounded-3xl backdrop-blur-md',
+    elevated: 'bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] rounded-2xl',
+    glass:    'glass-panel border border-white/60 shadow-[0_1px_3px_rgba(0,0,0,0.04)] rounded-2xl backdrop-blur-md',
   }[variant]
 
   const glowStyle = glow ? 'ambient-glow-primary' : ''

@@ -1,61 +1,71 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background:        #FAF8F4;
-  --color-surface:           #FFFFFF;
-  --color-surface-subtle:    #F3EFE6;
-  --color-surface-elevated:  #FFFFFF;
+  --color-background: #FAF8F4;
+  --color-surface: #FFFFFF;
+  --color-surface-subtle: #F3EFE6;
+  --color-surface-elevated: #FFFFFF;
 
-  --color-primary:           #274422;
-  --color-primary-hover:     #1C3318;
-  --color-primary-subtle:    #3D6636;
-  --color-primary-light:     #EBF3EA;
+  --color-primary: #274422;
+  --color-primary-hover: #1C3318;
+  --color-primary-subtle: #3D6636;
+  --color-primary-light: #EBF3EA;
 
-  --color-accent:            #C78326;
-  --color-accent-hover:      #AB6E1B;
-  --color-accent-subtle:     #DE9B3E;
-  --color-accent-light:      #FDF4E5;
+  --color-accent: #C78326;
+  --color-accent-hover: #AB6E1B;
+  --color-accent-subtle: #DE9B3E;
+  --color-accent-light: #FDF4E5;
 
-  --color-danger:            #9E3520;
-  --color-danger-subtle:     #842A17;
-  --color-danger-light:      #FBECE8;
+  --color-danger: #9E3520;
+  --color-danger-subtle: #842A17;
+  --color-danger-light: #FBECE8;
 
-  --color-success:           #1E6F38;
-  --color-success-light:     #EAF7EE;
+  --color-success: #1E6F38;
+  --color-success-light: #EAF7EE;
 
-  --color-text-primary:      #151A14;
-  --color-text-muted:        #566153;
-  --color-text-faint:        #899386;
+  --color-text-primary: #151A14;
+  --color-text-muted: #566153;
+  --color-text-faint: #899386;
 
-  --color-border:            #DFD9CB;
-  --color-border-strong:     #242E22;
-  --color-border-subtle:     #EAE6DB;
-  /* UI panel border — light cool blue-grey, 1.5px, matches design reference */
-  --color-border-ui:         #C9D4DC;
+  --color-border: rgba(21, 26, 20, 0.08);
+  --color-border-strong: rgba(21, 26, 20, 0.18);
+  --color-border-subtle: rgba(21, 26, 20, 0.05);
+  /* UI panel border — thin 1px, soft transparent tone */
+  --color-border-ui: rgba(21, 26, 20, 0.08);
 
-  --color-shell:             #274422;
-  --color-shell-hover:       rgba(255,255,255,0.06);
-  --color-shell-active:      rgba(255,255,255,0.11);
-  --color-shell-border:      rgba(255,255,255,0.09);
-  --color-on-shell:          rgba(255,255,255,0.68);
-  --color-on-shell-strong:   rgba(255,255,255,0.95);
-  --color-on-shell-faint:    rgba(255,255,255,0.28);
-  --color-on-shell-muted:    rgba(255,255,255,0.45);
-  --color-on-shell-accent:   #7EC972;
+  --color-shell: #274422;
+  --color-shell-hover: rgba(255, 255, 255, 0.06);
+  --color-shell-active: rgba(255, 255, 255, 0.11);
+  --color-shell-border: rgba(255, 255, 255, 0.12);
+  --color-on-shell: rgba(255, 255, 255, 0.68);
+  --color-on-shell-strong: rgba(255, 255, 255, 0.95);
+  --color-on-shell-faint: rgba(255, 255, 255, 0.28);
+  --color-on-shell-muted: rgba(255, 255, 255, 0.45);
+  --color-on-shell-accent: #7EC972;
 
   /* DA accent — amber/wheat harvest */
-  --color-da-accent:         #C78326;
+  --color-da-accent: #C78326;
 
   /* Officer accent — highland water/teal */
-  --color-officer-accent:    #4A8FA8;
+  --color-officer-accent: #4A8FA8;
 
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
+:root {
+  --sidebar-w: 260px;
+}
+
+@media (max-width: 1023px) {
+  :root {
+    --sidebar-w: 0px;
+  }
+}
+
 body {
-  background-color: theme(colors.background);
-  color: theme(colors.text-primary);
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
   font-family: var(--font-sans);
   min-height: 100vh;
   margin: 0;
@@ -65,29 +75,32 @@ body {
 }
 
 ::selection {
-  background-color: theme(colors.primary);
+  background-color: var(--color-primary);
   color: #fff;
 }
 
-input, button, select, textarea {
+input,
+button,
+select,
+textarea {
   font-family: inherit;
 }
 
 .glass-panel {
-  background: rgba(255,255,255,0.82);
+  background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 }
 
 .ambient-glow-primary {
-  box-shadow: 0 0 35px -8px rgba(39,68,34,0.18);
+  box-shadow: 0 0 35px -8px rgba(39, 68, 34, 0.18);
 }
 
 .ambient-glow-accent {
-  box-shadow: 0 0 35px -8px rgba(199,131,38,0.22);
+  box-shadow: 0 0 35px -8px rgba(199, 131, 38, 0.22);
 }
 
-/* UI panel border — 1.5px light cool blue-grey, as per design reference */
+/* UI panel border — refined 1.5px thickness and soft transparent color */
 .ui-border {
   border: 1.5px solid var(--color-border-ui);
 }
@@ -104,7 +117,7 @@ input, button, select, textarea {
   border-left: 1.5px solid var(--color-border-ui);
 }
 
-/* Legacy thick-border kept for backward compat but now uses ui-border colors */
+/* Legacy thick-border */
 .thick-border {
   border: 1.5px solid var(--color-border-ui);
 }

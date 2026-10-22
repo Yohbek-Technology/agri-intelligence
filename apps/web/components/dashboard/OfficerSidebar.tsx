@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
@@ -169,16 +169,23 @@ export function OfficerSidebar({ onClose }: Props) {
     [pathname],
   )
 
+  useEffect(() => {
+    document.documentElement.style.setProperty('--sidebar-w', collapsed ? '60px' : '260px')
+    return () => {
+      document.documentElement.style.removeProperty('--sidebar-w')
+    }
+  }, [collapsed])
+
   return (
     // The aside controls its OWN width so the flex parent (DashboardLayout)
     // reacts and gives freed space to the main area automatically.
     <aside
-      className="flex flex-col bg-shell h-full overflow-hidden"
+      className="flex flex-col bg-shell h-full overflow-hidden relative z-30"
       style={{
         width: collapsed ? '60px' : '260px',
         transition: 'width 230ms ease-in-out',
         // Very subtle shadow separating sidebar from main content
-        boxShadow: '2px 0 8px -2px rgba(0,0,0,0.08)',
+        boxShadow: '1px 0 2px rgba(0,0,0,0.03)',
       }}
     >
       {/* Top bar */}

@@ -27,7 +27,7 @@ export default function OfficerOverviewPage() {
   }
 
   return (
-    <div className="p-4 sm:p-8 officer-content">
+    <div className="w-full p-4 sm:p-6 lg:p-8 officer-content">
       <h1 className="text-3xl font-bold text-text-primary">
         {t('overview_greeting', { name: user?.name ?? 'Officer' })}
       </h1>

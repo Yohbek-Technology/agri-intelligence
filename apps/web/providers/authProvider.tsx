@@ -24,6 +24,27 @@ const AuthContext = createContext<AuthContextValue>({
   refetch: async () => {},
 })
 
+/** Unwrap whatever shape the server returns into { user, session } */
+function extractSession(raw: unknown): { user: AuthUser; session: AuthSession } | null {
+  if (!raw || typeof raw !== 'object') return null
+  const obj = raw as Record<string, unknown>
+
+  // Standard Better Auth format: { user, session }
+  if (obj.user && obj.session) {
+    return { user: obj.user as AuthUser, session: obj.session as AuthSession }
+  }
+
+  // Double-wrapped format: { data: { user, session } }
+  if (obj.data && typeof obj.data === 'object') {
+    const inner = obj.data as Record<string, unknown>
+    if (inner.user && inner.session) {
+      return { user: inner.user as AuthUser, session: inner.session as AuthSession }
+    }
+  }
+
+  return null
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [data, setData] = useState<{ user: AuthUser; session: AuthSession } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -34,7 +55,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     fetchingRef.current = true
     try {
       const result = await authClient.getSession()
-      setData(result.data as unknown as { user: AuthUser; session: AuthSession } | null)
+      // result.data is the raw server payload — unwrap defensively
+      const extracted = extractSession(result.data)
+      setData(extracted)
     } catch {
       setData(null)
     } finally {
@@ -45,15 +68,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     fetchSession()
-    // Only fetch once on mount — no window focus polling
   }, [fetchSession])
 
   const handleSignOut = useCallback(async () => {
-    await authClient.signOut()
+    try {
+      await authClient.signOut()
+    } catch { /* ignore */ }
     setData(null)
   }, [])
 
-  const user = data?.user ?? null
+  const user    = data?.user    ?? null
   const session = data?.session ?? null
 
   return (
@@ -61,11 +85,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         user,
         session,
-        role: user?.role ?? null,
+        role:            (user?.role ?? null) as UserRole | null,
         isAuthenticated: Boolean(user && session),
         isLoading,
-        signOut: handleSignOut,
-        refetch: fetchSession,
+        signOut:         handleSignOut,
+        refetch:         fetchSession,
       }}
     >
       {children}

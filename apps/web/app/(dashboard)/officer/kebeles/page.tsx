@@ -30,7 +30,7 @@ import type {
 } from '@repo/shared'
 
 const UI_BORDER = '1.5px solid var(--color-border-ui)'
-const SHADOW    = '0 1px 4px rgba(0,0,0,0.06)'
+const SHADOW    = '0 1px 2px rgba(0,0,0,0.03)'
 
 type Tab = 'kebeles' | 'staff'
 
@@ -162,7 +162,7 @@ export default function TerritoryStaffPage() {
   }
 
   return (
-    <div className="p-3 sm:p-6 max-w-5xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 w-full space-y-6">
 
       {/* Page header */}
       <motion.div
