@@ -18,7 +18,7 @@ export function ComingSoon({ titleKey, subtitleKey }: ComingSoonProps) {
 
       <div
         className="mt-8 rounded-2xl bg-surface flex flex-col items-center justify-center py-20 gap-4"
-        style={{ border: '1.5px solid var(--color-border-ui)', boxShadow: '0 1px 2px rgba(0,0,0,0.03)' }}
+        style={{ border: '2px solid var(--color-border-ui)', boxShadow: '0 1px 2px rgba(0,0,0,0.03)' }}
       >
         <Construction size={40} className="text-text-faint opacity-40" />
         <p className="text-sm font-medium text-text-faint font-mono tracking-widest uppercase">

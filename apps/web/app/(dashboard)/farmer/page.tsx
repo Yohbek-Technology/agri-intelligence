@@ -21,7 +21,7 @@ export default function FarmerOverviewPage() {
 
   if (!isAuthorized) {
     return (
-      <div className="m-8 p-5 text-sm text-danger bg-danger-light border border-danger rounded-xl">
+      <div className="m-8 p-5 text-sm text-danger bg-danger-light border-2 border-danger rounded-xl">
         Access denied. Your role does not have clearance for the Farmer workspace.
       </div>
     )

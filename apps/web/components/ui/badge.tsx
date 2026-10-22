@@ -33,7 +33,7 @@ export function Badge({
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 font-mono font-medium rounded-full border ${variantStyles} ${sizeStyles}`}
+      className={`inline-flex items-center gap-1.5 font-mono font-medium rounded-full border-2 ${variantStyles} ${sizeStyles}`}
     >
       {dot && (
         <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />

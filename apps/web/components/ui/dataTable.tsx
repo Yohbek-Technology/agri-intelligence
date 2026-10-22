@@ -14,7 +14,7 @@ import {
 } from '@tanstack/react-table'
 import { ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react'
 
-const UI_BORDER = '1.5px solid var(--color-border-ui)'
+const UI_BORDER = '2px solid var(--color-border-ui)'
 
 interface DataTableProps<TData> {
   columns: ColumnDef<TData, any>[]

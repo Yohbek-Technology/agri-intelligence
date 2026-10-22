@@ -11,7 +11,7 @@ import { CardSkeleton } from '@/components/ui/skeleton'
 import { showSuccessToast, showErrorToast } from '@/components/ui/toast'
 import type { OfficeParametersUpdate } from '@repo/shared'
 
-const UI_BORDER = '1.5px solid var(--color-border-ui)'
+const UI_BORDER = '2px solid var(--color-border-ui)'
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 

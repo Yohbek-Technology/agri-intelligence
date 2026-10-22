@@ -6,7 +6,7 @@ import { Globe, ChevronDown } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { setLocaleAction } from '@/i18n/actions/locale'
 
-const UI_BORDER = '1.5px solid var(--color-border-ui)'
+const UI_BORDER = '2px solid var(--color-border-ui)'
 
 const LANGUAGES = [
   { code: 'en' as const, native: 'English' },

@@ -24,7 +24,7 @@ export function Card({
   const glowStyle = glow ? 'ambient-glow-primary' : ''
 
   const borderStyle = variant !== 'glass'
-    ? { border: '1.5px solid var(--color-border-ui)' }
+    ? { border: '2px solid var(--color-border-ui)' }
     : {}
 
   return (
@@ -49,7 +49,7 @@ export function CardHeader({ title, subtitle, badge, action }: CardHeaderProps) 
   return (
     <div
       className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-5 pb-4"
-      style={{ borderBottom: '1.5px solid var(--color-border-ui)' }}
+      style={{ borderBottom: '2px solid var(--color-border-ui)' }}
     >
       <div>
         <div className="flex items-center gap-2 flex-wrap">

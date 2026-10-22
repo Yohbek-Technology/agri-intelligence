@@ -28,8 +28,8 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           className={`w-full bg-surface text-text-primary text-sm rounded-xl min-h-[48px] px-3.5 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer ${className}`}
           style={{
             border: error
-              ? '1.5px solid var(--color-danger)'
-              : '1.5px solid var(--color-border-ui)',
+              ? '2px solid var(--color-danger)'
+              : '2px solid var(--color-border-ui)',
           }}
           {...props}
         >

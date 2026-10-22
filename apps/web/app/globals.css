@@ -27,16 +27,16 @@
   --color-text-muted: #566153;
   --color-text-faint: #899386;
 
-  --color-border: rgba(21, 26, 20, 0.08);
-  --color-border-strong: rgba(21, 26, 20, 0.18);
-  --color-border-subtle: rgba(21, 26, 20, 0.05);
-  /* UI panel border — thin 1px, soft transparent tone */
-  --color-border-ui: rgba(21, 26, 20, 0.08);
+  --color-border: #DFD9CB;
+  --color-border-strong: #242E22;
+  --color-border-subtle: #EAE6DB;
+  /* UI panel border — light cool blue-grey, 2px, crisp visibility */
+  --color-border-ui: #C9D4DC;
 
   --color-shell: #274422;
   --color-shell-hover: rgba(255, 255, 255, 0.06);
   --color-shell-active: rgba(255, 255, 255, 0.11);
-  --color-shell-border: rgba(255, 255, 255, 0.12);
+  --color-shell-border: rgba(255, 255, 255, 0.16);
   --color-on-shell: rgba(255, 255, 255, 0.68);
   --color-on-shell-strong: rgba(255, 255, 255, 0.95);
   --color-on-shell-faint: rgba(255, 255, 255, 0.28);
@@ -55,6 +55,7 @@
 
 :root {
   --sidebar-w: 260px;
+  --ui-border-width: 2px;
 }
 
 @media (max-width: 1023px) {
@@ -100,34 +101,34 @@ textarea {
   box-shadow: 0 0 35px -8px rgba(199, 131, 38, 0.22);
 }
 
-/* UI panel border — refined 1.5px thickness and soft transparent color */
+/* UI panel border — prominent 2px thickness */
 .ui-border {
-  border: 1.5px solid var(--color-border-ui);
+  border: 2px solid var(--color-border-ui);
 }
 
 .ui-border-b {
-  border-bottom: 1.5px solid var(--color-border-ui);
+  border-bottom: 2px solid var(--color-border-ui);
 }
 
 .ui-border-t {
-  border-top: 1.5px solid var(--color-border-ui);
+  border-top: 2px solid var(--color-border-ui);
 }
 
 .ui-border-l {
-  border-left: 1.5px solid var(--color-border-ui);
+  border-left: 2px solid var(--color-border-ui);
 }
 
 /* Legacy thick-border */
 .thick-border {
-  border: 1.5px solid var(--color-border-ui);
+  border: 2px solid var(--color-border-ui);
 }
 
 .thick-border-b {
-  border-bottom: 1.5px solid var(--color-border-ui);
+  border-bottom: 2px solid var(--color-border-ui);
 }
 
 .thick-border-t {
-  border-top: 1.5px solid var(--color-border-ui);
+  border-top: 2px solid var(--color-border-ui);
 }
 
 /* Mobile content padding — minimal so content starts close to screen edge */

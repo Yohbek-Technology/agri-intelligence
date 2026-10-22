@@ -75,7 +75,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       {/* Right content panel */}
       <div className="w-full lg:w-3/5 flex flex-col h-screen overflow-y-auto bg-[var(--color-surface)]">
         {/* Mobile top bar */}
-        <div className="flex lg:hidden items-center justify-between px-5 py-4" style={{ borderBottom: '1.5px solid var(--color-border-ui)' }}>
+        <div className="flex lg:hidden items-center justify-between px-5 py-4" style={{ borderBottom: '2px solid var(--color-border-ui)' }}>
           <BrandLogo size="sm" />
           <Link href="/" className="text-xs font-mono font-semibold text-text-muted hover:text-text-primary transition-colors">
             ← {t('portal')}

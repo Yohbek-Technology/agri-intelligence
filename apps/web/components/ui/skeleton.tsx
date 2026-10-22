@@ -29,12 +29,12 @@ export function TableSkeleton({ rows = 6, cols = 5 }: { rows?: number; cols?: nu
   return (
     <div
       className="bg-surface rounded-xl overflow-hidden"
-      style={{ border: '1.5px solid var(--color-border-ui)' }}
+      style={{ border: '2px solid var(--color-border-ui)' }}
     >
       {/* Header */}
       <div
         className="flex gap-4 px-4 py-3 bg-surface-subtle"
-        style={{ borderBottom: '1.5px solid var(--color-border-ui)' }}
+        style={{ borderBottom: '2px solid var(--color-border-ui)' }}
       >
         {Array.from({ length: cols }).map((_, i) => (
           <Skeleton key={i} className="h-3 flex-1" />
@@ -46,7 +46,7 @@ export function TableSkeleton({ rows = 6, cols = 5 }: { rows?: number; cols?: nu
         <div
           key={ri}
           className="flex gap-4 px-4 py-3.5"
-          style={ri < rows - 1 ? { borderBottom: '1.5px solid var(--color-border-ui)' } : {}}
+          style={ri < rows - 1 ? { borderBottom: '2px solid var(--color-border-ui)' } : {}}
         >
           {Array.from({ length: cols }).map((_, ci) => (
             <Skeleton
@@ -65,7 +65,7 @@ export function CardSkeleton({ rows = 4 }: { rows?: number }) {
   return (
     <div
       className="bg-surface rounded-2xl p-6 space-y-4"
-      style={{ border: '1.5px solid var(--color-border-ui)' }}
+      style={{ border: '2px solid var(--color-border-ui)' }}
     >
       <Skeleton className="h-3 w-32" />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -88,7 +88,7 @@ export function ListSkeleton({ rows = 5 }: { rows?: number }) {
         <div
           key={i}
           className="flex items-center gap-3 py-3 px-1"
-          style={i < rows - 1 ? { borderBottom: '1.5px solid var(--color-border-ui)' } : {}}
+          style={i < rows - 1 ? { borderBottom: '2px solid var(--color-border-ui)' } : {}}
         >
           <Skeleton className="h-8 w-8 rounded-full shrink-0" />
           <div className="flex-1 space-y-1.5">

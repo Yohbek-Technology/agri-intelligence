@@ -86,12 +86,12 @@ function VerifyOtpContent() {
             className={`w-11 sm:w-12 h-14 sm:h-16 text-center text-xl sm:text-2xl font-mono font-bold rounded-2xl transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50 ${
               digit ? 'bg-primary-light text-primary' : 'bg-surface text-text-primary'
             }`}
-            style={{ border: digit ? '1.5px solid var(--color-primary)' : '1.5px solid var(--color-border-ui)' }}
+            style={{ border: digit ? '2px solid var(--color-primary)' : '2px solid var(--color-border-ui)' }}
           />
         ))}
       </div>
 
-      <div className="flex items-center gap-2 text-xs font-mono text-text-muted bg-surface-subtle rounded-xl px-3 py-2" style={{ border: '1.5px solid var(--color-border-ui)' }}>
+      <div className="flex items-center gap-2 text-xs font-mono text-text-muted bg-surface-subtle rounded-xl px-3 py-2" style={{ border: '2px solid var(--color-border-ui)' }}>
         <span>🔒</span>
         <span>{t('securityNote')}</span>
       </div>

@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Notice } from '@/components/ui/notice'
 
-const UI_BORDER = '1.5px solid var(--color-border-ui)'
+const UI_BORDER = '2px solid var(--color-border-ui)'
 
 type DrawerMode   = 'create' | 'edit'
 type BoundaryType = 'centroid' | 'geojson'

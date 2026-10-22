@@ -17,7 +17,7 @@ import { Select } from '@/components/ui/select'
 import { Notice } from '@/components/ui/notice'
 import { authService } from '@/services/authService'
 
-const UI_BORDER = '1.5px solid var(--color-border-ui)'
+const UI_BORDER = '2px solid var(--color-border-ui)'
 const ETHIOPIAN_PHONE_REGEX = /^(?:\+251|251|0)[79][0-9]{8}$/
 const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,30}$/
 

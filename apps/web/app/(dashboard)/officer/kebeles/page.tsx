@@ -29,7 +29,7 @@ import type {
   UpdateStaffInput,
 } from '@repo/shared'
 
-const UI_BORDER = '1.5px solid var(--color-border-ui)'
+const UI_BORDER = '2px solid var(--color-border-ui)'
 const SHADOW    = '0 1px 2px rgba(0,0,0,0.03)'
 
 type Tab = 'kebeles' | 'staff'

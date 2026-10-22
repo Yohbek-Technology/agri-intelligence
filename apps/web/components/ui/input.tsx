@@ -38,14 +38,14 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
               leftIcon ? 'pl-10' : 'pl-3.5'
             } ${rightIcon ? 'pr-10' : 'pr-3.5'} ${
               error
-                ? 'border border-danger focus:ring-2 focus:ring-danger/20'
+                ? 'border-2 border-danger focus:ring-2 focus:ring-danger/20'
                 : success
-                ? 'border border-success focus:ring-2 focus:ring-success/20'
-                : 'border focus:border-primary focus:ring-2 focus:ring-primary/15'
+                ? 'border-2 border-success focus:ring-2 focus:ring-success/20'
+                : 'border-2 focus:border-primary focus:ring-2 focus:ring-primary/15'
             } ${className}`}
             style={{
               borderColor: error ? undefined : success ? undefined : 'var(--color-border-ui)',
-              borderWidth: '1.5px',
+              borderWidth: '2px',
             }}
             {...props}
           />

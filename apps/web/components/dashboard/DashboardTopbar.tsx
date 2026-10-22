@@ -9,9 +9,9 @@ import { LocaleSwitcher } from '@/components/ui/localeSwitcher'
 import { NotificationPanel } from '@/components/dashboard/NotificationPanel'
 import type { AuthUser } from '@repo/shared'
 
-const UI_BORDER = '1.5px solid var(--color-border-ui)'
+const UI_BORDER = '2px solid var(--color-border-ui)'
 /* Shell items sit on a dark green bg, so their border uses the shell token */
-const SHELL_BORDER = '1.5px solid var(--color-shell-border)'
+const SHELL_BORDER = '2px solid var(--color-shell-border)'
 
 interface Props {
   user: AuthUser | null | undefined

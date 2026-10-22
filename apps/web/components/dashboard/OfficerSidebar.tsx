@@ -204,7 +204,7 @@ export function OfficerSidebar({ onClose }: Props) {
             'bg-shell-hover text-on-shell-faint hover:text-on-shell hover:bg-shell-active transition-colors shrink-0',
             collapsed ? 'mx-auto' : 'ml-auto',
           ].join(' ')}
-          style={{ border: '1.5px solid var(--color-shell-border)' }}
+          style={{ border: '2px solid var(--color-shell-border)' }}
         >
           {collapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
         </button>
@@ -228,7 +228,7 @@ export function OfficerSidebar({ onClose }: Props) {
       {!collapsed && (
         <div
           className="px-3 pt-3 pb-4 shrink-0 space-y-3"
-          style={{ borderTop: '1.5px solid var(--color-shell-border)' }}
+          style={{ borderTop: '2px solid var(--color-shell-border)' }}
         >
           <div className="lg:hidden">
             <LocaleSwitcher />

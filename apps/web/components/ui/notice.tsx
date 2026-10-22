@@ -42,7 +42,7 @@ export function Notice({ type = 'info', message, onDismiss }: NoticeProps) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
       className={`p-3.5 rounded-2xl text-xs sm:text-sm font-medium flex items-start justify-between gap-3 ${BG[type]}`}
-      style={{ border: `1.5px solid ${BORDER_COLOR[type]}` }}
+      style={{ border: `2px solid ${BORDER_COLOR[type]}` }}
       role="alert"
     >
       <div className="flex items-center gap-2">

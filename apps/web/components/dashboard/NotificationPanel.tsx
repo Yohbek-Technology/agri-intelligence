@@ -7,7 +7,7 @@ import {
   MessageSquare, Megaphone, CheckCircle, AlertTriangle,
 } from 'lucide-react'
 
-const UI_BORDER = '1.5px solid var(--color-border-ui)'
+const UI_BORDER = '2px solid var(--color-border-ui)'
 
 export type NotificationKind = 'alert' | 'diagnosis' | 'message' | 'announcement' | 'success' | 'warning'
 

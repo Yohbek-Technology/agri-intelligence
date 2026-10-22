@@ -123,7 +123,7 @@ export function AiAssistantPopup() {
             exit={{ opacity: 0, y: 10, scale: 0.96 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
             className="fixed bottom-[5.5rem] right-6 z-50 w-[360px] sm:w-[400px] max-w-[calc(100vw-3rem)] h-[520px] max-h-[80vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden text-slate-900"
-            style={{ border: '1.5px solid var(--color-border-ui)' }}
+            style={{ border: '2px solid var(--color-border-ui)' }}
           >
             {/* Header */}
             <div className="px-5 py-3.5 border-b-2 border-slate-200 bg-white flex items-center justify-between">

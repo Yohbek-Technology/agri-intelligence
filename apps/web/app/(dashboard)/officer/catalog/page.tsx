@@ -25,7 +25,7 @@ import type {
   CatalogStatus,
 } from '@repo/shared'
 
-const UI_BORDER = '1.5px solid var(--color-border-ui)'
+const UI_BORDER = '2px solid var(--color-border-ui)'
 
 type Tab = 'crops' | 'varieties' | 'fertilizer' | 'pests' | 'chemicals'
 
