@@ -1,256 +1,231 @@
-import { Hono } from 'hono'
-import { db } from '@/config/db.js'
-import { registeredChemicals, pestCatalog, crops, cropVarieties } from '@/db/schemas/catalog.js'
-import { cityOffices } from '@/db/schemas/tenancy.js'
-import { sessionGuard } from '@/middlewares/session.js'
-import { eq, and, ilike, or, desc } from 'drizzle-orm'
+import { Hono } from "hono"
+import { sessionGuard, tenantGuard, requireAdminOrOfficer, requireDeskStaff } from '@/middlewares/index.js'
+import {
+  listCrops, createCrop, updateCrop,
+  listVarieties, createVariety, updateVariety,
+  listFertilizerRates, upsertFertilizerRate,
+  listPests, createPest, updatePest,
+  listChemicals, createChemical, updateChemical, retireChemical,
+} from '@/services/catalog.js'
+import {
+  createCropSchema, updateCropSchema,
+  createVarietySchema, updateVarietySchema,
+  upsertFertilizerRateSchema,
+  createPestSchema, updatePestSchema,
+  createChemicalSchema, updateChemicalSchema,
+} from '@repo/shared'
 
-export const catalogRouter = new Hono()
+// ---- Public (any authenticated staff) read router ----
+export const catalogPublicRouter = new Hono()
+catalogPublicRouter.use('*', sessionGuard, tenantGuard)
 
-/**
- * Ensures baseline MoA/EPA registered chemicals and pests exist for the given city office.
- */
-export async function seedBaselineCatalog(cityOfficeId: string) {
-  // 1. Ensure baseline pests exist
-  const existingPests = await db
-    .select({ id: pestCatalog.id, code: pestCatalog.code })
-    .from(pestCatalog)
-    .where(eq(pestCatalog.cityOfficeId, cityOfficeId))
-
-  const pestMap = new Map(existingPests.map((p) => [p.code, p.id]))
-
-  const baselinePests = [
-    {
-      code: 'wheat_stem_rust',
-      kind: 'disease' as const,
-      name: {
-        en: 'Wheat Stem Rust',
-        am: 'የስንዴ ቢጫ ዝገት',
-        om: 'Waagii Qamadii',
-        ti: 'ናይ ስርናይ ዝገት',
-      },
-      preventionAdvice: {
-        en: 'Plant certified resistant varieties (e.g. Kakaba, Dandaa). Avoid excessive nitrogen fertilization in humid seasons.',
-        am: 'የተረጋገጡ የበሽታ መቋቋም አቅም ያላቸውን ዝርያዎች ይዝሩ (ለምሳሌ ካካባ)።',
-      },
-    },
-    {
-      code: 'fall_armyworm',
-      kind: 'pest' as const,
-      name: {
-        en: 'Fall Armyworm',
-        am: 'የተምች ትል',
-        om: 'Raammoo Hoolaa',
-        ti: 'ተምች',
-      },
-      preventionAdvice: {
-        en: 'Scout maize whorls weekly. Handpick egg masses or apply approved bio-pesticides at first sign.',
-        am: 'የበቆሎውን እምብርት በየሳምንቱ ይፈትሹ።',
-      },
-    },
-    {
-      code: 'head_smut',
-      kind: 'disease' as const,
-      name: {
-        en: 'Head Smut',
-        am: 'የራስ አረም / ስመት',
-        om: 'Wagii Boqqolloo',
-        ti: 'ስመት',
-      },
-      preventionAdvice: {
-        en: 'Treat seed with certified fungicides before planting. Practice 3-year crop rotation with legumes.',
-        am: 'ዘር ከመዝራትዎ በፊት በማከሚያ ኬሚካል ያክሙ።',
-      },
-    },
-  ]
-
-  for (const bp of baselinePests) {
-    if (!pestMap.has(bp.code)) {
-      const [inserted] = await db
-        .insert(pestCatalog)
-        .values({
-          cityOfficeId,
-          code: bp.code,
-          kind: bp.kind,
-          name: bp.name,
-          preventionAdvice: bp.preventionAdvice,
-        })
-        .onConflictDoNothing()
-        .returning({ id: pestCatalog.id, code: pestCatalog.code })
-
-      if (inserted) {
-        pestMap.set(inserted.code, inserted.id)
-      }
-    }
-  }
-
-  // 2. Ensure baseline registered chemicals exist
-  const existingChems = await db
-    .select({ id: registeredChemicals.id, regNum: registeredChemicals.registrationNumber })
-    .from(registeredChemicals)
-    .where(eq(registeredChemicals.cityOfficeId, cityOfficeId))
-
-  const chemRegs = new Set(existingChems.map((c) => c.regNum))
-
-  const baselineChemicals = [
-    {
-      brandName: 'Tilt 250 EC',
-      activeIngredient: 'Propiconazole 250 g/L',
-      registrationNumber: 'MoA-ET/1042',
-      category: 'fungicide' as const,
-      dosageText: {
-        en: '0.5 L / Ha diluted in 200 Liters clean water (approx. 25-30 ml per 15L knapsack)',
-        am: 'በሄክታር 0.5 ሊትር በ200 ሊትር ንጹህ ውሃ (ወይም በ15 ሊትር ጀሪካን 30 ሚሊ)',
-      },
-      protectiveEquipmentText: {
-        en: 'Protective face mask, chemical rubber gloves, rubber boots, and eye goggles',
-        am: 'የፊት ማስክ፣ የጎማ ጓንት እና ቦት ጫማ',
-      },
-      safetyIntervalDays: 30,
-      targetPestCodes: ['wheat_stem_rust'],
-    },
-    {
-      brandName: 'Ampligo 150 ZC',
-      activeIngredient: 'Chlorantraniliprole 100 g/L + Lambda-cyhalothrin 50 g/L',
-      registrationNumber: 'MoA-ET/884',
-      category: 'insecticide' as const,
-      dosageText: {
-        en: '0.2 L / Ha in 200 Liters water directed into the plant whorls',
-        am: 'በሄክታር 0.2 ሊትር በእጽዋቱ እምብርት ውስጥ ይረጩ',
-      },
-      protectiveEquipmentText: {
-        en: 'Vapor respirator mask, neoprene gloves, protective overall, boots',
-        am: 'የመተንፈሻ ማስክ፣ የጎማ ጓንት እና ሙሉ ልብስ',
-      },
-      safetyIntervalDays: 14,
-      targetPestCodes: ['fall_armyworm'],
-    },
-    {
-      brandName: 'Nativo 300 SC',
-      activeIngredient: 'Trifloxystrobin 100 g/L + Tebuconazole 200 g/L',
-      registrationNumber: 'MoA-ET/920',
-      category: 'fungicide' as const,
-      dosageText: {
-        en: '0.4 L / Ha in 200 Liters water applied at first visual onset of lesions',
-        am: 'በሄክታር 0.4 ሊትር የመጀመሪያው የበሽታ ምልክት ሲታይ',
-      },
-      protectiveEquipmentText: {
-        en: 'Protective mask, gloves, long trousers, protective eye shield',
-        am: 'ማስክ፣ ጓንት እና የአይን መነፅር',
-      },
-      safetyIntervalDays: 28,
-      targetPestCodes: ['wheat_stem_rust', 'head_smut'],
-    },
-  ]
-
-  for (const bc of baselineChemicals) {
-    if (!chemRegs.has(bc.registrationNumber)) {
-      const targetPestIds: string[] = []
-      for (const pcode of bc.targetPestCodes) {
-        const pid = pestMap.get(pcode)
-        if (pid) targetPestIds.push(pid)
-      }
-
-      await db
-        .insert(registeredChemicals)
-        .values({
-          cityOfficeId,
-          brandName: bc.brandName,
-          activeIngredient: bc.activeIngredient,
-          registrationNumber: bc.registrationNumber,
-          category: bc.category,
-          dosageText: bc.dosageText,
-          protectiveEquipmentText: bc.protectiveEquipmentText,
-          safetyIntervalDays: bc.safetyIntervalDays,
-          targetPestIds,
-        })
-        .onConflictDoNothing()
-    }
-  }
-}
-
-/**
- * GET /api/v1/catalog/chemicals
- * List MoA-registered chemicals with optional search & category filter
- */
-catalogRouter.get('/chemicals', sessionGuard, async (c) => {
+catalogPublicRouter.get('/crops', async (c) => {
   const user = c.get('user')
-  const category = c.req.query('category')
-  const search = c.req.query('search')
-  const pestId = c.req.query('pestId')
-
-  let cityOfficeId = user?.cityOfficeId
-  if (!cityOfficeId) {
-    const off = await db.select({ id: cityOffices.id }).from(cityOffices).limit(1)
-    if (off.length) cityOfficeId = off[0].id
-  }
-
-  if (cityOfficeId) {
-    await seedBaselineCatalog(cityOfficeId)
-  }
-
-  const conditions = [eq(registeredChemicals.status, 'active')]
-  if (cityOfficeId) {
-    conditions.push(eq(registeredChemicals.cityOfficeId, cityOfficeId))
-  }
-  if (category && category !== 'all') {
-    conditions.push(eq(registeredChemicals.category, category as any))
-  }
-  if (search) {
-    conditions.push(
-      or(
-        ilike(registeredChemicals.brandName, `%${search}%`),
-        ilike(registeredChemicals.activeIngredient, `%${search}%`),
-        ilike(registeredChemicals.registrationNumber, `%${search}%`)
-      )!
-    )
-  }
-
-  const chems = await db
-    .select()
-    .from(registeredChemicals)
-    .where(and(...conditions))
-    .orderBy(desc(registeredChemicals.createdAt))
-
-  let filtered = chems
-  if (pestId) {
-    filtered = chems.filter((item) => item.targetPestIds && item.targetPestIds.includes(pestId))
-  }
-
-  return c.json({ data: filtered })
+  if (!user.cityOfficeId) return c.json({ error: { code: 'forbidden', message: 'No office assigned.' } }, 403)
+  const list = await listCrops(user.cityOfficeId)
+  return c.json({ data: list })
 })
 
-/**
- * GET /api/v1/catalog/pests
- * List known crop pests and diseases
- */
-catalogRouter.get('/pests', sessionGuard, async (c) => {
+catalogPublicRouter.get('/varieties', async (c) => {
   const user = c.get('user')
-  const search = c.req.query('search')
+  if (!user.cityOfficeId) return c.json({ error: { code: 'forbidden', message: 'No office assigned.' } }, 403)
+  const cropId = c.req.query('cropId')
+  const list = await listVarieties(user.cityOfficeId, cropId)
+  return c.json({ data: list })
+})
 
-  let cityOfficeId = user?.cityOfficeId
-  if (!cityOfficeId) {
-    const off = await db.select({ id: cityOffices.id }).from(cityOffices).limit(1)
-    if (off.length) cityOfficeId = off[0].id
+catalogPublicRouter.get('/pests', async (c) => {
+  const user = c.get('user')
+  if (!user.cityOfficeId) return c.json({ error: { code: 'forbidden', message: 'No office assigned.' } }, 403)
+  const list = await listPests(user.cityOfficeId)
+  return c.json({ data: list })
+})
+
+catalogPublicRouter.get('/chemicals', async (c) => {
+  const user = c.get('user')
+  if (!user.cityOfficeId) return c.json({ error: { code: 'forbidden', message: 'No office assigned.' } }, 403)
+  const list = await listChemicals(user.cityOfficeId)
+  return c.json({ data: list })
+})
+
+// Fertilizer rates are readable by all desk staff (da + officer + system_admin)
+catalogPublicRouter.get('/fertilizer-rates', requireDeskStaff, async (c) => {
+  const user = c.get('user')
+  if (!user.cityOfficeId) return c.json({ error: { code: 'forbidden', message: 'No office assigned.' } }, 403)
+  const list = await listFertilizerRates(user.cityOfficeId)
+  return c.json({ data: list })
+})
+
+// ---- Officer-only write router ----
+export const officeCatalogRouter = new Hono()
+officeCatalogRouter.use('*', sessionGuard, tenantGuard, requireAdminOrOfficer)
+
+// Crops
+officeCatalogRouter.post('/crops', async (c) => {
+  const user = c.get('user')
+  if (!user.cityOfficeId) return c.json({ error: { code: 'forbidden', message: 'No office assigned.' } }, 403)
+  const body = await c.req.json().catch(() => null)
+  const parsed = createCropSchema.safeParse(body)
+  if (!parsed.success) {
+    return c.json({ error: { code: 'validation_error', message: 'Invalid crop data.', details: parsed.error.flatten() } }, 422)
   }
-
-  if (cityOfficeId) {
-    await seedBaselineCatalog(cityOfficeId)
+  try {
+    const crop = await createCrop(parsed.data, user.cityOfficeId, user.id)
+    return c.json({ data: crop }, 201)
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : ''
+    if (msg.includes('crops_city_office_id_code_key')) {
+      return c.json({ error: { code: 'conflict', message: 'Crop code already exists for this office.' } }, 409)
+    }
+    throw err
   }
+})
 
-  const conditions = [eq(pestCatalog.status, 'active')]
-  if (cityOfficeId) {
-    conditions.push(eq(pestCatalog.cityOfficeId, cityOfficeId))
+officeCatalogRouter.patch('/crops/:id', async (c) => {
+  const user = c.get('user')
+  if (!user.cityOfficeId) return c.json({ error: { code: 'forbidden', message: 'No office assigned.' } }, 403)
+  const id = c.req.param('id')
+  const body = await c.req.json().catch(() => null)
+  const parsed = updateCropSchema.safeParse(body)
+  if (!parsed.success) {
+    return c.json({ error: { code: 'validation_error', message: 'Invalid crop data.', details: parsed.error.flatten() } }, 422)
   }
-  if (search) {
-    conditions.push(ilike(pestCatalog.code, `%${search}%`))
+  try {
+    const crop = await updateCrop(id, user.cityOfficeId, parsed.data, user.id)
+    if (!crop) return c.json({ error: { code: 'not_found', message: 'Crop not found.' } }, 404)
+    return c.json({ data: crop })
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : ''
+    if (msg.includes('SELF_SUCCESSOR')) {
+      return c.json({ error: { code: 'validation_error', message: 'A crop cannot be its own recommended successor.' } }, 422)
+    }
+    throw err
   }
+})
 
-  const pests = await db
-    .select()
-    .from(pestCatalog)
-    .where(and(...conditions))
-    .orderBy(desc(pestCatalog.createdAt))
+// Varieties
+officeCatalogRouter.post('/varieties', async (c) => {
+  const user = c.get('user')
+  if (!user.cityOfficeId) return c.json({ error: { code: 'forbidden', message: 'No office assigned.' } }, 403)
+  const body = await c.req.json().catch(() => null)
+  const parsed = createVarietySchema.safeParse(body)
+  if (!parsed.success) {
+    return c.json({ error: { code: 'validation_error', message: 'Invalid variety data.', details: parsed.error.flatten() } }, 422)
+  }
+  try {
+    const variety = await createVariety(parsed.data, user.cityOfficeId, user.id)
+    return c.json({ data: variety }, 201)
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : ''
+    if (msg.includes('crop_varieties_crop_id_name_key')) {
+      return c.json({ error: { code: 'conflict', message: 'Variety name already exists for this crop.' } }, 409)
+    }
+    throw err
+  }
+})
 
-  return c.json({ data: pests })
+officeCatalogRouter.patch('/varieties/:id', async (c) => {
+  const user = c.get('user')
+  if (!user.cityOfficeId) return c.json({ error: { code: 'forbidden', message: 'No office assigned.' } }, 403)
+  const id = c.req.param('id')
+  const body = await c.req.json().catch(() => null)
+  const parsed = updateVarietySchema.safeParse(body)
+  if (!parsed.success) {
+    return c.json({ error: { code: 'validation_error', message: 'Invalid variety data.', details: parsed.error.flatten() } }, 422)
+  }
+  const variety = await updateVariety(id, user.cityOfficeId, parsed.data, user.id)
+  if (!variety) return c.json({ error: { code: 'not_found', message: 'Variety not found.' } }, 404)
+  return c.json({ data: variety })
+})
+
+// Fertilizer rates
+officeCatalogRouter.put('/fertilizer-rates', async (c) => {
+  const user = c.get('user')
+  if (!user.cityOfficeId) return c.json({ error: { code: 'forbidden', message: 'No office assigned.' } }, 403)
+  const body = await c.req.json().catch(() => null)
+  const parsed = upsertFertilizerRateSchema.safeParse(body)
+  if (!parsed.success) {
+    return c.json({ error: { code: 'validation_error', message: 'Invalid rate data.', details: parsed.error.flatten() } }, 422)
+  }
+  const rate = await upsertFertilizerRate(parsed.data, user.cityOfficeId, user.id)
+  return c.json({ data: rate }, 201)
+})
+
+// Pests
+officeCatalogRouter.post('/pests', async (c) => {
+  const user = c.get('user')
+  if (!user.cityOfficeId) return c.json({ error: { code: 'forbidden', message: 'No office assigned.' } }, 403)
+  const body = await c.req.json().catch(() => null)
+  const parsed = createPestSchema.safeParse(body)
+  if (!parsed.success) {
+    return c.json({ error: { code: 'validation_error', message: 'Invalid pest data.', details: parsed.error.flatten() } }, 422)
+  }
+  try {
+    const pest = await createPest(parsed.data, user.cityOfficeId, user.id)
+    return c.json({ data: pest }, 201)
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : ''
+    if (msg.includes('pest_catalog_city_office_id_code_key')) {
+      return c.json({ error: { code: 'conflict', message: 'Pest code already exists for this office.' } }, 409)
+    }
+    throw err
+  }
+})
+
+officeCatalogRouter.patch('/pests/:id', async (c) => {
+  const user = c.get('user')
+  if (!user.cityOfficeId) return c.json({ error: { code: 'forbidden', message: 'No office assigned.' } }, 403)
+  const id = c.req.param('id')
+  const body = await c.req.json().catch(() => null)
+  const parsed = updatePestSchema.safeParse(body)
+  if (!parsed.success) {
+    return c.json({ error: { code: 'validation_error', message: 'Invalid pest data.', details: parsed.error.flatten() } }, 422)
+  }
+  const pest = await updatePest(id, user.cityOfficeId, parsed.data, user.id)
+  if (!pest) return c.json({ error: { code: 'not_found', message: 'Pest not found.' } }, 404)
+  return c.json({ data: pest })
+})
+
+// Chemicals
+officeCatalogRouter.post('/chemicals', async (c) => {
+  const user = c.get('user')
+  if (!user.cityOfficeId) return c.json({ error: { code: 'forbidden', message: 'No office assigned.' } }, 403)
+  const body = await c.req.json().catch(() => null)
+  const parsed = createChemicalSchema.safeParse(body)
+  if (!parsed.success) {
+    return c.json({ error: { code: 'validation_error', message: 'Invalid chemical data.', details: parsed.error.flatten() } }, 422)
+  }
+  try {
+    const chemical = await createChemical(parsed.data, user.cityOfficeId, user.id)
+    return c.json({ data: chemical }, 201)
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : ''
+    if (msg.includes('registered_chemicals_office_registration_key')) {
+      return c.json({ error: { code: 'conflict', message: 'Registration number already exists for this office.' } }, 409)
+    }
+    throw err
+  }
+})
+
+officeCatalogRouter.patch('/chemicals/:id', async (c) => {
+  const user = c.get('user')
+  if (!user.cityOfficeId) return c.json({ error: { code: 'forbidden', message: 'No office assigned.' } }, 403)
+  const id = c.req.param('id')
+  const body = await c.req.json().catch(() => null)
+  const parsed = updateChemicalSchema.safeParse(body)
+  if (!parsed.success) {
+    return c.json({ error: { code: 'validation_error', message: 'Invalid chemical data.', details: parsed.error.flatten() } }, 422)
+  }
+  const chemical = await updateChemical(id, user.cityOfficeId, parsed.data, user.id)
+  if (!chemical) return c.json({ error: { code: 'not_found', message: 'Chemical not found.' } }, 404)
+  return c.json({ data: chemical })
+})
+
+officeCatalogRouter.post('/chemicals/:id/retire', async (c) => {
+  const user = c.get('user')
+  if (!user.cityOfficeId) return c.json({ error: { code: 'forbidden', message: 'No office assigned.' } }, 403)
+  const id = c.req.param('id')
+  const chemical = await retireChemical(id, user.cityOfficeId, user.id)
+  if (!chemical) return c.json({ error: { code: 'not_found', message: 'Chemical not found.' } }, 404)
+  return c.json({ data: chemical })
 })

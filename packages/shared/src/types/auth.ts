@@ -69,6 +69,14 @@ export interface TwoFactorChallenge {
   twoFactorMethods: Array<'totp' | 'otp'>
 }
 
+export interface OfficeSummary {
+  id: string
+  name: string
+  defaultLanguage: string
+  isActive: boolean
+  parameters?: Record<string, unknown>
+}
+
 export interface OfficeConfig {
   landUnit: {
     timadToHa: number

@@ -1,1 +1,5 @@
 export * from './auth.js'
+export * from './office-parameters.validator.js'
+export * from './kebele.validator.js'
+export * from './staff.validator.js'
+export * from './catalog.validator.js'

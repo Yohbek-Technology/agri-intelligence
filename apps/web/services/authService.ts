@@ -15,12 +15,9 @@ import {
 } from '@repo/shared'
 import { authClient } from '@/lib/authClient'
 import { mapAuthError } from '@/lib/errorMapper'
+import { apiFetch, type ServiceResult } from '@/lib/apiFetch'
 
-export interface ServiceResult<T = unknown> {
-  success: boolean
-  data?: T
-  error?: string
-}
+export type { ServiceResult } from '@/lib/apiFetch'
 
 export const authService = {
   async signIn(input: PhoneSignIn): Promise<ServiceResult> {
@@ -136,27 +133,11 @@ export const authService = {
     if (!parseResult.success) {
       return { success: false, error: parseResult.error.issues[0]?.message }
     }
-
     const normalizedPhone = PhoneUtils.normalize(parseResult.data.phoneNumber)
-
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000'}/api/auth/phone-number/request-password-reset`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ phoneNumber: normalizedPhone }),
-        }
-      )
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) {
-        return { success: false, error: mapAuthError(data) }
-      }
-      return { success: true, data }
-    } catch (err) {
-      return { success: false, error: mapAuthError(err) }
-    }
+    return apiFetch('/api/auth/phone-number/request-password-reset', {
+      method: 'POST',
+      body: JSON.stringify({ phoneNumber: normalizedPhone }),
+    })
   },
 
   async resetPassword(input: PasswordResetConfirm): Promise<ServiceResult> {
@@ -164,31 +145,15 @@ export const authService = {
     if (!parseResult.success) {
       return { success: false, error: parseResult.error.issues[0]?.message }
     }
-
     const normalizedPhone = PhoneUtils.normalize(parseResult.data.phoneNumber)
-
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000'}/api/auth/phone-number/reset-password`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            phoneNumber: normalizedPhone,
-            otp: parseResult.data.code,
-            newPassword: parseResult.data.newPassword,
-          }),
-        }
-      )
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) {
-        return { success: false, error: mapAuthError(data) }
-      }
-      return { success: true, data }
-    } catch (err) {
-      return { success: false, error: mapAuthError(err) }
-    }
+    return apiFetch('/api/auth/phone-number/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({
+        phoneNumber: normalizedPhone,
+        otp: parseResult.data.code,
+        newPassword: parseResult.data.newPassword,
+      }),
+    })
   },
 
   async signOut(): Promise<ServiceResult> {

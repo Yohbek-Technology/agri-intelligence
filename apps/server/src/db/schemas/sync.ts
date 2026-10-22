@@ -158,6 +158,21 @@ export const AUDIT_ACTIONS = {
   AUTH_PASSWORD_RESET: "auth.password_reset",
   AUTH_LOGOUT: "auth.logout",
   AUTH_CLIENT_DENIED: "auth.client_denied",
+  // Staff management
+  STAFF_CREATED: "staff.created",
+  STAFF_UPDATED: "staff.updated",
+  STAFF_DEACTIVATED: "staff.deactivated",
+  // Catalog management
+  CATALOG_CROP_CREATED: "catalog.crop_created",
+  CATALOG_CROP_UPDATED: "catalog.crop_updated",
+  CATALOG_VARIETY_CREATED: "catalog.variety_created",
+  CATALOG_VARIETY_UPDATED: "catalog.variety_updated",
+  CATALOG_FERTILIZER_RATE_UPSERTED: "catalog.fertilizer_rate_upserted",
+  CATALOG_PEST_CREATED: "catalog.pest_created",
+  CATALOG_PEST_UPDATED: "catalog.pest_updated",
+  CATALOG_CHEMICAL_CREATED: "catalog.chemical_created",
+  CATALOG_CHEMICAL_UPDATED: "catalog.chemical_updated",
+  CATALOG_CHEMICAL_RETIRED: "catalog.chemical_retired",
 } as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS] | (string & {});

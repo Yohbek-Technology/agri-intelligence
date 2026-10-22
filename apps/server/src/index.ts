@@ -14,11 +14,15 @@ import { plotsRouter } from '@/routes/plots.js'
 import { cropCyclesRouter } from '@/routes/crop-cycles.js'
 import { daTasksRouter } from '@/routes/da-tasks.js'
 import { diagnosticsRouter } from '@/routes/diagnostics.js'
-import { catalogRouter } from '@/routes/catalog.js'
+// import { catalogRouter } from '@/routes/catalog.js'
 import { yieldGapRouter } from '@/routes/yield-gap.js'
 import { weatherRouter } from '@/routes/weather.js'
 import { grievancesRouter } from '@/routes/grievances.js'
 import { syncRouter, devicesRouter, appVersionRouter } from '@/routes/sync.js'
+import { kebelesPublicRouter, officeKebeleRouter } from '@/routes/kebele.js'
+import { staffRouter } from '@/routes/staff.js'
+import { catalogPublicRouter, officeCatalogRouter } from '@/routes/catalog.js'
+import { auditRouter } from '@/routes/audit.js'
 import { pool } from '@/config/db.js'
 
 const app = new Hono()
@@ -59,13 +63,27 @@ app.route('/api/v1/plots', plotsRouter)
 app.route('/api/v1/cycles', cropCyclesRouter)
 app.route('/api/v1/da/tasks', daTasksRouter)
 app.route('/api/v1/diagnoses', diagnosticsRouter)
-app.route('/api/v1/catalog', catalogRouter)
+// app.route('/api/v1/catalog', catalogRouter)
 app.route('/api/v1/yield-gap', yieldGapRouter)
 app.route('/api/v1/weather', weatherRouter)
 app.route('/api/v1/grievances', grievancesRouter)
 app.route('/api/v1/sync', syncRouter)
 app.route('/api/v1/devices', devicesRouter)
 app.route('/api/v1/app', appVersionRouter)
+
+// Kebele public reads
+app.route('/api/v1/kebeles', kebelesPublicRouter)
+
+// Catalog public reads
+app.route('/api/v1/catalog', catalogPublicRouter)
+
+// Office management router (officer-only writes)
+const officeManagementRouter = new Hono()
+officeManagementRouter.route('/kebeles', officeKebeleRouter)
+officeManagementRouter.route('/users', staffRouter)
+officeManagementRouter.route('/catalog', officeCatalogRouter)
+officeManagementRouter.route('/audit-logs', auditRouter)
+app.route('/api/v1/office', officeManagementRouter)
 
 app.get('/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOString() }))
 app.get('/', (c) => c.text('Agricultural Intelligence API is operational'))
