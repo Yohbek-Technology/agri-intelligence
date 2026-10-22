@@ -136,7 +136,7 @@ export function DataTable<TData>({
                 {hg.headers.map((header) => (
                   <th
                     key={header.id}
-                    className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wider whitespace-nowrap"
+                    className="px-3 sm:px-4 py-2.5 sm:py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wider whitespace-nowrap"
                     style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
                   >
                     {header.isPlaceholder ? null : (
@@ -186,7 +186,7 @@ export function DataTable<TData>({
                   onClick={onRowClick ? () => onRowClick(row.original) : undefined}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-4 py-3 text-text-primary whitespace-nowrap">
+                    <td key={cell.id} className="px-3 sm:px-4 py-2.5 sm:py-3 text-text-primary whitespace-nowrap">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>
                   ))}
@@ -199,7 +199,7 @@ export function DataTable<TData>({
 
       {/* Pagination */}
       {enablePagination && (
-        <div className="flex items-center justify-between px-5 py-3" style={{ borderTop: UI_BORDER }}>
+        <div className="flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3" style={{ borderTop: UI_BORDER }}>
           <span className="text-xs text-text-faint">
             Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount() || 1}
           </span>

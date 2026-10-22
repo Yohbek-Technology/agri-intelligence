@@ -236,13 +236,12 @@ export default function SettingsPage() {
         </ParameterSection>
       ))}
 
-      {/* Save bar — fixed at bottom of screen, positioned to the right of the sidebar, visible at all times */}
+      {/* Save bar — fixed at bottom of screen, positioned to the right of the sidebar on desktop, full width on mobile */}
       <div
-        className="fixed bottom-0 right-0 z-20 bg-surface/95 backdrop-blur-md px-2.5 sm:px-6 py-2.5 sm:py-3.5 space-y-2 transition-[left] duration-[230ms] ease-in-out"
+        className="fixed bottom-0 left-0 lg:left-[var(--sidebar-w,260px)] right-0 z-40 bg-surface/98 backdrop-blur-md px-3 sm:px-6 py-2.5 sm:py-3.5 space-y-2 transition-[left] duration-[230ms] ease-in-out"
         style={{
-          left: 'var(--sidebar-w, 0px)',
           borderTop: UI_BORDER,
-          boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.04)',
+          boxShadow: '0 -4px 14px rgba(0, 0, 0, 0.08)',
         }}
       >
         {generalError && <Notice type="error" message={generalError} />}
@@ -251,11 +250,11 @@ export default function SettingsPage() {
             key={isDirty ? 'dirty' : 'clean'}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className={`text-xs font-mono font-medium truncate max-w-[130px] sm:max-w-none ${isDirty ? 'text-accent' : 'text-text-faint'}`}
+            className={`text-xs font-mono font-medium truncate shrink min-w-0 ${isDirty ? 'text-accent' : 'text-text-faint'}`}
           >
             {isDirty ? t('settings_unsaved') : t('settings_saved')}
           </motion.p>
-          <div className="flex gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <Button
               variant="ghost"
               size="sm"

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslations } from 'next-intl'
 import { useCatalogPage, type CatalogTab as Tab } from '@/hooks/useCatalog'
 import { DataTable } from '@/components/ui/dataTable'
-import { TableSkeleton } from '@/components/ui/skeleton'
+import { TableSkeleton, ListSkeleton } from '@/components/ui/skeleton'
 import type { ColumnDef } from '@tanstack/react-table'
 import type {
   CropRow,
@@ -310,15 +310,15 @@ export default function CatalogPage() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="flex items-center gap-3 overflow-hidden"
+            className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3"
           >
-            <label className="text-sm font-medium text-text-primary whitespace-nowrap">
+            <label className="text-xs sm:text-sm font-medium text-text-primary whitespace-nowrap">
               {t('catalog_filter_crop')}
             </label>
             <select
               value={selectedCropId}
               onChange={(e) => setSelectedCropId(e.target.value)}
-              className="text-sm rounded-lg px-3 py-2 bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
+              className="text-sm rounded-lg px-3 py-2 bg-surface text-text-primary w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-primary/15"
               style={{ border: UI_BORDER }}
             >
               <option value="">{t('catalog_all_crops')}</option>
@@ -330,7 +330,7 @@ export default function CatalogPage() {
         )}
       </AnimatePresence>
 
-      {/* Table — animated tab switch */}
+      {/* Content — animated tab switch */}
       <AnimatePresence mode="wait">
         <motion.div
           key={activeTab}
@@ -340,37 +340,254 @@ export default function CatalogPage() {
           transition={{ duration: 0.2 }}
         >
           {isLoading ? (
-            <TableSkeleton rows={7} cols={5} />
+            <>
+              <div className="sm:hidden">
+                <ListSkeleton rows={5} />
+              </div>
+              <div className="hidden sm:block">
+                <TableSkeleton rows={7} cols={5} />
+              </div>
+            </>
           ) : activeTab === 'crops' ? (
-            <DataTable<CropRow>
-              columns={cropColumns}
-              data={cropList}
-              emptyMessage={t('catalog_no_crops')}
-            />
+            <>
+              {/* Mobile card list */}
+              <div className="space-y-2.5 sm:hidden">
+                {cropList.length === 0 ? (
+                  <div className="bg-surface rounded-xl p-8 text-center text-sm text-text-muted" style={{ border: UI_BORDER }}>
+                    {t('catalog_no_crops')}
+                  </div>
+                ) : (
+                  cropList.map((c) => (
+                    <div
+                      key={c.id}
+                      className="bg-surface rounded-xl p-3.5 space-y-2 shadow-sm"
+                      style={{ border: UI_BORDER }}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-semibold text-sm text-text-primary">{c.nameEn}</span>
+                        <StatusBadge status={c.status} />
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-text-muted pt-1 border-t border-border-ui/50">
+                        <span className="font-mono bg-surface-subtle px-2 py-0.5 rounded text-[11px]" style={{ border: UI_BORDER }}>
+                          {c.code}
+                        </span>
+                        <span>
+                          {t('catalog_col_max_yield')}: <strong className="font-mono text-text-primary">{c.maxPlausibleYieldQtPerHa}</strong> qt/ha
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Desktop table */}
+              <div className="hidden sm:block">
+                <DataTable<CropRow>
+                  columns={cropColumns}
+                  data={cropList}
+                  emptyMessage={t('catalog_no_crops')}
+                />
+              </div>
+            </>
           ) : activeTab === 'varieties' ? (
-            <DataTable<VarietyRow>
-              columns={varietyColumns}
-              data={varietyList}
-              emptyMessage={t('catalog_no_varieties')}
-            />
+            <>
+              {/* Mobile card list */}
+              <div className="space-y-2.5 sm:hidden">
+                {varietyList.length === 0 ? (
+                  <div className="bg-surface rounded-xl p-8 text-center text-sm text-text-muted" style={{ border: UI_BORDER }}>
+                    {t('catalog_no_varieties')}
+                  </div>
+                ) : (
+                  varietyList.map((v) => (
+                    <div
+                      key={v.id}
+                      className="bg-surface rounded-xl p-3.5 space-y-2 shadow-sm"
+                      style={{ border: UI_BORDER }}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-semibold text-sm text-text-primary">{v.name}</span>
+                        <StatusBadge status={v.status} />
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-text-muted pt-1 border-t border-border-ui/50">
+                        <span className={`text-xs font-medium ${v.isCertified ? 'text-success' : 'text-text-faint'}`}>
+                          {v.isCertified ? t('catalog_certified') : t('catalog_local')}
+                        </span>
+                        <span className="truncate max-w-[190px] text-right font-mono text-[11px]">
+                          {v.permittedZones.join(', ')}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Desktop table */}
+              <div className="hidden sm:block">
+                <DataTable<VarietyRow>
+                  columns={varietyColumns}
+                  data={varietyList}
+                  emptyMessage={t('catalog_no_varieties')}
+                />
+              </div>
+            </>
           ) : activeTab === 'fertilizer' ? (
-            <DataTable<FertilizerRateRow>
-              columns={rateColumns}
-              data={rateList}
-              emptyMessage={t('catalog_no_rates')}
-            />
+            <>
+              {/* Mobile card list */}
+              <div className="space-y-2.5 sm:hidden">
+                {rateList.length === 0 ? (
+                  <div className="bg-surface rounded-xl p-8 text-center text-sm text-text-muted" style={{ border: UI_BORDER }}>
+                    {t('catalog_no_rates')}
+                  </div>
+                ) : (
+                  rateList.map((r) => {
+                    const cropName = cropList.find((c) => c.id === r.cropId)?.nameEn ?? r.cropId
+                    return (
+                      <div
+                        key={r.id}
+                        className="bg-surface rounded-xl p-3.5 space-y-2.5 shadow-sm"
+                        style={{ border: UI_BORDER }}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-semibold text-sm text-text-primary">{cropName}</span>
+                          <span className="font-mono text-xs text-text-faint bg-surface-subtle px-1.5 py-0.5 rounded" style={{ border: UI_BORDER }}>
+                            v{r.ratesVersion}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 bg-surface-subtle p-2 rounded-lg text-center text-xs" style={{ border: UI_BORDER }}>
+                          <div>
+                            <div className="text-[10px] text-text-muted uppercase font-medium">{t('catalog_col_urea')}</div>
+                            <div className="font-mono font-bold text-text-primary mt-0.5">{r.ureaKgPerHa} <span className="text-[9px] font-normal text-text-muted">kg/ha</span></div>
+                          </div>
+                          <div>
+                            <div className="text-[10px] text-text-muted uppercase font-medium">{t('catalog_col_nps')}</div>
+                            <div className="font-mono font-bold text-text-primary mt-0.5">{r.npsKgPerHa} <span className="text-[9px] font-normal text-text-muted">kg/ha</span></div>
+                          </div>
+                          <div>
+                            <div className="text-[10px] text-text-muted uppercase font-medium">{t('catalog_col_seed')}</div>
+                            <div className="font-mono font-bold text-text-primary mt-0.5">{r.seedKgPerHa} <span className="text-[9px] font-normal text-text-muted">kg/ha</span></div>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-text-muted">
+                          <span className="capitalize">{r.agroZone.replace('_', ' ')}</span>
+                          <span className="font-mono text-[11px] text-text-faint">{r.effectiveFrom}</span>
+                        </div>
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+
+              {/* Desktop table */}
+              <div className="hidden sm:block">
+                <DataTable<FertilizerRateRow>
+                  columns={rateColumns}
+                  data={rateList}
+                  emptyMessage={t('catalog_no_rates')}
+                />
+              </div>
+            </>
           ) : activeTab === 'pests' ? (
-            <DataTable<PestRow>
-              columns={pestColumns}
-              data={pestList}
-              emptyMessage={t('catalog_no_pests')}
-            />
+            <>
+              {/* Mobile card list */}
+              <div className="space-y-2.5 sm:hidden">
+                {pestList.length === 0 ? (
+                  <div className="bg-surface rounded-xl p-8 text-center text-sm text-text-muted" style={{ border: UI_BORDER }}>
+                    {t('catalog_no_pests')}
+                  </div>
+                ) : (
+                  pestList.map((p) => {
+                    const pestName = typeof p.name === 'object' && p.name !== null
+                      ? (p.name as Record<string, string>).en ?? ''
+                      : String(p.name)
+                    return (
+                      <div
+                        key={p.id}
+                        className="bg-surface rounded-xl p-3.5 space-y-2 shadow-sm"
+                        style={{ border: UI_BORDER }}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-semibold text-sm text-text-primary">{pestName}</span>
+                            <span className="font-mono text-[10px] bg-surface-subtle px-1.5 py-0.5 rounded text-text-muted" style={{ border: UI_BORDER }}>
+                              {p.code}
+                            </span>
+                          </div>
+                          <StatusBadge status={p.status} />
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-text-muted pt-1 border-t border-border-ui/50">
+                          <span className="capitalize">{p.kind}</span>
+                          {p.isQuarantinePest && (
+                            <span className="text-xs font-medium text-danger bg-danger-light px-2 py-0.5 rounded-full" style={{ border: UI_BORDER }}>
+                              {t('catalog_quarantine_badge')}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+
+              {/* Desktop table */}
+              <div className="hidden sm:block">
+                <DataTable<PestRow>
+                  columns={pestColumns}
+                  data={pestList}
+                  emptyMessage={t('catalog_no_pests')}
+                />
+              </div>
+            </>
           ) : (
-            <DataTable<ChemicalRow>
-              columns={chemicalColumns}
-              data={chemicalList}
-              emptyMessage={t('catalog_no_chemicals')}
-            />
+            <>
+              {/* Mobile card list */}
+              <div className="space-y-2.5 sm:hidden">
+                {chemicalList.length === 0 ? (
+                  <div className="bg-surface rounded-xl p-8 text-center text-sm text-text-muted" style={{ border: UI_BORDER }}>
+                    {t('catalog_no_chemicals')}
+                  </div>
+                ) : (
+                  chemicalList.map((c) => (
+                    <div
+                      key={c.id}
+                      className="bg-surface rounded-xl p-3.5 space-y-2.5 shadow-sm"
+                      style={{ border: UI_BORDER }}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-semibold text-sm text-text-primary">{c.brandName}</span>
+                        <StatusBadge status={c.status} />
+                      </div>
+                      <div className="text-xs text-text-muted">
+                        <span className="font-medium text-text-primary">{c.activeIngredient}</span> · <span className="capitalize">{c.category}</span>
+                      </div>
+                      <div className="flex items-center justify-between pt-1.5 border-t border-border-ui/50 text-xs">
+                        <span className="text-text-muted">
+                          {t('catalog_col_phi')}: <strong className="font-mono text-text-primary">{c.safetyIntervalDays}d</strong>
+                        </span>
+                        {c.status === 'active' && (
+                          <button
+                            type="button"
+                            onClick={() => setRetireTarget(c.id)}
+                            className="text-xs font-semibold text-danger hover:underline cursor-pointer px-2 py-1 rounded bg-danger-light"
+                            style={{ border: UI_BORDER }}
+                          >
+                            {t('catalog_retire')}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Desktop table */}
+              <div className="hidden sm:block">
+                <DataTable<ChemicalRow>
+                  columns={chemicalColumns}
+                  data={chemicalList}
+                  emptyMessage={t('catalog_no_chemicals')}
+                />
+              </div>
+            </>
           )}
         </motion.div>
       </AnimatePresence>
