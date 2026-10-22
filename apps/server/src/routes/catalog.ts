@@ -5,7 +5,7 @@ import {
   listVarieties, createVariety, updateVariety,
   listFertilizerRates, upsertFertilizerRate,
   listPests, createPest, updatePest,
-  listChemicals, createChemical, updateChemical, retireChemical,
+  listChemicals, createChemical, updateChemical, retireChemical, unretireChemical,
 } from '@/services/catalog.js'
 import {
   createCropSchema, updateCropSchema,
@@ -226,6 +226,15 @@ officeCatalogRouter.post('/chemicals/:id/retire', async (c) => {
   if (!user.cityOfficeId) return c.json({ error: { code: 'forbidden', message: 'No office assigned.' } }, 403)
   const id = c.req.param('id')
   const chemical = await retireChemical(id, user.cityOfficeId, user.id)
+  if (!chemical) return c.json({ error: { code: 'not_found', message: 'Chemical not found.' } }, 404)
+  return c.json({ data: chemical })
+})
+
+officeCatalogRouter.post('/chemicals/:id/unretire', async (c) => {
+  const user = c.get('user')
+  if (!user.cityOfficeId) return c.json({ error: { code: 'forbidden', message: 'No office assigned.' } }, 403)
+  const id = c.req.param('id')
+  const chemical = await unretireChemical(id, user.cityOfficeId, user.id)
   if (!chemical) return c.json({ error: { code: 'not_found', message: 'Chemical not found.' } }, 404)
   return c.json({ data: chemical })
 })

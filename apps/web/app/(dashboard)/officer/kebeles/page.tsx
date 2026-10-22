@@ -14,6 +14,7 @@ import {
   useUpdateStaff,
   useDeactivateStaff,
   useReactivateStaff,
+  useRestoreKebele,
 } from '@/hooks/useKebeles'
 import { KebeleDrawer } from '@/components/officer/KebeleDrawer'
 import { StaffDrawer }  from '@/components/officer/StaffDrawer'
@@ -63,6 +64,7 @@ export default function TerritoryStaffPage() {
   const updateStaff = useUpdateStaff()
   const deactivate  = useDeactivateStaff()
   const reactivate  = useReactivateStaff()
+  const restoreKeb  = useRestoreKebele()
 
   const kebeles   = kebelesQ.data ?? []
   const staffList = staffQ.data   ?? []
@@ -98,22 +100,13 @@ export default function TerritoryStaffPage() {
             onUndo: () => {
               undid = true
               if (snapshot) qc.setQueryData(['kebeles'], snapshot)
-              createKeb.mutate(
-                {
-                  name: row.name,
-                  ...(row.centroidLatitude && row.centroidLongitude
-                    ? {
-                        centroidLatitude:  parseFloat(row.centroidLatitude),
-                        centroidLongitude: parseFloat(row.centroidLongitude),
-                        ...(row.radiusMeters ? { radiusMeters: row.radiusMeters } : {}),
-                      }
-                    : { boundary: row.boundary }),
-                } as CreateKebeleInput,
-                {
-                  onSuccess: () => showSuccessToast('Kebele restored'),
-                  onError: () => { void qc.invalidateQueries({ queryKey: ['kebeles'] }); showErrorToast('Could not restore kebele') },
+              restoreKeb.mutate(row.id, {
+                onSuccess: () => showSuccessToast('Kebele restored'),
+                onError: (err) => {
+                  void qc.invalidateQueries({ queryKey: ['kebeles'] })
+                  showErrorToast(err instanceof Error ? err.message : 'Could not restore kebele')
                 },
-              )
+              })
             },
           })
         }
@@ -135,6 +128,7 @@ export default function TerritoryStaffPage() {
       setStaffDrawer({ open: false })
     } catch (err) {
       showErrorToast(err instanceof Error ? err.message : 'Failed to save staff')
+      throw err
     }
   }
 

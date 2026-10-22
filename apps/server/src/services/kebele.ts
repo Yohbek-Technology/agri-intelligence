@@ -113,3 +113,17 @@ export async function deleteKebele(
 
   return { success: true }
 }
+
+export async function restoreKebele(
+  id: string,
+  cityOfficeId: string
+): Promise<KebeleRow | null> {
+  const [row] = await db
+    .update(kebeles)
+    .set({ deletedAt: null, updatedAt: new Date() })
+    .where(and(eq(kebeles.id, id), eq(kebeles.cityOfficeId, cityOfficeId)))
+    .returning()
+
+  if (!row) return null
+  return rowToKebeleRow(row)
+}

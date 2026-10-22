@@ -517,3 +517,28 @@ export async function retireChemical(
 
   return rowToChemicalRow(row)
 }
+
+export async function unretireChemical(
+  id: string,
+  cityOfficeId: string,
+  actorUserId: string
+): Promise<ChemicalRow | null> {
+  const [row] = await db
+    .update(registeredChemicals)
+    .set({ status: 'active', effectiveTo: null, updatedAt: new Date() })
+    .where(and(eq(registeredChemicals.id, id), eq(registeredChemicals.cityOfficeId, cityOfficeId)))
+    .returning()
+
+  if (!row) return null
+
+  await db.insert(auditLogs).values({
+    cityOfficeId,
+    actorUserId,
+    action:      'catalog.chemical_unretired',
+    entityType:  'registered_chemical',
+    entityId:    id,
+    changesJson: { status: 'active', effectiveTo: null },
+  })
+
+  return rowToChemicalRow(row)
+}

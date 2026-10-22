@@ -33,8 +33,11 @@ export function useOfficeConfig() {
 export function useUpdateOfficeParams() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (body: { defaultLanguage?: string; parameters?: OfficeParametersUpdate }) =>
-      officerService.updateOfficeParams(body),
+    mutationFn: async (body: { defaultLanguage?: string; parameters?: OfficeParametersUpdate }) => {
+      const res = await officerService.updateOfficeParams(body)
+      if (!res.success) throw new Error(res.error ?? 'Failed to update office parameters')
+      return res.data!
+    },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['office'] })
     },
@@ -112,16 +115,12 @@ export function useOfficeParamsForm() {
         if (path && !errors[path]) errors[path] = issue.message
       }
       setFieldErrors(errors)
-      return
+      throw new Error('Please fix validation errors before saving.')
     }
 
-    const result = await mutation.mutateAsync({ parameters: parsed.data })
-    if (!result.success) {
-      setGeneralError(result.error ?? 'Failed to save settings.')
-    } else {
-      setGeneralError(null)
-      setInitialValues(formValues)
-    }
+    await mutation.mutateAsync({ parameters: parsed.data })
+    setGeneralError(null)
+    setInitialValues(formValues)
   }, [formValues, mutation])
 
   const handleReset = useCallback(() => {
@@ -130,8 +129,19 @@ export function useOfficeParamsForm() {
     setGeneralError(null)
   }, [initialValues])
 
+  const handleUndo = useCallback(async (previousValues: OfficeParametersUpdate) => {
+    const parsed = officeParametersUpdateSchema.safeParse(previousValues)
+    if (!parsed.success) return
+    await mutation.mutateAsync({ parameters: parsed.data })
+    setFormValues(previousValues)
+    setInitialValues(previousValues)
+    setFieldErrors({})
+    setGeneralError(null)
+  }, [mutation])
+
   return {
     formValues,
+    initialValues,
     setField,
     isDirty,
     isSubmitting: mutation.isPending,
@@ -139,5 +149,6 @@ export function useOfficeParamsForm() {
     fieldErrors,
     handleSubmit,
     handleReset,
+    handleUndo,
   }
 }

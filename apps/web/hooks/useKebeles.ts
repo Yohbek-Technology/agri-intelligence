@@ -28,7 +28,11 @@ export function useKebeles() {
 export function useCreateKebele() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (body: CreateKebeleInput) => officerService.createKebele(body),
+    mutationFn: async (body: CreateKebeleInput) => {
+      const res = await officerService.createKebele(body)
+      if (!res.success) throw new Error(res.error ?? 'Failed to create kebele')
+      return res.data!
+    },
     onSuccess: () => void qc.invalidateQueries({ queryKey: ['kebeles'] }),
   })
 }
@@ -36,8 +40,11 @@ export function useCreateKebele() {
 export function useUpdateKebele() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, body }: { id: string; body: UpdateKebeleInput }) =>
-      officerService.updateKebele(id, body),
+    mutationFn: async ({ id, body }: { id: string; body: UpdateKebeleInput }) => {
+      const res = await officerService.updateKebele(id, body)
+      if (!res.success) throw new Error(res.error ?? 'Failed to update kebele')
+      return res.data!
+    },
     onMutate: async ({ id, body }) => {
       await qc.cancelQueries({ queryKey: ['kebeles'] })
       const prev = qc.getQueryData<KebeleRow[]>(['kebeles'])
@@ -56,7 +63,11 @@ export function useUpdateKebele() {
 export function useDeleteKebele() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => officerService.deleteKebele(id),
+    mutationFn: async (id: string) => {
+      const res = await officerService.deleteKebele(id)
+      if (!res.success) throw new Error(res.error ?? 'Failed to delete kebele')
+      return res.data
+    },
     // Optimistic: remove from cache immediately so UI is instant
     onMutate: async (id) => {
       await qc.cancelQueries({ queryKey: ['kebeles'] })
@@ -66,6 +77,25 @@ export function useDeleteKebele() {
     },
     onError: (_err, _vars, ctx) => {
       if (ctx?.prev) qc.setQueryData(['kebeles'], ctx.prev)
+    },
+    onSettled: () => void qc.invalidateQueries({ queryKey: ['kebeles'] }),
+  })
+}
+
+/** Restore a soft-deleted kebele (undo delete) */
+export function useRestoreKebele() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await officerService.restoreKebele(id)
+      if (!res.success) throw new Error(res.error ?? 'Failed to restore kebele')
+      return res.data!
+    },
+    onMutate: async () => {
+      await qc.cancelQueries({ queryKey: ['kebeles'] })
+    },
+    onError: (_err, _vars, ctx) => {
+      void qc.invalidateQueries({ queryKey: ['kebeles'] })
     },
     onSettled: () => void qc.invalidateQueries({ queryKey: ['kebeles'] }),
   })
@@ -88,7 +118,11 @@ export function useStaff() {
 export function useCreateStaff() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (body: CreateStaffInput) => officerService.createStaff(body),
+    mutationFn: async (body: CreateStaffInput) => {
+      const res = await officerService.createStaff(body)
+      if (!res.success) throw new Error(res.error ?? 'Failed to create staff member')
+      return res.data!
+    },
     onSuccess: () => void qc.invalidateQueries({ queryKey: ['staff'] }),
   })
 }
@@ -96,8 +130,11 @@ export function useCreateStaff() {
 export function useUpdateStaff() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, body }: { id: string; body: UpdateStaffInput }) =>
-      officerService.updateStaff(id, body),
+    mutationFn: async ({ id, body }: { id: string; body: UpdateStaffInput }) => {
+      const res = await officerService.updateStaff(id, body)
+      if (!res.success) throw new Error(res.error ?? 'Failed to update staff member')
+      return res.data!
+    },
     onMutate: async ({ id, body }) => {
       await qc.cancelQueries({ queryKey: ['staff'] })
       const prev = qc.getQueryData<StaffRow[]>(['staff'])
@@ -116,7 +153,11 @@ export function useUpdateStaff() {
 export function useDeactivateStaff() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => officerService.deactivateStaff(id),
+    mutationFn: async (id: string) => {
+      const res = await officerService.deactivateStaff(id)
+      if (!res.success) throw new Error(res.error ?? 'Failed to deactivate staff member')
+      return res.data
+    },
     // Optimistic: mark as banned immediately
     onMutate: async (id) => {
       await qc.cancelQueries({ queryKey: ['staff'] })
@@ -137,7 +178,11 @@ export function useDeactivateStaff() {
 export function useReactivateStaff() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => officerService.reactivateStaff(id),
+    mutationFn: async (id: string) => {
+      const res = await officerService.reactivateStaff(id)
+      if (!res.success) throw new Error(res.error ?? 'Failed to reactivate staff member')
+      return res.data
+    },
     onMutate: async (id) => {
       await qc.cancelQueries({ queryKey: ['staff'] })
       const prev = qc.getQueryData<StaffRow[]>(['staff'])

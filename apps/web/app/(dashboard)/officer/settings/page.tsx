@@ -86,20 +86,25 @@ export default function SettingsPage() {
   const t = useTranslations('OfficerPages')
   const { data: office, isLoading } = useOfficeSummary()
   const {
-    formValues, setField, isDirty, isSubmitting,
-    generalError, fieldErrors, handleSubmit, handleReset,
+    formValues, initialValues, setField, isDirty, isSubmitting,
+    generalError, fieldErrors, handleSubmit, handleReset, handleUndo,
   } = useOfficeParamsForm()
 
   const fe = fieldErrors as Partial<Record<keyof OfficeParametersUpdate, string>>
 
   async function handleSave() {
+    const prevSnapshot = { ...initialValues }
     try {
       await handleSubmit()
       showSuccessToast(t('toast_settings_saved'), {
         label: t('undo'),
-        onUndo: () => {
-          handleReset()
-          showSuccessToast('Settings reverted to last saved values')
+        onUndo: async () => {
+          try {
+            await handleUndo(prevSnapshot)
+            showSuccessToast('Settings reverted to last saved values')
+          } catch (err) {
+            showErrorToast(err instanceof Error ? err.message : 'Failed to revert settings')
+          }
         },
       })
     } catch (err) {

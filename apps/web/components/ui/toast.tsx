@@ -26,6 +26,8 @@ export function Toaster() {
           error: 'border-danger',
           warning: 'border-accent',
           info: 'border-officer-accent',
+          actionButton: '!bg-officer-accent !text-white !font-medium !px-3 !py-1 !rounded-lg !border !border-officer-accent hover:!opacity-90 transition-opacity text-xs',
+          cancelButton: '!bg-surface-subtle !text-text-primary',
         },
       }}
     />

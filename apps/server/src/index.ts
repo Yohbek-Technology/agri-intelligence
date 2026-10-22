@@ -6,7 +6,7 @@ import { auth } from '@/config/auth.js'
 import { pool } from '@/config/db.js'
 import { officeRouter } from '@/routes/office.js'
 import { authExtraRouter } from '@/routes/auth-extra.js'
-import { mobileAuthRouter } from '@/routes/mobile-auth.js'
+
 import { kebelesPublicRouter, officeKebeleRouter } from '@/routes/kebele.js'
 import { staffRouter } from '@/routes/staff.js'
 import { catalogPublicRouter, officeCatalogRouter } from '@/routes/catalog.js'
@@ -35,10 +35,6 @@ app.use(
     credentials: true,
   }),
 )
-
-// ── Auth ──────────────────────────────────────────────────────────────────────
-// Mobile/web auth adapter (sign-in, sign-up, OTP, password reset, session, sign-out)
-app.route('/api/auth', mobileAuthRouter)
 
 // Better Auth core handler fallback
 app.on(['POST', 'GET'], '/api/auth/*', (c) => auth.handler(c.req.raw))

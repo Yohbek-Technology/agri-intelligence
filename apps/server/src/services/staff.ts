@@ -120,6 +120,7 @@ export async function createStaff(
           gt(verifications.expiresAt, new Date())
         )
       )
+      .orderBy(sql`${verifications.createdAt} DESC`)
       .limit(1)
 
     if (!verif) {
@@ -147,17 +148,30 @@ export async function createStaff(
   const placeholderEmail = `staff-${crypto.randomUUID()}@internal.agri.invalid`
 
   // Use Better Auth to create user + credential account with hashed password
-  const signUpResult = await auth.api.signUpEmail({
-    body: {
-      name:        data.name,
-      email:       placeholderEmail,
-      password:    data.password,
-      phoneNumber: data.phoneNumber,
-    },
-  })
+  let signUpResult: any
+  try {
+    signUpResult = await auth.api.signUpEmail({
+      body: {
+        name:        data.name,
+        email:       placeholderEmail,
+        password:    data.password,
+        phoneNumber: data.phoneNumber,
+      },
+    })
+  } catch (err: any) {
+    return {
+      row: undefined as unknown as StaffRow,
+      error: 'signup_failed',
+      message: err?.message || 'Failed to create staff user account.',
+    }
+  }
 
   if (!signUpResult?.user) {
-    throw new Error('Failed to create staff user via Better Auth.')
+    return {
+      row: undefined as unknown as StaffRow,
+      error: 'signup_failed',
+      message: 'Failed to create staff user via Better Auth.',
+    }
   }
 
   const newUserId = signUpResult.user.id

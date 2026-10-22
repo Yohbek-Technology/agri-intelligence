@@ -11,6 +11,7 @@ import {
   usePests,
   useChemicals,
   useRetireChemical,
+  useUnretireChemical,
 } from '@/hooks/useCatalog'
 import { DataTable } from '@/components/ui/dataTable'
 import { TableSkeleton } from '@/components/ui/skeleton'
@@ -53,8 +54,9 @@ export default function CatalogPage() {
   const varietiesQ = useVarieties(selectedCropId || undefined)
   const ratesQ    = useFertilizerRates()
   const pestsQ    = usePests()
-  const chemicalsQ = useChemicals()
-  const retireMut  = useRetireChemical()
+  const chemicalsQ  = useChemicals()
+  const retireMut   = useRetireChemical()
+  const unretireMut = useUnretireChemical()
 
   const cropList     = (cropsQ.data     ?? []) as CropRow[]
   const varietyList  = (varietiesQ.data ?? []) as VarietyRow[]
@@ -290,14 +292,14 @@ export default function CatalogPage() {
             label: t('undo'),
             onUndo: () => {
               undid = true
-              // Restore immediately from snapshot
               if (snapshot) qc.setQueryData(['catalog', 'chemicals'], snapshot)
-              // Re-activate via update (set status back to active)
-              // The backend route for unretire would be PATCH with status: active
-              // For now restore cache and refetch — real implementation needs a
-              // dedicated API endpoint
-              qc.invalidateQueries({ queryKey: ['catalog', 'chemicals'] })
-              showSuccessToast('Chemical restored (pending server sync)')
+              unretireMut.mutate(id, {
+                onSuccess: () => showSuccessToast('Chemical restored'),
+                onError: (err) => {
+                  void qc.invalidateQueries({ queryKey: ['catalog', 'chemicals'] })
+                  showErrorToast(err instanceof Error ? err.message : 'Could not restore chemical')
+                },
+              })
             },
           })
         }

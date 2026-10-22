@@ -87,6 +87,10 @@ export const officerService = {
     return apiFetch<void>(`/api/v1/office/kebeles/${id}`, { method: 'DELETE' })
   },
 
+  restoreKebele(id: string): Promise<ServiceResult<KebeleRow>> {
+    return apiFetch<KebeleRow>(`/api/v1/office/kebeles/${id}/restore`, { method: 'POST' })
+  },
+
   // ---- Staff ----
   listStaff(): Promise<ServiceResult<StaffRow[]>> {
     return apiFetch<StaffRow[]>('/api/v1/office/users')
@@ -205,6 +209,10 @@ export const officerService = {
 
   retireChemical(id: string): Promise<ServiceResult<void>> {
     return apiFetch<void>(`/api/v1/office/catalog/chemicals/${id}/retire`, { method: 'POST' })
+  },
+
+  unretireChemical(id: string): Promise<ServiceResult<ChemicalRow>> {
+    return apiFetch<ChemicalRow>(`/api/v1/office/catalog/chemicals/${id}/unretire`, { method: 'POST' })
   },
 
   // ---- Audit logs ----

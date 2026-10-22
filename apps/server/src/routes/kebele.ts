@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { sessionGuard, tenantGuard, requireAdminOrOfficer, assertTenantMatch } from '@/middlewares/index.js'
-import { listKebeles, createKebele, updateKebele, deleteKebele } from '@/services/kebele.js'
+import { listKebeles, createKebele, updateKebele, deleteKebele, restoreKebele } from '@/services/kebele.js'
 import { createKebeleSchema, updateKebeleSchema } from '@repo/shared'
 
 // Public (any authenticated staff) — read-only
@@ -89,4 +89,19 @@ officeKebeleRouter.delete('/:id', async (c) => {
   }
 
   return c.json({ data: { success: true } })
+})
+
+officeKebeleRouter.post('/:id/restore', async (c) => {
+  const user = c.get('user')
+  if (!user.cityOfficeId) {
+    return c.json({ error: { code: 'forbidden', message: 'No city office assigned.' } }, 403)
+  }
+
+  const id = c.req.param('id')
+  const restored = await restoreKebele(id, user.cityOfficeId)
+  if (!restored) {
+    return c.json({ error: { code: 'not_found', message: 'Kebele not found.' } }, 404)
+  }
+
+  return c.json({ data: restored })
 })

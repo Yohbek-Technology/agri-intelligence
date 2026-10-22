@@ -30,7 +30,11 @@ export function useCrops() {
 export function useCreateCrop() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (body: CreateCropInput) => officerService.createCrop(body),
+    mutationFn: async (body: CreateCropInput) => {
+      const res = await officerService.createCrop(body)
+      if (!res.success) throw new Error(res.error ?? 'Failed to create crop')
+      return res.data!
+    },
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['catalog', 'crops'] }),
   })
 }
@@ -38,8 +42,11 @@ export function useCreateCrop() {
 export function useUpdateCrop() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, body }: { id: string; body: UpdateCropInput }) =>
-      officerService.updateCrop(id, body),
+    mutationFn: async ({ id, body }: { id: string; body: UpdateCropInput }) => {
+      const res = await officerService.updateCrop(id, body)
+      if (!res.success) throw new Error(res.error ?? 'Failed to update crop')
+      return res.data!
+    },
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['catalog', 'crops'] }),
   })
 }
@@ -59,7 +66,11 @@ export function useVarieties(cropId?: string) {
 export function useCreateVariety() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (body: CreateVarietyInput) => officerService.createVariety(body),
+    mutationFn: async (body: CreateVarietyInput) => {
+      const res = await officerService.createVariety(body)
+      if (!res.success) throw new Error(res.error ?? 'Failed to create variety')
+      return res.data!
+    },
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['catalog', 'varieties'] }),
   })
 }
@@ -67,8 +78,11 @@ export function useCreateVariety() {
 export function useUpdateVariety() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, body }: { id: string; body: UpdateVarietyInput }) =>
-      officerService.updateVariety(id, body),
+    mutationFn: async ({ id, body }: { id: string; body: UpdateVarietyInput }) => {
+      const res = await officerService.updateVariety(id, body)
+      if (!res.success) throw new Error(res.error ?? 'Failed to update variety')
+      return res.data!
+    },
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['catalog', 'varieties'] }),
   })
 }
@@ -88,7 +102,11 @@ export function useFertilizerRates() {
 export function useUpsertFertilizerRate() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (body: UpsertFertilizerRateInput) => officerService.upsertFertilizerRate(body),
+    mutationFn: async (body: UpsertFertilizerRateInput) => {
+      const res = await officerService.upsertFertilizerRate(body)
+      if (!res.success) throw new Error(res.error ?? 'Failed to save fertilizer rate')
+      return res.data!
+    },
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['catalog', 'fertilizer-rates'] }),
   })
 }
@@ -108,7 +126,11 @@ export function usePests() {
 export function useCreatePest() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (body: CreatePestInput) => officerService.createPest(body),
+    mutationFn: async (body: CreatePestInput) => {
+      const res = await officerService.createPest(body)
+      if (!res.success) throw new Error(res.error ?? 'Failed to create pest')
+      return res.data!
+    },
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['catalog', 'pests'] }),
   })
 }
@@ -116,8 +138,11 @@ export function useCreatePest() {
 export function useUpdatePest() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, body }: { id: string; body: UpdatePestInput }) =>
-      officerService.updatePest(id, body),
+    mutationFn: async ({ id, body }: { id: string; body: UpdatePestInput }) => {
+      const res = await officerService.updatePest(id, body)
+      if (!res.success) throw new Error(res.error ?? 'Failed to update pest')
+      return res.data!
+    },
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['catalog', 'pests'] }),
   })
 }
@@ -137,7 +162,11 @@ export function useChemicals() {
 export function useCreateChemical() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (body: CreateChemicalInput) => officerService.createChemical(body),
+    mutationFn: async (body: CreateChemicalInput) => {
+      const res = await officerService.createChemical(body)
+      if (!res.success) throw new Error(res.error ?? 'Failed to create chemical')
+      return res.data!
+    },
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['catalog', 'chemicals'] }),
   })
 }
@@ -145,8 +174,11 @@ export function useCreateChemical() {
 export function useUpdateChemical() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, body }: { id: string; body: UpdateChemicalInput }) =>
-      officerService.updateChemical(id, body),
+    mutationFn: async ({ id, body }: { id: string; body: UpdateChemicalInput }) => {
+      const res = await officerService.updateChemical(id, body)
+      if (!res.success) throw new Error(res.error ?? 'Failed to update chemical')
+      return res.data!
+    },
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['catalog', 'chemicals'] }),
   })
 }
@@ -154,13 +186,41 @@ export function useUpdateChemical() {
 export function useRetireChemical() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => officerService.retireChemical(id),
+    mutationFn: async (id: string) => {
+      const res = await officerService.retireChemical(id)
+      if (!res.success) throw new Error(res.error ?? 'Failed to retire chemical')
+      return res.data
+    },
     // Optimistic: mark retired immediately in cache
     onMutate: async (id) => {
       await qc.cancelQueries({ queryKey: ['catalog', 'chemicals'] })
       const prev = qc.getQueryData<ChemicalRow[]>(['catalog', 'chemicals'])
       qc.setQueryData<ChemicalRow[]>(['catalog', 'chemicals'], (old) =>
         old?.map((c) => (c.id === id ? { ...c, status: 'retired' as const } : c)) ?? [],
+      )
+      return { prev }
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) qc.setQueryData(['catalog', 'chemicals'], ctx.prev)
+    },
+    onSettled: () => void qc.invalidateQueries({ queryKey: ['catalog', 'chemicals'] }),
+  })
+}
+
+/** Unretire / restore a retired chemical (undo retire) */
+export function useUnretireChemical() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await officerService.unretireChemical(id)
+      if (!res.success) throw new Error(res.error ?? 'Failed to unretire chemical')
+      return res.data!
+    },
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey: ['catalog', 'chemicals'] })
+      const prev = qc.getQueryData<ChemicalRow[]>(['catalog', 'chemicals'])
+      qc.setQueryData<ChemicalRow[]>(['catalog', 'chemicals'], (old) =>
+        old?.map((c) => (c.id === id ? { ...c, status: 'active' as const, effectiveTo: null } : c)) ?? [],
       )
       return { prev }
     },

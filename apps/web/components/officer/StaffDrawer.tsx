@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslations } from 'next-intl'
-import { X, Search, Check, ArrowLeft, ShieldCheck, RefreshCw } from 'lucide-react'
+import { X, ArrowLeft, ShieldCheck, RefreshCw } from 'lucide-react'
 import { createStaffSchema, updateStaffSchema, PhoneUtils } from '@repo/shared'
 import type {
   KebeleRow,
@@ -56,7 +56,6 @@ export function StaffDrawer({
   const [lang, setLang] = useState(initial?.preferredLanguage ?? 'am')
   const [password, setPassword] = useState('')
   const [assignedIds, setAssignedIds] = useState<string[]>(initial?.assignedKebeleIds ?? [])
-  const [kebeleSearch, setKebeleSearch] = useState('')
 
   // OTP Verification state
   const [otpCode, setOtpCode] = useState('')
@@ -83,17 +82,7 @@ export function StaffDrawer({
     return () => clearInterval(timer)
   }, [resendCooldown])
 
-  // Filter kebeles by search
-  const filteredKebeles = useMemo(
-    () => kebeles.filter((k) => k.name.toLowerCase().includes(kebeleSearch.toLowerCase())),
-    [kebeles, kebeleSearch],
-  )
 
-  const toggleKebele = useCallback((id: string) => {
-    setAssignedIds((prev) =>
-      prev.includes(id) ? prev.filter((k) => k !== id) : [...prev, id],
-    )
-  }, [])
 
   // Live username availability check
   const handleUsernameChange = useCallback((val: string) => {
@@ -274,7 +263,11 @@ export function StaffDrawer({
         return
       }
 
-      await onSubmit(parsed.data)
+      try {
+        await onSubmit(parsed.data)
+      } catch (err: any) {
+        setValidationError(err?.message || 'Failed to create staff member.')
+      }
     } else {
       // Edit mode: directly submit update
       const payload: UpdateStaffInput = {
@@ -291,7 +284,11 @@ export function StaffDrawer({
         return
       }
 
-      await onSubmit(parsed.data)
+      try {
+        await onSubmit(parsed.data)
+      } catch (err: any) {
+        setValidationError(err?.message || 'Failed to update staff member.')
+      }
     }
   }, [name, username, phone, otpCode, role, lang, assignedIds, password, mode, onSubmit])
 
@@ -464,89 +461,26 @@ export function StaffDrawer({
                   />
                 )}
 
-                {/* Assigned kebeles */}
+                {/* Assigned kebele */}
                 <AnimatePresence>
                   {role === 'da' && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="space-y-2 overflow-hidden"
                     >
-                      <p className="text-xs font-semibold text-text-primary uppercase tracking-wider font-mono">
-                        {t('staff_assigned_kebeles')}
-                      </p>
-
-                      {/* Selected kebeles chips */}
-                      {assignedIds.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5">
-                          {assignedIds.map((id) => {
-                            const keb = kebeles.find((k) => k.id === id)
-                            if (!keb) return null
-                            return (
-                              <motion.span
-                                key={id}
-                                initial={{ scale: 0.8, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                exit={{ scale: 0.8, opacity: 0 }}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-primary-light text-primary cursor-pointer hover:bg-danger-light hover:text-danger transition-colors"
-                                style={{ border: UI_BORDER }}
-                                onClick={() => toggleKebele(id)}
-                                title="Click to remove"
-                              >
-                                {keb.name}
-                                <X size={10} />
-                              </motion.span>
-                            )
-                          })}
-                        </div>
-                      )}
-
-                      {/* Search input */}
-                      <div className="relative">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-faint pointer-events-none" />
-                        <input
-                          type="text"
-                          placeholder="Search kebeles…"
-                          value={kebeleSearch}
-                          onChange={(e) => setKebeleSearch(e.target.value)}
-                          className="w-full pl-9 pr-3 py-2 text-sm rounded-xl bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
-                          style={{ border: UI_BORDER }}
-                        />
-                      </div>
-
-                      {/* Kebele list */}
-                      {kebeles.length > 0 ? (
-                        <div
-                          className="max-h-48 overflow-y-auto rounded-xl"
-                          style={{ border: UI_BORDER }}
-                        >
-                          {filteredKebeles.length === 0 ? (
-                            <p className="text-xs text-text-faint text-center py-6">No kebeles match your search</p>
-                          ) : (
-                            filteredKebeles.map((k, i) => {
-                              const selected = assignedIds.includes(k.id)
-                              return (
-                                <button
-                                  key={k.id}
-                                  type="button"
-                                  onClick={() => toggleKebele(k.id)}
-                                  className={[
-                                    'w-full flex items-center justify-between px-3 py-2.5 text-sm transition-colors cursor-pointer text-left',
-                                    selected ? 'bg-primary-light text-primary' : 'hover:bg-surface-subtle text-text-primary',
-                                  ].join(' ')}
-                                  style={i < filteredKebeles.length - 1 ? { borderBottom: UI_BORDER } : {}}
-                                >
-                                  <span>{k.name}</span>
-                                  {selected && <Check size={14} className="shrink-0" />}
-                                </button>
-                              )
-                            })
-                          )}
-                        </div>
-                      ) : (
-                        <p className="text-xs text-text-faint font-mono">No kebeles defined yet. Add kebeles first.</p>
-                      )}
+                      <Select
+                        label={t('staff_assigned_kebeles')}
+                        value={assignedIds[0] ?? ''}
+                        onChange={(e) => {
+                          const val = e.target.value
+                          setAssignedIds(val ? [val] : [])
+                        }}
+                        options={[
+                          { value: '', label: kebeles.length === 0 ? 'No kebeles available' : 'Select kebele...' },
+                          ...kebeles.map((k) => ({ value: k.id, label: k.name })),
+                        ]}
+                      />
                     </motion.div>
                   )}
                 </AnimatePresence>
