@@ -16,17 +16,7 @@
       "import": "./dist/validators/index.js",
       "default": "./dist/validators/index.js"
     },
-    "./validations": {
-      "types": "./dist/validators/index.d.ts",
-      "import": "./dist/validators/index.js",
-      "default": "./dist/validators/index.js"
-    },
     "./types": {
-      "types": "./dist/types/index.d.ts",
-      "import": "./dist/types/index.js",
-      "default": "./dist/types/index.js"
-    },
-    "./type": {
       "types": "./dist/types/index.d.ts",
       "import": "./dist/types/index.js",
       "default": "./dist/types/index.js"

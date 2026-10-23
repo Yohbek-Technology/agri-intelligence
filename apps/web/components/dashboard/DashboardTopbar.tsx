@@ -110,11 +110,11 @@ export function DashboardTopbar({ user, onSignOut, onMenuToggle }: Props) {
                 </div>
                 <button type="button" onClick={() => setProfileOpen(false)}
                   className="w-full flex items-center gap-3 px-4 py-2.5 cursor-pointer text-text-muted hover:bg-surface-subtle transition-colors">
-                  <User size={15} /><span className="text-sm font-medium">Profile &amp; Settings</span>
+                  <User size={15} /><span className="text-sm font-medium">{t('profileSettings' as any)}</span>
                 </button>
                 <button type="button" onClick={() => setProfileOpen(false)}
                   className="w-full flex items-center gap-3 px-4 py-2.5 cursor-pointer text-text-muted hover:bg-surface-subtle transition-colors">
-                  <Settings size={15} /><span className="text-sm font-medium">Preferences</span>
+                  <Settings size={15} /><span className="text-sm font-medium">{t('preferences' as any)}</span>
                 </button>
                 <div className="my-1" style={{ borderTop: UI_BORDER }} />
                 <button type="button" onClick={() => { setProfileOpen(false); onSignOut() }}
@@ -133,7 +133,7 @@ export function DashboardTopbar({ user, onSignOut, onMenuToggle }: Props) {
           className="lg:hidden flex items-center justify-center w-9 h-9 rounded-lg cursor-pointer
             bg-shell-hover text-on-shell hover:bg-shell-active transition-colors"
           style={{ border: SHELL_BORDER }}
-          aria-label="Open menu"
+          aria-label={t('toggleSidebar')}
         >
           <Menu size={17} />
         </button>

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useRef, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   X, Bell, CloudLightning, Stethoscope,
@@ -45,6 +46,7 @@ interface Props {
 }
 
 export function NotificationPanel({ open, onClose, anchorRef }: Props) {
+  const t = useTranslations('Dashboard')
   const panelRef = useRef<HTMLDivElement>(null)
   const unread = MOCK_NOTIFICATIONS.filter((n) => !n.read).length
 
@@ -94,7 +96,7 @@ export function NotificationPanel({ open, onClose, anchorRef }: Props) {
           <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: UI_BORDER }}>
             <div className="flex items-center gap-2.5">
               <Bell size={16} className="text-text-muted" />
-              <span className="text-base font-semibold text-text-primary">Notifications</span>
+              <span className="text-base font-semibold text-text-primary">{t('notifications')}</span>
               {unread > 0 && (
                 <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-danger text-white text-[10px] font-bold">
                   {unread}
@@ -146,7 +148,7 @@ export function NotificationPanel({ open, onClose, anchorRef }: Props) {
               type="button"
               className="w-full text-sm text-text-muted hover:text-primary font-medium text-center cursor-pointer transition-colors"
             >
-              Mark all as read
+              {t('markAllRead')}
             </button>
           </div>
         </motion.div>

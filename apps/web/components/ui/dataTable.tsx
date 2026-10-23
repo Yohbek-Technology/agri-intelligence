@@ -12,6 +12,7 @@ import {
   type SortingState,
   type RowSelectionState,
 } from '@tanstack/react-table'
+import { useTranslations } from 'next-intl'
 import { ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react'
 
 const UI_BORDER = '2px solid var(--color-border-ui)'
@@ -38,14 +39,17 @@ export function DataTable<TData>({
   data,
   enableSelection = false,
   onDeleteSelected,
-  deleteLabel = 'Delete Selected',
+  deleteLabel,
   isLoading = false,
-  emptyMessage = 'No records found.',
+  emptyMessage,
   enablePagination = true,
   pageSize = 50,
   onRowClick,
   className = '',
 }: DataTableProps<TData>) {
+  const t = useTranslations('Common')
+  const resolvedEmptyMessage = emptyMessage ?? t('noRecords')
+  const resolvedDeleteLabel = deleteLabel ?? t('deleteSelected')
   const [sorting, setSorting]           = useState<SortingState>([])
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
 
@@ -122,7 +126,7 @@ export function DataTable<TData>({
             onClick={handleDeleteSelected}
             className="text-xs font-medium text-white bg-danger rounded-lg px-3 py-1.5 cursor-pointer hover:bg-danger-subtle transition-colors"
           >
-            {deleteLabel}
+            {resolvedDeleteLabel}
           </button>
         </div>
       )}
@@ -168,13 +172,13 @@ export function DataTable<TData>({
             {isLoading ? (
               <tr>
                 <td colSpan={allColumns.length} className="px-4 py-8 text-center text-sm text-text-faint">
-                  Loading…
+                  {t('loading')}
                 </td>
               </tr>
             ) : table.getRowModel().rows.length === 0 ? (
               <tr>
                 <td colSpan={allColumns.length} className="px-4 py-8 text-center text-sm text-text-faint">
-                  {emptyMessage}
+                  {resolvedEmptyMessage}
                 </td>
               </tr>
             ) : (
@@ -201,7 +205,7 @@ export function DataTable<TData>({
       {enablePagination && (
         <div className="flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3" style={{ borderTop: UI_BORDER }}>
           <span className="text-xs text-text-faint">
-            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount() || 1}
+            {t('pageOf', { page: table.getState().pagination.pageIndex + 1, pages: table.getPageCount() || 1 })}
           </span>
           <div className="flex gap-2">
             <button
@@ -211,7 +215,7 @@ export function DataTable<TData>({
               className="px-3 py-1.5 text-xs font-medium rounded-lg cursor-pointer disabled:opacity-40 hover:bg-surface-subtle whitespace-nowrap"
               style={{ border: UI_BORDER }}
             >
-              ← Previous
+              {t('previous')}
             </button>
             <button
               type="button"
@@ -220,7 +224,7 @@ export function DataTable<TData>({
               className="px-3 py-1.5 text-xs font-medium rounded-lg cursor-pointer disabled:opacity-40 hover:bg-surface-subtle whitespace-nowrap"
               style={{ border: UI_BORDER }}
             >
-              Next →
+              {t('next')}
             </button>
           </div>
         </div>
