@@ -23,29 +23,50 @@ export type AdminTwoFactorVerify = z.infer<typeof AdminTwoFactorVerifySchema>
 export type UserProfileUpdate    = z.infer<typeof UserProfileUpdateSchema>
 export type LanguageSelect       = z.infer<typeof LanguageSelectSchema>
 
-export type UserRole    = 'farmer' | 'da' | 'officer' | 'system_admin'
-export type AppLanguage = 'en' | 'am' | 'om' | 'ti'
+export type UserRole =
+  | 'FARMER'
+  | 'DA'
+  | 'CITY_ADMIN'
+  | 'SUPER_ADMIN'
+  | 'farmer'
+  | 'da'
+  | 'city_admin'
+  | 'super_admin'
+  | 'officer'
+  | 'system_admin'
+
+export type AppLanguage = 'am' | 'om' | 'ti' | 'en'
+
+export type ApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED'
 
 export interface AuthUser {
   id: string
-  name: string
+  fullName: string
+  name?: string
   email: string
   emailVerified: boolean
-  image?: string | null
   imageUrl?: string | null
+  image?: string | null
   phoneNumber?: string | null
-  phoneNumberVerified: boolean
+  isPhoneVerified: boolean
+  phoneNumberVerified?: boolean
   role: UserRole
-  banned: boolean
+  status: ApprovalStatus
+  cityId?: string | null
+  cityOfficeId?: string | null
+  language: AppLanguage
+  preferredLanguage?: AppLanguage
+  autoTts: boolean
+  voiceNavEnabled: boolean
+  lastLoginAt?: Date | null
+  createdAt: Date
+  updatedAt: Date
+  banned?: boolean
   banReason?: string | null
   banExpires?: Date | null
   banExpiresAt?: Date | null
-  cityOfficeId?: string | null
-  preferredLanguage: AppLanguage
-  assignedKebeleIds: string
+  assignedKebeleIds?: string
   deletedAt?: Date | null
-  createdAt: Date
-  updatedAt: Date
 }
 
 export interface AuthSession {

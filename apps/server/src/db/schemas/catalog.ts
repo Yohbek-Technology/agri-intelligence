@@ -1,210 +1,108 @@
-import { pgTable, uuid, varchar, timestamp, jsonb, boolean, date, check, index, unique, numeric, integer, smallint } from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar, timestamp, boolean, date, check, unique, numeric, smallint, text, primaryKey } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm/_relations";
 import { sql } from "drizzle-orm";
-import { cityOffices } from "./tenancy.js";
-import { users } from "./auth-schema.js";
-import { catalogStatus, chemicalCategory, pestKind, agroZone } from "./enums.js";
+import { cities } from "./tenancy.js";
+import { agroZone } from "./enums.js";
 
-export const crops = pgTable(
-  "crops",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    cityOfficeId: uuid("city_office_id")
-      .notNull()
-      .references(() => cityOffices.id, { onDelete: "cascade" }),
-    code: varchar("code", { length: 40 }).notNull(),
-    nameEn: varchar("name_en", { length: 100 }).notNull(),
-    nameAm: varchar("name_am", { length: 100 }),
-    nameOm: varchar("name_om", { length: 100 }),
-    nameTi: varchar("name_ti", { length: 100 }),
-    maxPlausibleYieldQtPerHa: numeric("max_plausible_yield_qt_per_ha", { precision: 6, scale: 2 }).notNull().default("80"),
-    weedingWindows: jsonb("weeding_windows").notNull().default([]),
-    recommendedSuccessors: uuid("recommended_successors").array().notNull().default(sql`'{}'::uuid[]`),
-    status: catalogStatus("status").notNull().default("active"),
-    effectiveFrom: date("effective_from").notNull().defaultNow(),
-    effectiveTo: date("effective_to"),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-  },
-  (table) => ({
-    uqCode: unique("crops_city_office_id_code_key").on(table.cityOfficeId, table.code),
-    weedingWindowsCheck: check(
-      "crops_weeding_windows_check",
-      sql`jsonb_typeof(weeding_windows) = 'array'`
-    ),
-    selfSuccessorCheck: check(
-      "crops_self_successor_check",
-      sql`not (id = any(recommended_successors))`
-    ),
-  })
-);
+export const crops = pgTable("crops", {
+  crop_id: uuid("crop_id").primaryKey().defaultRandom(),
+  code: varchar("code", { length: 30 }).notNull().unique(),
+  name_en: varchar("name_en", { length: 60 }).notNull(),
+  seed_rate_kg_ha: numeric("seed_rate_kg_ha", { precision: 8, scale: 2 }),
+  urea_kg_ha: numeric("urea_kg_ha", { precision: 8, scale: 2 }),
+  nps_kg_ha: numeric("nps_kg_ha", { precision: 8, scale: 2 }),
+  is_active: boolean("is_active").notNull().default(true),
+});
 
 export const cropVarieties = pgTable(
   "crop_varieties",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    cityOfficeId: uuid("city_office_id")
+    variety_id: uuid("variety_id").primaryKey().defaultRandom(),
+    crop_id: uuid("crop_id")
       .notNull()
-      .references(() => cityOffices.id, { onDelete: "cascade" }),
-    cropId: uuid("crop_id")
-      .notNull()
-      .references(() => crops.id, { onDelete: "cascade" }),
-    name: varchar("name", { length: 120 }).notNull(),
-    isCertified: boolean("is_certified").notNull().default(true),
-    permittedZones: agroZone("permitted_zones").array().notNull(),
-    status: catalogStatus("status").notNull().default("active"),
-    effectiveFrom: date("effective_from").notNull().defaultNow(),
-    effectiveTo: date("effective_to"),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+      .references(() => crops.crop_id),
+    name: varchar("name", { length: 100 }).notNull(),
+    seed_class: varchar("seed_class", { length: 20 }).notNull(),
+    potential_yield_qt_ha: numeric("potential_yield_qt_ha", { precision: 8, scale: 2 }),
+    suitable_zones: agroZone("suitable_zones").array(),
+    is_approved: boolean("is_approved").notNull().default(true),
   },
   (table) => ({
-    uqName: unique("crop_varieties_crop_id_name_key").on(table.cropId, table.name),
+    uqCropName: unique("crop_varieties_crop_id_name_key").on(table.crop_id, table.name),
+    seedClassCheck: check(
+      "crop_varieties_seed_class_check",
+      sql`seed_class in ('CERTIFIED_IMPROVED','RECYCLED_IMPROVED','LOCAL_LANDRACE')`
+    ),
   })
 );
 
-export const fertilizerRates = pgTable(
-  "fertilizer_rates",
+export const pestsDiseases = pgTable(
+  "pests_diseases",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    cityOfficeId: uuid("city_office_id")
-      .notNull()
-      .references(() => cityOffices.id, { onDelete: "cascade" }),
-    cropId: uuid("crop_id")
-      .notNull()
-      .references(() => crops.id, { onDelete: "cascade" }),
-    agroZone: agroZone("agro_zone").notNull(),
-    ureaKgPerHa: numeric("urea_kg_per_ha", { precision: 8, scale: 2 }).notNull(),
-    npsKgPerHa: numeric("nps_kg_per_ha", { precision: 8, scale: 2 }).notNull(),
-    seedKgPerHa: numeric("seed_kg_per_ha", { precision: 8, scale: 2 }).notNull(),
-    ratesVersion: integer("rates_version").notNull(),
-    effectiveFrom: date("effective_from").notNull(),
-    createdByUserId: uuid("created_by_user_id").references(() => users.id),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    pest_id: uuid("pest_id").primaryKey().defaultRandom(),
+    code: varchar("code", { length: 40 }).notNull().unique(),
+    name_en: varchar("name_en", { length: 100 }).notNull(),
+    kind: varchar("kind", { length: 10 }).notNull(),
+    is_quarantine: boolean("is_quarantine").notNull().default(false),
+    symptoms: text("symptoms"),
+    management_advice: text("management_advice"),
   },
   (table) => ({
-    uqVersion: unique("fertilizer_rates_office_crop_zone_effective_key").on(
-      table.cityOfficeId,
-      table.cropId,
-      table.agroZone,
-      table.effectiveFrom
-    ),
-    ratesCheck: check(
-      "fertilizer_rates_check",
-      sql`urea_kg_per_ha >= 0 and nps_kg_per_ha >= 0 and seed_kg_per_ha >= 0`
-    ),
+    kindCheck: check("pests_diseases_kind_check", sql`kind in ('PEST','DISEASE','WEED','DEFICIENCY')`),
   })
 );
 
-export const pestCatalog = pgTable(
-  "pest_catalog",
+export const pesticides = pgTable("pesticides", {
+  pesticide_id: uuid("pesticide_id").primaryKey().defaultRandom(),
+  trade_name: varchar("trade_name", { length: 100 }).notNull(),
+  active_ingredient: varchar("active_ingredient", { length: 150 }).notNull(),
+  registration_number: varchar("registration_number", { length: 60 }).unique(),
+  is_registered: boolean("is_registered").notNull().default(true),
+  registration_expiry: date("registration_expiry"),
+  target_pest_ids: uuid("target_pest_ids").array(),
+  target_crop_ids: uuid("target_crop_ids").array(),
+  dosage_instructions: text("dosage_instructions"),
+  rain_free_hours: smallint("rain_free_hours"),
+  safety_notes: text("safety_notes"),
+});
+
+export const cityPesticides = pgTable(
+  "city_pesticides",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    cityOfficeId: uuid("city_office_id")
+    city_id: uuid("city_id")
       .notNull()
-      .references(() => cityOffices.id, { onDelete: "cascade" }),
-    code: varchar("code", { length: 60 }).notNull(),
-    kind: pestKind("kind").notNull(),
-    name: jsonb("name").notNull(),
-    preventionAdvice: jsonb("prevention_advice"),
-    referenceMediaId: uuid("reference_media_id"),
-    isQuarantinePest: boolean("is_quarantine_pest").notNull().default(false),
-    status: catalogStatus("status").notNull().default("active"),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+      .references(() => cities.city_id),
+    pesticide_id: uuid("pesticide_id")
+      .notNull()
+      .references(() => pesticides.pesticide_id),
+    is_available: boolean("is_available").notNull().default(true),
+    verified_at: timestamp("verified_at", { withTimezone: true }),
   },
   (table) => ({
-    uqCode: unique("pest_catalog_city_office_id_code_key").on(table.cityOfficeId, table.code),
+    pk: primaryKey({ columns: [table.city_id, table.pesticide_id] }),
   })
 );
 
-export const registeredChemicals = pgTable(
-  "registered_chemicals",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    cityOfficeId: uuid("city_office_id")
-      .notNull()
-      .references(() => cityOffices.id, { onDelete: "cascade" }),
-    brandName: varchar("brand_name", { length: 150 }).notNull(),
-    activeIngredient: varchar("active_ingredient", { length: 200 }).notNull(),
-    registrationNumber: varchar("registration_number", { length: 80 }).notNull(),
-    category: chemicalCategory("category").notNull(),
-    dosageText: jsonb("dosage_text").notNull(),
-    protectiveEquipmentText: jsonb("protective_equipment_text"),
-    safetyIntervalDays: smallint("safety_interval_days").notNull(),
-    labelMediaId: uuid("label_media_id"),
-    permittedZones: agroZone("permitted_zones").array(),
-    targetCropIds: uuid("target_crop_ids").array().notNull().default(sql`'{}'::uuid[]`),
-    targetPestIds: uuid("target_pest_ids").array().notNull().default(sql`'{}'::uuid[]`),
-    status: catalogStatus("status").notNull().default("active"),
-    effectiveFrom: date("effective_from").notNull().defaultNow(),
-    effectiveTo: date("effective_to"),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-  },
-  (table) => ({
-    uqRegistration: unique("registered_chemicals_office_registration_key").on(
-      table.cityOfficeId,
-      table.registrationNumber
-    ),
-    safetyIntervalCheck: check(
-      "registered_chemicals_safety_check",
-      sql`safety_interval_days >= 0`
-    ),
-    idxTargetCrops: index("idx_chemicals_target_crops")
-      .using("gin", table.targetCropIds)
-      .where(sql`status = 'active'`),
-    idxTargetPests: index("idx_chemicals_target_pests")
-      .using("gin", table.targetPestIds)
-      .where(sql`status = 'active'`),
-  })
-);
-
-export const cropsRelations = relations(crops, ({ one, many }) => ({
-  cityOffice: one(cityOffices, {
-    fields: [crops.cityOfficeId],
-    references: [cityOffices.id],
-  }),
+export const cropsRelations = relations(crops, ({ many }) => ({
   varieties: many(cropVarieties),
-  fertilizerRates: many(fertilizerRates),
 }));
 
 export const cropVarietiesRelations = relations(cropVarieties, ({ one }) => ({
-  cityOffice: one(cityOffices, {
-    fields: [cropVarieties.cityOfficeId],
-    references: [cityOffices.id],
-  }),
   crop: one(crops, {
-    fields: [cropVarieties.cropId],
-    references: [crops.id],
+    fields: [cropVarieties.crop_id],
+    references: [crops.crop_id],
   }),
 }));
 
-export const fertilizerRatesRelations = relations(fertilizerRates, ({ one }) => ({
-  cityOffice: one(cityOffices, {
-    fields: [fertilizerRates.cityOfficeId],
-    references: [cityOffices.id],
+export const cityPesticidesRelations = relations(cityPesticides, ({ one }) => ({
+  city: one(cities, {
+    fields: [cityPesticides.city_id],
+    references: [cities.city_id],
   }),
-  crop: one(crops, {
-    fields: [fertilizerRates.cropId],
-    references: [crops.id],
-  }),
-  createdByUser: one(users, {
-    fields: [fertilizerRates.createdByUserId],
-    references: [users.id],
+  pesticide: one(pesticides, {
+    fields: [cityPesticides.pesticide_id],
+    references: [pesticides.pesticide_id],
   }),
 }));
 
-export const pestCatalogRelations = relations(pestCatalog, ({ one }) => ({
-  cityOffice: one(cityOffices, {
-    fields: [pestCatalog.cityOfficeId],
-    references: [cityOffices.id],
-  }),
-}));
 
-export const registeredChemicalsRelations = relations(registeredChemicals, ({ one }) => ({
-  cityOffice: one(cityOffices, {
-    fields: [registeredChemicals.cityOfficeId],
-    references: [cityOffices.id],
-  }),
-}));

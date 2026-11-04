@@ -1,57 +1,36 @@
 import { relations } from 'drizzle-orm/_relations'
-import { pgTable, uuid, text, timestamp, boolean, index, check, varchar } from 'drizzle-orm/pg-core'
-import { sql } from 'drizzle-orm'
-import { userRole, appLanguage } from './enums.js'
-import { cityOffices } from './tenancy.js'
+import { pgTable, uuid, text, timestamp, boolean, index, varchar } from 'drizzle-orm/pg-core'
+import { userRole, languageCode, approvalStatus } from './enums.js'
+import { cities } from './tenancy.js'
 
 export const users = pgTable(
   'users',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
-    name: varchar('name', { length: 255 }).notNull(),
-    username: varchar('username', { length: 50 }).unique(),
+    id: uuid('user_id').primaryKey().defaultRandom(),
+    city_id: uuid('city_id').references(() => cities.city_id),
+    role: userRole('role').notNull(),
+    phone_number: varchar('phone_number', { length: 20 }).notNull().unique(),
+    full_name: varchar('full_name', { length: 150 }).notNull(),
     email: varchar('email', { length: 255 }).notNull().unique(),
     emailVerified: boolean('email_verified').default(false).notNull(),
-    image_url: varchar('image_url', { length: 500 }),
+    image_url: text('image_url'),
+    is_phone_verified: boolean('is_phone_verified').default(false).notNull(),
+    status: approvalStatus('status').default('PENDING').notNull(),
+    language: languageCode('language').default('am').notNull(),
+    auto_tts: boolean('auto_tts').default(true).notNull(),
+    voice_nav_enabled: boolean('voice_nav_enabled').default(true).notNull(),
+    last_login_at: timestamp('last_login_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull().$onUpdate(() => new Date()),
-    phone_number: varchar('phone_number', { length: 20 }).unique(),
-    phone_number_verified: boolean('phone_number_verified').default(false).notNull(),
-    role: userRole('role').default('farmer').notNull(),
-    banned: boolean('banned').default(false).notNull(),
-    ban_reason: text('ban_reason'),
-    ban_expires_at: timestamp('ban_expires_at', { withTimezone: true }),
-    city_office_id: uuid('city_office_id').references(() => cityOffices.id),
-    preferred_language: appLanguage('preferred_language').default('am').notNull(),
-    assigned_kebele_ids: uuid('assigned_kebele_ids').array().default(sql`'{}'::uuid[]`).notNull(),
-    deleted_at: timestamp('deleted_at', { withTimezone: true }),
-  },
-  (table) => ({
-    phoneFormatCheck: check(
-      'users_phone_format_check',
-      sql`phone_number is null or phone_number ~ '^\\+251[79][0-9]{8}$'`
-    ),
-    phoneOrDeletedCheck: check(
-      'users_phone_or_deleted_check',
-      sql`phone_number is not null or deleted_at is not null`
-    ),
-    verifiedNeedsPhoneCheck: check(
-      'users_verified_needs_phone_check',
-      sql`not phone_number_verified or phone_number is not null`
-    ),
-    roleOfficeCheck: check(
-      'users_role_office_check',
-      sql`role in ('system_admin', 'farmer') or city_office_id is not null`
-    ),
-  })
+  }
 )
 
 export const accounts = pgTable(
   'accounts',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    provider_account_id: varchar('provider_account_id', { length: 255 }).notNull(),
-    providerId: varchar('provider_id', { length: 100 }).notNull(),
+    provider_account_id: text('provider_account_id').notNull(),
+    providerId: text('provider_id').notNull(),
     userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
     accessToken: text('access_token'),
     refreshToken: text('refresh_token'),
@@ -64,11 +43,7 @@ export const accounts = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull().$onUpdate(() => new Date()),
   },
   (table) => ({
-    userIdIdx: index('account_userId_idx').on(table.userId),
-    credentialPasswordCheck: check(
-      'accounts_credential_password_check',
-      sql`provider_id <> 'credential' or password is not null`
-    ),
+    userIdIdx: index('idx_accounts_user').on(table.userId),
   })
 )
 
@@ -76,16 +51,16 @@ export const sessions = pgTable(
   'sessions',
   {
     id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    token: text('token').notNull().unique(),
     expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
-    token: varchar('token', { length: 500 }).notNull().unique(),
+    ipAddress: text('ip_address'),
+    userAgent: text('user_agent'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull().$onUpdate(() => new Date()),
-    ipAddress: varchar('ip_address', { length: 100 }),
-    userAgent: text('user_agent'),
-    userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   },
   (table) => ({
-    userIdIdx: index('session_userId_idx').on(table.userId),
+    userIdIdx: index('idx_sessions_user').on(table.userId),
   })
 )
 
@@ -93,21 +68,24 @@ export const verifications = pgTable(
   'verifications',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    identifier: varchar('identifier', { length: 255 }).notNull(),
+    identifier: text('identifier').notNull(),
     value: text('value').notNull(),
     expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull().$onUpdate(() => new Date()),
   },
   (table) => ({
-    identifierIdx: index('verification_identifier_idx').on(table.identifier),
-    expiryIdx: index('idx_verifications_expiry').on(table.expiresAt),
+    identifierIdx: index('idx_verifications_identifier').on(table.identifier, table.expiresAt),
   })
 )
 
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ many, one }) => ({
   sessions: many(sessions),
   accounts: many(accounts),
+  city: one(cities, {
+    fields: [users.city_id],
+    references: [cities.city_id],
+  }),
 }))
 
 export const accountsRelations = relations(accounts, ({ one }) => ({

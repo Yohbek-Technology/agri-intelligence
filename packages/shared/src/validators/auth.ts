@@ -12,13 +12,16 @@ export const PhoneSignUpSchema = z.object({
   password: z
     .string()
     .min(10, 'Password must be at least 10 characters')
-    .regex(PASSWORD_COMPLEXITY_REGEX, 'Password must contain uppercase, lowercase, and a number'),
-  name: z.string().min(2, 'Full name must be at least 2 characters').max(120),
+    .regex(PASSWORD_COMPLEXITY_REGEX, 'Password must contain uppercase, lowercase, and a number')
+    .optional(),
+  name: z.string().min(2, 'Full name must be at least 2 characters').max(150),
   preferredLanguage: z.enum(['am', 'om', 'ti', 'en']).default('am'),
+  language: z.enum(['am', 'om', 'ti', 'en']).optional(),
   username: z.string()
     .min(3, 'Username must be at least 3 characters')
     .max(30, 'Username must be 30 characters or less')
-    .regex(/^[a-zA-Z0-9_]+$/, 'Only letters, numbers, and underscores allowed'),
+    .regex(/^[a-zA-Z0-9_]+$/, 'Only letters, numbers, and underscores allowed')
+    .optional(),
 })
 
 export const PhoneSignInSchema = z.object({
@@ -47,6 +50,7 @@ export const PhoneOtpVerifySchema = z.object({
   password: z.string().optional(),
   name: z.string().optional(),
   preferredLanguage: z.enum(['am', 'om', 'ti', 'en']).optional(),
+  language: z.enum(['am', 'om', 'ti', 'en']).optional(),
   username: z.string().optional(),
 })
 
@@ -93,9 +97,12 @@ export const AdminTwoFactorVerifySchema = z.object({
 })
 
 export const UserProfileUpdateSchema = z.object({
-  name: z.string().min(2).max(255).optional(),
+  name: z.string().min(2).max(150).optional(),
+  language: z.enum(['am', 'om', 'ti', 'en']).optional(),
   preferredLanguage: z.enum(['am', 'om', 'ti', 'en']).optional(),
   imageUrl: z.string().url().max(500).optional(),
+  autoTts: z.boolean().optional(),
+  voiceNavEnabled: z.boolean().optional(),
 })
 
 export const LanguageSelectSchema = z.object({

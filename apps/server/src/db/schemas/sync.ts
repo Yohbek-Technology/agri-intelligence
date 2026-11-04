@@ -1,202 +1,89 @@
-import { pgTable, uuid, varchar, timestamp, bigint, jsonb, check, index, unique, text, char } from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar, timestamp, bigint, bigserial, jsonb, check, index, integer, text } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm/_relations";
 import { sql } from "drizzle-orm";
-import { cityOffices } from "./tenancy.js";
 import { users } from "./auth-schema.js";
-import { syncOperation, syncMutationStatus, devicePlatform } from "./enums.js";
+import { devices, farmers } from "./farmers.js";
+import { syncOpType, syncStatus } from "./enums.js";
 
-export const devices = pgTable(
-  "devices",
+export const syncQueue = pgTable(
+  "sync_queue",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    userId: uuid("user_id")
+    op_id: uuid("op_id").primaryKey(),
+    batch_id: uuid("batch_id").notNull(),
+    device_id: uuid("device_id")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    cityOfficeId: uuid("city_office_id").references(() => cityOffices.id),
-    deviceIdentifier: varchar("device_identifier", { length: 120 }).notNull(),
-    platform: devicePlatform("platform").notNull().default("pwa"),
-    appVersion: varchar("app_version", { length: 20 }),
-    webPushSubscription: text("web_push_subscription"),
-    fcmToken: text("fcm_token"),
-    lastSyncCursor: bigint("last_sync_cursor", { mode: "number" }).notNull().default(0),
-    lastSyncAt: timestamp("last_sync_at", { withTimezone: true }),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-  },
-  (table) => ({
-    uqUserDevice: unique("devices_user_device_key").on(table.userId, table.deviceIdentifier),
-    idxUser: index("idx_devices_user").on(table.userId),
-    devicesAndroidNoWebPush: check(
-      "devices_android_no_web_push",
-      sql`platform <> 'android' or web_push_subscription is null`
-    ),
-    devicesPwaNoFcm: check(
-      "devices_pwa_no_fcm",
-      sql`platform <> 'pwa' or fcm_token is null`
-    ),
-  })
-);
-
-export const syncMutations = pgTable(
-  "sync_mutations",
-  {
-    id: uuid("id").primaryKey(),
-    deviceId: uuid("device_id")
-      .notNull()
-      .references(() => devices.id, { onDelete: "cascade" }),
-    userId: uuid("user_id")
+      .references(() => devices.device_id),
+    user_id: uuid("user_id")
       .notNull()
       .references(() => users.id),
-    cityOfficeId: uuid("city_office_id")
-      .notNull()
-      .references(() => cityOffices.id),
-    entityType: varchar("entity_type", { length: 60 }).notNull(),
-    entityId: uuid("entity_id").notNull(),
-    operation: syncOperation("operation").notNull(),
-    payload: jsonb("payload").notNull(),
-    payloadHash: char("payload_hash", { length: 64 }).notNull(),
-    clientSequenceNumber: bigint("client_sequence_number", { mode: "number" }).notNull(),
-    clientCreatedAt: timestamp("client_created_at", { withTimezone: true }).notNull(),
-    status: syncMutationStatus("status").notNull(),
-    rejectReason: varchar("reject_reason", { length: 255 }),
-    receivedAt: timestamp("received_at", { withTimezone: true }).notNull().defaultNow(),
+    on_behalf_of_farmer_id: uuid("on_behalf_of_farmer_id").references(() => farmers.farmer_id),
+    seq_no: integer("seq_no").notNull(),
+    table_name: varchar("table_name", { length: 60 }).notNull(),
+    record_id: uuid("record_id").notNull(),
+    op_type: syncOpType("op_type").notNull(),
+    payload: jsonb("payload"),
+    base_version: bigint("base_version", { mode: "number" }),
+    client_ts: timestamp("client_ts", { withTimezone: true }).notNull(),
+    status: syncStatus("status").notNull().default("PENDING"),
+    server_value: jsonb("server_value"),
+    resolution: varchar("resolution", { length: 12 }),
+    error_message: text("error_message"),
+    received_at: timestamp("received_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => ({
-    payloadHashCheck: check(
-      "sync_mutations_hash_check",
-      sql`payload_hash ~ '^[0-9a-f]{64}$'`
+    resolutionCheck: check(
+      "sync_queue_resolution_check",
+      sql`resolution is null or resolution in ('SERVER_WINS','CLIENT_WINS','MERGED','MANUAL')`
     ),
-    idxDevice: index("idx_sync_mutations_device").on(table.deviceId, table.clientSequenceNumber),
+    idxSyncqBatch: index("idx_syncq_batch").on(table.batch_id, table.seq_no),
   })
 );
 
-export const syncChanges = pgTable(
-  "sync_changes",
+export const syncChangeLog = pgTable(
+  "sync_change_log",
   {
-    sequenceNumber: bigint("sequence_number", { mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
-    cityOfficeId: uuid("city_office_id").notNull(),
-    entityType: varchar("entity_type", { length: 60 }).notNull(),
-    entityId: uuid("entity_id").notNull(),
-    operation: syncOperation("operation").notNull(),
-    farmerId: uuid("farmer_id"),
-    changedAt: timestamp("changed_at", { withTimezone: true }).notNull().defaultNow(),
+    change_id: bigserial("change_id", { mode: "number" }).primaryKey(),
+    table_name: varchar("table_name", { length: 60 }).notNull(),
+    record_id: uuid("record_id").notNull(),
+    op_type: syncOpType("op_type").notNull(),
+    city_id: uuid("city_id"),
+    farmer_id: uuid("farmer_id"),
+    changed_at: timestamp("changed_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => ({
-    idxPull: index("idx_sync_changes_pull").on(table.cityOfficeId, table.sequenceNumber),
-    idxFarmer: index("idx_sync_changes_farmer").on(table.farmerId, table.sequenceNumber),
+    idxChangelogScope: index("idx_changelog_scope").on(table.city_id, table.change_id),
   })
 );
 
-export const auditLogs = pgTable(
-  "audit_logs",
-  {
-    id: bigint("id", { mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
-    cityOfficeId: uuid("city_office_id").references(() => cityOffices.id),
-    actorUserId: uuid("actor_user_id").references(() => users.id),
-    action: varchar("action", { length: 80 }).notNull(),
-    entityType: varchar("entity_type", { length: 60 }),
-    entityId: uuid("entity_id"),
-    changesJson: jsonb("changes_json"),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  },
-  (table) => ({
-    idxOffice: index("idx_audit_office").on(table.cityOfficeId, table.id),
-    idxEntity: index("idx_audit_entity").on(table.entityType, table.entityId),
-    idxActorAction: index("idx_audit_actor_action").on(
-      table.actorUserId,
-      table.action,
-      table.createdAt
-    ),
-  })
-);
+export const auditLogs = pgTable("audit_logs", {
+  audit_log_id: bigserial("audit_log_id", { mode: "number" }).primaryKey(),
+  user_id: uuid("user_id").references(() => users.id),
+  city_id: uuid("city_id"),
+  action: varchar("action", { length: 60 }).notNull(),
+  entity_table: varchar("entity_table", { length: 60 }),
+  entity_id: uuid("entity_id"),
+  details: jsonb("details"),
+  created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
 
-export const devicesRelations = relations(devices, ({ one, many }) => ({
-  cityOffice: one(cityOffices, {
-    fields: [devices.cityOfficeId],
-    references: [cityOffices.id],
-  }),
-  user: one(users, {
-    fields: [devices.userId],
-    references: [users.id],
-  }),
-  syncMutations: many(syncMutations),
-}));
-
-export const syncMutationsRelations = relations(syncMutations, ({ one }) => ({
+export const syncQueueRelations = relations(syncQueue, ({ one }) => ({
   device: one(devices, {
-    fields: [syncMutations.deviceId],
-    references: [devices.id],
-  }),
-  cityOffice: one(cityOffices, {
-    fields: [syncMutations.cityOfficeId],
-    references: [cityOffices.id],
+    fields: [syncQueue.device_id],
+    references: [devices.device_id],
   }),
   user: one(users, {
-    fields: [syncMutations.userId],
+    fields: [syncQueue.user_id],
     references: [users.id],
+  }),
+  onBehalfOfFarmer: one(farmers, {
+    fields: [syncQueue.on_behalf_of_farmer_id],
+    references: [farmers.farmer_id],
   }),
 }));
 
 export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
-  cityOffice: one(cityOffices, {
-    fields: [auditLogs.cityOfficeId],
-    references: [cityOffices.id],
-  }),
-  actorUser: one(users, {
-    fields: [auditLogs.actorUserId],
+  user: one(users, {
+    fields: [auditLogs.user_id],
     references: [users.id],
   }),
 }));
-
-export const AUDIT_ACTIONS = {
-  FARMER_VERIFY: "farmer.verify",
-  OFFICE_PARAMETERS_UPDATE: "office.parameters_update",
-  LOG_CORRECT: "log.correct",
-  AUTH_SIGNUP: "auth.signup",
-  AUTH_LOGIN_FAILED: "auth.login_failed",
-  AUTH_LOCKOUT: "auth.lockout",
-  AUTH_PASSWORD_RESET: "auth.password_reset",
-  AUTH_LOGOUT: "auth.logout",
-  AUTH_CLIENT_DENIED: "auth.client_denied",
-  // Staff management
-  STAFF_CREATED: "staff.created",
-  STAFF_UPDATED: "staff.updated",
-  STAFF_DEACTIVATED: "staff.deactivated",
-  // Catalog management
-  CATALOG_CROP_CREATED: "catalog.crop_created",
-  CATALOG_CROP_UPDATED: "catalog.crop_updated",
-  CATALOG_VARIETY_CREATED: "catalog.variety_created",
-  CATALOG_VARIETY_UPDATED: "catalog.variety_updated",
-  CATALOG_FERTILIZER_RATE_UPSERTED: "catalog.fertilizer_rate_upserted",
-  CATALOG_PEST_CREATED: "catalog.pest_created",
-  CATALOG_PEST_UPDATED: "catalog.pest_updated",
-  CATALOG_CHEMICAL_CREATED: "catalog.chemical_created",
-  CATALOG_CHEMICAL_UPDATED: "catalog.chemical_updated",
-  CATALOG_CHEMICAL_RETIRED: "catalog.chemical_retired",
-} as const;
-
-export type AuditAction = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS] | (string & {});
-
-export const enforceAndroidDeviceRolesTriggerSql = sql`
-create or replace function enforce_android_device_roles()
-returns trigger
-language plpgsql
-as $$
-declare
-  r user_role;
-begin
-  if new.platform = 'android' then
-    select role into r from users where id = new.user_id;
-    if r is null or r not in ('farmer', 'da') then
-      raise exception 'client_not_permitted' using errcode = '23514';
-    end if;
-  end if;
-  return new;
-end;
-$$;
-
-create trigger trg_devices_android_roles
-before insert or update of platform, user_id on devices
-for each row execute function enforce_android_device_roles();
-`;
-

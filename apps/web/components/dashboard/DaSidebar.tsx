@@ -11,6 +11,7 @@ import {
   LayoutDashboard, Users, MapPin, NotebookPen,
   Wheat, Microscope, TriangleAlert, Megaphone,
   ClipboardList, ArrowLeftRight, UserCog, CloudSun,
+  RotateCw,
 } from 'lucide-react'
 
 const NAV = [
@@ -40,6 +41,7 @@ const NAV = [
     id: 'intelligence', labelKey: 'sec_intelligence',
     items: [
       { id: 'diagnosis', labelKey: 'nav_diagnosis', href: '/da/diagnosis', icon: <Microscope size={18} /> },
+      { id: 'rotation',  labelKey: 'nav_rotation',  href: '/da/rotation',  icon: <RotateCw size={18} /> },
     ],
   },
   {
