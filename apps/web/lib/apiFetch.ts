@@ -22,7 +22,11 @@ export async function apiFetch<T>(
         (json?.error as Record<string, unknown>)?.message as string | undefined
       return { success: false, error: errMsg || `HTTP ${res.status}` }
     }
-    return { success: true, data: json.data as T }
+    const data =
+      json && typeof json === 'object' && 'data' in json && (json as { data: unknown }).data !== undefined
+        ? (json as { data: T }).data
+        : (json as T)
+    return { success: true, data }
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : 'Network error' }
   }

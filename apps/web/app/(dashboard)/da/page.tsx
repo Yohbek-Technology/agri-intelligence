@@ -7,7 +7,7 @@ export default function DaOverviewPage() {
    const t = useTranslations('Dashboard')
     const tp = useTranslations('DaPages')
     const { user } = useAuthSession()
-    const { isAuthorized, isLoading } = useRoleGuard(['officer', 'system_admin'])
+    const { isAuthorized, isLoading } = useRoleGuard(['da', 'DA'])
   
     if (isLoading) {
       return (
@@ -20,18 +20,18 @@ export default function DaOverviewPage() {
     if (!isAuthorized) {
       return (
         <div className="m-8 p-5 text-sm text-danger bg-danger-light border-2 border-danger rounded-xl">
-          Access denied. Your role does not have clearance for the Officer workspace.
+          Access denied. Your role does not have access to the DA workspace.
         </div>
       )
     }
   
     return (
-      <div className="w-full px-2.5 py-3 sm:p-6 lg:p-8 officer-content">
+      <div className="w-full px-2.5 py-3 sm:p-6 lg:p-8">
         <h1 className="text-3xl font-bold text-text-primary">
-          {t('overview_greeting', { name: user?.name ?? 'Officer' })}
+          {t('overview_greeting', { name: user?.name ?? user?.fullName ?? 'Development Agent' })}
         </h1>
         <p className="mt-2 text-base text-text-muted">
-          {t('off_overview_subtitle')}
+          {t('da_overview_subtitle')}
         </p>
       </div>
     )

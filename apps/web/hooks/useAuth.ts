@@ -25,13 +25,15 @@ const LOCKOUT_DURATION_SECONDS = 15 * 60
 const DRAFT_STORAGE_KEY = 'agri_reg_draft'
 
 export function getDashboardPath(role: UserRole | string | null | undefined): string {
-  switch (role) {
-    case 'farmer':
+  switch (role?.toUpperCase()) {
+    case 'FARMER':
       return '/farmer'
-    case 'da':
+    case 'DA':
       return '/da'
-    case 'officer':
-    case 'system_admin':
+    case 'CITY_ADMIN':
+    case 'SUPER_ADMIN':
+    case 'OFFICER':
+    case 'SYSTEM_ADMIN':
       return '/officer'
     default:
       return '/farmer'
@@ -222,6 +224,7 @@ export function useSignUpForm() {
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null)
   const [usernameChecking, setUsernameChecking] = useState<boolean>(false)
+  const [phoneAvailable, setPhoneAvailable] = useState<boolean | null>(null)
   const [phoneChecking, setPhoneChecking] = useState<boolean>(false)
 
   const usernameDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -262,13 +265,24 @@ export function useSignUpForm() {
       setUsernameChecking(true)
       try {
         const res = await authService.isUsernameAvailable(lower)
-        const available = res.data?.available ?? false
-        setUsernameAvailable(available)
-        if (!available) {
-          setLiveErrors((p) => ({ ...p, username: 'Username is already taken' }))
+        if (res.success && res.data) {
+          const available = res.data.available
+          setUsernameAvailable(available)
+          if (!available) {
+            setLiveErrors((p) => ({ ...p, username: 'Username is already taken' }))
+          } else {
+            setLiveErrors((p) => ({ ...p, username: '' }))
+          }
+        } else {
+          // Server error — don't mark as taken; let the form submit and let the
+          // server enforce uniqueness. Clear error so the user isn't blocked.
+          setUsernameAvailable(null)
+          setLiveErrors((p) => ({ ...p, username: '' }))
         }
       } catch {
+        // Network/unexpected error — same: don't block the form.
         setUsernameAvailable(null)
+        setLiveErrors((p) => ({ ...p, username: '' }))
       } finally {
         setUsernameChecking(false)
       }
@@ -277,9 +291,11 @@ export function useSignUpForm() {
 
   const onPhoneChange = useCallback((v: string) => {
     setField('phoneNumber', v)
+    setPhoneAvailable(null)
     const r = PhoneSignUpSchema.shape.phoneNumber.safeParse(v)
     if (!r.success) {
       setLiveErrors((p) => ({ ...p, phoneNumber: r.error.issues[0]?.message ?? '' }))
+      if (phoneDebounceRef.current) clearTimeout(phoneDebounceRef.current)
       return
     }
     setLiveErrors((p) => ({ ...p, phoneNumber: '' }))
@@ -289,11 +305,16 @@ export function useSignUpForm() {
       setPhoneChecking(true)
       try {
         const res = await authService.checkPhoneExists(v)
-        if (res.data?.exists) {
+        const exists = res.data?.exists ?? false
+        if (exists) {
+          setPhoneAvailable(false)
           setLiveErrors((p) => ({ ...p, phoneNumber: 'Phone number is already registered' }))
+        } else {
+          setPhoneAvailable(true)
+          setLiveErrors((p) => ({ ...p, phoneNumber: '' }))
         }
       } catch {
-        // network error handled on submit
+        setPhoneAvailable(null)
       } finally {
         setPhoneChecking(false)
       }
@@ -355,7 +376,8 @@ export function useSignUpForm() {
     !isLoading &&
     !usernameChecking &&
     !phoneChecking &&
-    usernameAvailable === true &&
+    usernameAvailable !== false &&
+    phoneAvailable !== false &&
     !!formData.name &&
     !!formData.username &&
     !!formData.phoneNumber &&
@@ -379,6 +401,7 @@ export function useSignUpForm() {
     isLoading,
     usernameAvailable,
     usernameChecking,
+    phoneAvailable,
     phoneChecking,
     onNameChange,
     onUsernameChange,
@@ -461,7 +484,10 @@ export function useOtpVerification() {
     if (stored) {
       try {
         const parsed = JSON.parse(stored) as PhoneSignUp
-        return parsed.phoneNumber || queryPhone
+        // Normalize to E.164 so SSR (URL param) and client (sessionStorage raw input)
+        // produce the same string — prevents React hydration mismatch.
+        const rawPhone = parsed.phoneNumber || queryPhone
+        return PhoneUtils.normalize(rawPhone) || queryPhone
       } catch {
         return queryPhone
       }
@@ -801,7 +827,11 @@ export function useRoleGuard(allowedRoles: UserRole[]) {
   const router = useRouter()
   const { user, role, isAuthenticated, isLoading } = useAuth()
 
-  const isRolePermitted = Boolean(role && allowedRoles.includes(role))
+  // Normalize both sides to uppercase for comparison so DB values ('FARMER')
+  // match type values ('farmer') without manual case-mapping everywhere.
+  const normalizedRole = role?.toUpperCase() as UserRole | null
+  const normalizedAllowed = allowedRoles.map((r) => r.toUpperCase())
+  const isRolePermitted = Boolean(normalizedRole && normalizedAllowed.includes(normalizedRole))
 
   useEffect(() => {
     if (isLoading) return
@@ -811,7 +841,7 @@ export function useRoleGuard(allowedRoles: UserRole[]) {
       return
     }
 
-    if (role && !allowedRoles.includes(role)) {
+    if (role && !normalizedAllowed.includes(role.toUpperCase())) {
       router.replace(getDashboardPath(role))
     }
   }, [isLoading, isAuthenticated, role, allowedRoles, router])

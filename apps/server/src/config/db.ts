@@ -14,7 +14,8 @@ export const pool = new Pool({
   max: 5,
   min: 0,
   idleTimeoutMillis: 20_000,
-  connectionTimeoutMillis: 10_000,
+  // Neon serverless can have cold-start latency of 10–20s; use 30s to be safe.
+  connectionTimeoutMillis: 30_000,
   allowExitOnIdle: true,
 })
 

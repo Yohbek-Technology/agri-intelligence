@@ -1,8 +1,9 @@
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
-import { phoneNumber, openAPI, bearer } from 'better-auth/plugins'
+import { phoneNumber, openAPI, bearer, username } from 'better-auth/plugins'
 import { db } from '@/config/db.js'
 import * as schema from '@/db/index.js'
+import { eq } from 'drizzle-orm'
 import { sendSms, onPhoneVerified, normalizeEthiopianPhone } from '@/services/sms.js'
 
 const BETTER_AUTH_SECRET = process.env.BETTER_AUTH_SECRET
@@ -55,6 +56,12 @@ export const auth = betterAuth({
     openAPI(),
     bearer(),
 
+    username({
+      displayUsername: false,
+      minUsernameLength: 3,
+      maxUsernameLength: 30,
+    }),
+
     phoneNumber({
       otpLength: 6,
       expiresIn: 600,
@@ -102,6 +109,12 @@ export const auth = betterAuth({
         }
         if (ctx?.body?.name) {
           await ctx.context.internalAdapter.updateUser(user.id, { name: ctx.body.name })
+        }
+        if (ctx?.body?.username) {
+          await db
+            .update(schema.users)
+            .set({ username: ctx.body.username.toLowerCase() })
+            .where(eq(schema.users.id, user.id))
         }
         if (ctx?.body?.language || ctx?.body?.preferredLanguage) {
           await ctx.context.internalAdapter.updateUser(user.id, { language: ctx.body.language || ctx.body.preferredLanguage })

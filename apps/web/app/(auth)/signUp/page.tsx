@@ -22,6 +22,8 @@ function SignUpContent() {
     isLoading,
     usernameAvailable,
     usernameChecking,
+    phoneAvailable,
+    phoneChecking,
     onNameChange,
     onUsernameChange,
     onPhoneChange,
@@ -84,9 +86,14 @@ function SignUpContent() {
           value={formData.phoneNumber}
           onChange={(e) => onPhoneChange(e.target.value)}
           error={liveErrors.phoneNumber || fieldErrors.phoneNumber}
-          success={!!(formData.phoneNumber && !liveErrors.phoneNumber && !fieldErrors.phoneNumber)}
+          success={!!(formData.phoneNumber && phoneAvailable === true && !liveErrors.phoneNumber && !fieldErrors.phoneNumber)}
           disabled={isLoading}
-          hint={!liveErrors.phoneNumber && !fieldErrors.phoneNumber ? t('phoneHint') : undefined}
+          hint={
+            phoneChecking ? t('usernameChecking')
+            : phoneAvailable === true && !liveErrors.phoneNumber && !fieldErrors.phoneNumber ? '✓ Phone number available'
+            : !liveErrors.phoneNumber && !fieldErrors.phoneNumber ? t('phoneHint')
+            : undefined
+          }
         />
 
         <div className="space-y-2">
