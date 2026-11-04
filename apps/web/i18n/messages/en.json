@@ -388,7 +388,8 @@
     "off_overview_subtitle": "City Agriculture Officer workspace. Govern your jurisdiction and analytics.",
     "profileSettings": "Profile & Settings",
     "preferences": "Preferences",
-    "markAllRead": "Mark all as read"
+    "markAllRead": "Mark all as read",
+    "farmer_overview_subtitle": "Farmer Intelligence Dashboard is operational. All plot telemetry linked."
   },
   "OfficerPages": {
     "audit_title": "Office Audit Trail",

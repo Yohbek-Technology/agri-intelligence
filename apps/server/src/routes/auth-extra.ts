@@ -15,7 +15,7 @@ authExtraRouter.get('/check-phone', async (c) => {
     .from(users)
     .where(eq(users.phone_number, normalized))
     .limit(1)
-  return c.json({ exists: rows.length > 0 })
+  return c.json({ exists: rows.length > 0, data: { exists: rows.length > 0 } })
 })
 
 export { authExtraRouter }

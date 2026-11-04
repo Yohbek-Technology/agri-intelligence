@@ -388,7 +388,8 @@
     "off_overview_subtitle": "Bakka hojii Ogeessa Qonnaa Magaalaa. Naannoo kee bulchi.",
     "profileSettings": "Piroofayilii fi Qindaa'inoota",
     "preferences": "Filannoowwan",
-    "markAllRead": "Hunda akka dubbifametti mallatteessi"
+    "markAllRead": "Hunda akka dubbifametti mallatteessi",
+    "farmer_overview_subtitle": "Deshboordi Qonnaa hojii irra jira. Telemetrii lafa hundinuu hidhamee jira."
   },
   "OfficerPages": {
     "audit_title": "Seenaa Odiitii Biiroo",

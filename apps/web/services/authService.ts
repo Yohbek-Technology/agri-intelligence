@@ -87,21 +87,11 @@ export const authService = {
         password:          parsed.data.password,
         name:              parsed.data.name,
         preferredLanguage: parsed.data.preferredLanguage,
+        username:          parsed.data.username?.toLowerCase(),
       } as unknown as Parameters<typeof authClient.phoneNumber.verify>[0]
 
       const res = await authClient.phoneNumber.verify(verifyPayload)
       if (res.error) return { success: false, error: mapAuthError(res.error) }
-
-      // Update username after the account is created and the session is live
-      if (parsed.data.username) {
-        const updateRes = await authClient.updateUser({
-          username: parsed.data.username.toLowerCase(),
-        } as Parameters<typeof authClient.updateUser>[0])
-        if (updateRes.error) {
-          // Non-fatal: user is in, just couldn't set username
-          return { success: true, data: res.data, error: mapAuthError(updateRes.error) }
-        }
-      }
 
       return { success: true, data: res.data }
     } catch (err) {
@@ -156,12 +146,17 @@ export const authService = {
     }
   },
 
-  // ─── Check username availability ───────────────────────────────────────────
+  // ─── Check username availability (Better Auth) ─────────────────────────────
   async isUsernameAvailable(username: string): Promise<ServiceResult<{ available: boolean }>> {
-    return apiFetch<{ available: boolean }>('/api/auth/is-username-available', {
-      method: 'POST',
-      body: JSON.stringify({ username: username.toLowerCase() }),
-    })
+    try {
+      const res = await authClient.isUsernameAvailable({
+        username: username.toLowerCase(),
+      })
+      if (res.error) return { success: false, error: mapAuthError(res.error) }
+      return { success: true, data: res.data as { available: boolean } }
+    } catch (err) {
+      return { success: false, error: mapAuthError(err) }
+    }
   },
 
   // ─── Check phone existence ─────────────────────────────────────────────────

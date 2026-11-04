@@ -1,3 +1,8 @@
+// Force IPv4 DNS resolution first — Neon serverless only accepts IPv4.
+// This MUST run before any import that creates a pg Pool.
+import dns from 'node:dns'
+try { dns.setDefaultResultOrder('ipv4first') } catch { /* node <16 */ }
+
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'

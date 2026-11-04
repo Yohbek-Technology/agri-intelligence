@@ -388,7 +388,8 @@
     "off_overview_subtitle": "የከተማ ግብርና ኦፊሰር የስራ ቦታ። ስልጣንዎን እና ትንተናዎን ያስተዳድሩ።",
     "profileSettings": "መገለጫ እና ቅንብሮች",
     "preferences": "ምርጫዎች",
-    "markAllRead": "ሁሉንም እንደተነበበ ምልክት አድርግ"
+    "markAllRead": "ሁሉንም እንደተነበበ ምልክት አድርግ",
+    "farmer_overview_subtitle": "የሜዳ ብልህ ዳሽቦርድ ንቁ ነው። ሁሉም ማሳ ቴሌሜትሪ ተያይዟል።"
   },
   "OfficerPages": {
     "audit_title": "የቢሮ ኦዲት መዝገብ",

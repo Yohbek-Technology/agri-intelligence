@@ -11,6 +11,7 @@ export const users = pgTable(
     role: userRole('role').notNull(),
     phone_number: varchar('phone_number', { length: 20 }).notNull().unique(),
     full_name: varchar('full_name', { length: 150 }).notNull(),
+    username: varchar('username', { length: 50 }).unique(),
     email: varchar('email', { length: 255 }).notNull().unique(),
     emailVerified: boolean('email_verified').default(false).notNull(),
     image_url: text('image_url'),

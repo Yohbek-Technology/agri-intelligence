@@ -7,7 +7,7 @@ export default function OfficerOverviewPage() {
   const t = useTranslations('Dashboard')
   const tp = useTranslations('OfficerPages')
   const { user } = useAuthSession()
-  const { isAuthorized, isLoading } = useRoleGuard(['officer', 'system_admin'])
+  const { isAuthorized, isLoading } = useRoleGuard(['officer', 'system_admin', 'CITY_ADMIN', 'SUPER_ADMIN', 'city_admin', 'super_admin'])
 
   if (isLoading) {
     return (
@@ -28,7 +28,7 @@ export default function OfficerOverviewPage() {
   return (
     <div className="w-full px-2.5 py-3 sm:p-6 lg:p-8 officer-content">
       <h1 className="text-3xl font-bold text-text-primary">
-        {t('overview_greeting', { name: user?.name ?? 'Officer' })}
+        {t('overview_greeting', { name: user?.name ?? user?.fullName ?? 'City Admin' })}
       </h1>
       <p className="mt-2 text-base text-text-muted">
         {t('off_overview_subtitle')}
