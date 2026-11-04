@@ -20,7 +20,8 @@
   },
   "include": [
     "src/**/*",
-    "test/**/*"
+    "test/**/*",
+    "temp/ai.test.ts"
   ],
   "exclude": [
     "node_modules"

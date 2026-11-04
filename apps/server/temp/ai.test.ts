@@ -8,7 +8,7 @@ import {
   roundCoordinates,
   sanitizePromptContext,
   Type,
-} from '../../src/config/ai-provider.js'
+} from '../src/config/ai-provider.js'
 import type { AITier } from '@repo/shared'
 
 const isDev = process.env.NODE_ENV !== 'production'
