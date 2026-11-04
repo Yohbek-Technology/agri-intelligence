@@ -11,6 +11,11 @@ import {
 
 // Real Cloudinary calls — credentials must be set in .env
 // Every test that uploads cleans up after itself
+const hasCloudinary = Boolean(
+  process.env.CLOUDINARY_CLOUD_NAME &&
+  process.env.CLOUDINARY_API_KEY &&
+  process.env.CLOUDINARY_API_SECRET
+)
 
 describe('generateStorageKey', () => {
   it('returns a correctly structured path', () => {
@@ -41,7 +46,7 @@ describe('extractPublicId', () => {
   })
 })
 
-describe('uploadFile — real Cloudinary', () => {
+describe.skipIf(!hasCloudinary)('uploadFile — real Cloudinary', () => {
   it('uploads a remote URL and returns valid metadata', async () => {
     let result
     try {
@@ -85,7 +90,7 @@ describe('uploadFile — real Cloudinary', () => {
   }, 30000)
 })
 
-describe('getSignedUrl — real Cloudinary', () => {
+describe.skipIf(!hasCloudinary)('getSignedUrl — real Cloudinary', () => {
   it('returns a signed URL with a valid signature token', async () => {
     const result = await uploadFile(
       'https://res.cloudinary.com/demo/image/upload/sample.jpg',
@@ -101,7 +106,7 @@ describe('getSignedUrl — real Cloudinary', () => {
   }, 30000)
 })
 
-describe('deleteFile — real Cloudinary', () => {
+describe.skipIf(!hasCloudinary)('deleteFile — real Cloudinary', () => {
   it('deletes an uploaded asset without throwing', async () => {
     const result = await uploadFile(
       'https://res.cloudinary.com/demo/image/upload/sample.jpg',
@@ -113,7 +118,7 @@ describe('deleteFile — real Cloudinary', () => {
   }, 30000)
 })
 
-describe('deleteFileByUrl — real Cloudinary', () => {
+describe.skipIf(!hasCloudinary)('deleteFileByUrl — real Cloudinary', () => {
   it('deletes an asset using only the secure_url', async () => {
     const result = await uploadFile(
       'https://res.cloudinary.com/demo/image/upload/sample.jpg',
