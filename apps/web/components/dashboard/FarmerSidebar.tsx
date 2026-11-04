@@ -12,7 +12,7 @@ import {
   NotebookPen, BookOpen, TrendingUp, Microscope,
   FlaskConical, CloudSun, BarChart2, Headphones,
   TriangleAlert, Megaphone, Archive,
-  ArrowLeftRight, UserCog, Settings2,
+  ArrowLeftRight, UserCog, Settings2, RotateCw,
 } from 'lucide-react'
 
 const NAV = [
@@ -42,6 +42,7 @@ const NAV = [
     items: [
       { id: 'yield-gap', labelKey: 'nav_yield_gap', href: '/farmer/yield-gap', icon: <TrendingUp size={18} /> },
       { id: 'diagnosis', labelKey: 'nav_diagnosis', href: '/farmer/diagnosis', icon: <Microscope size={18} /> },
+      { id: 'rotation',  labelKey: 'nav_rotation',  href: '/farmer/rotation',  icon: <RotateCw size={18} /> },
       { id: 'inputs',    labelKey: 'nav_inputs',    href: '/farmer/inputs',    icon: <FlaskConical size={18} /> },
     ],
   },
@@ -49,12 +50,6 @@ const NAV = [
     id: 'weather', labelKey: 'sec_weather',
     items: [
       { id: 'weather', labelKey: 'nav_weather', href: '/farmer/weather', icon: <CloudSun size={18} /> },
-    ],
-  },
-  {
-    id: 'market', labelKey: 'sec_market',
-    items: [
-      { id: 'prices',  labelKey: 'nav_prices',  href: '/farmer/market',  icon: <BarChart2 size={18} /> },
     ],
   },
   {

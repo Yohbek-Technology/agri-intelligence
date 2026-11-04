@@ -1,234 +1,160 @@
-import { pgTable, uuid, varchar, timestamp, boolean, check, index, uniqueIndex, numeric, integer, smallint } from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar, timestamp, boolean, check, index, unique, numeric, integer, smallint, char, bigint, text, jsonb } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm/_relations";
 import { sql } from "drizzle-orm";
-import { cityOffices, kebeles, geographyPoint } from "./tenancy.js";
+import { cities, kebeles, geographyPoint, geographyPolygon } from "./tenancy.js";
 import { users } from "./auth-schema.js";
-import { appLanguage, areaUnit, agroZone, soilClass, drainageClass, plotStatus } from "./enums.js";
+import { approvalStatus, landUnit, agroZone, soilType } from "./enums.js";
+
+export const fieldAgents = pgTable("field_agents", {
+  agent_id: uuid("agent_id").primaryKey().defaultRandom(),
+  user_id: uuid("user_id")
+    .notNull()
+    .unique()
+    .references(() => users.id),
+  city_id: uuid("city_id")
+    .notNull()
+    .references(() => cities.city_id),
+  specialization: varchar("specialization", { length: 100 }),
+  max_farmers: smallint("max_farmers").notNull().default(50),
+  is_active: boolean("is_active").notNull().default(true),
+});
 
 export const farmers = pgTable(
   "farmers",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    cityOfficeId: uuid("city_office_id")
+    farmer_id: uuid("farmer_id").primaryKey().defaultRandom(),
+    user_id: uuid("user_id").unique().references(() => users.id),
+    city_id: uuid("city_id")
       .notNull()
-      .references(() => cityOffices.id),
-    userId: uuid("user_id").unique().references(() => users.id, { onDelete: "set null" }),
-    fullName: varchar("full_name", { length: 120 }).notNull(),
-    phoneNumber: varchar("phone_number", { length: 20 }),
-    hasNoPhone: boolean("has_no_phone").notNull().default(false),
-    localIdNumber: varchar("local_id_number", { length: 40 }).notNull(),
-    kebeleId: uuid("kebele_id")
+      .references(() => cities.city_id),
+    kebele_id: uuid("kebele_id")
       .notNull()
-      .references(() => kebeles.id),
-    assignedDaUserId: uuid("assigned_da_user_id").references(() => users.id),
-    registeredByUserId: uuid("registered_by_user_id").references(() => users.id),
-    preferredLanguage: appLanguage("preferred_language").notNull().default("am"),
-    isVerified: boolean("is_verified").notNull().default(false),
-    consentAgreed: boolean("consent_agreed").notNull().default(true),
-    consentAgreedAt: timestamp("consent_agreed_at", { withTimezone: true }).defaultNow(),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+      .references(() => kebeles.kebele_id),
+    agent_id: uuid("agent_id").references(() => fieldAgents.agent_id),
+    local_id_number: varchar("local_id_number", { length: 50 }),
+    full_name: varchar("full_name", { length: 150 }).notNull(),
+    phone_number: varchar("phone_number", { length: 20 }),
+    gender: char("gender", { length: 1 }),
+    literacy_level: varchar("literacy_level", { length: 10 }),
+    status: approvalStatus("status").notNull().default("PENDING"),
+    created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
+    deleted_at: timestamp("deleted_at", { withTimezone: true }),
+    sync_version: bigint("sync_version", { mode: "number" }).notNull().default(0),
   },
   (table) => ({
-    fullNameCheck: check(
-      "farmers_full_name_check",
-      sql`full_name = btrim(full_name) and char_length(full_name) between 2 and 120`
-    ),
-    noPhoneCheck: check(
-      "farmers_has_no_phone_check",
-      sql`has_no_phone = (phone_number is null)`
-    ),
-    phoneFormatCheck: check(
-      "farmers_phone_format_check",
-      sql`phone_number is null or phone_number ~ '^\\+251[79][0-9]{8}$'`
-    ),
-    consentCheck: check(
-      "farmers_consent_check",
-      sql`not consent_agreed or consent_agreed_at is not null`
-    ),
-    uqPhoneActive: uniqueIndex("uq_farmers_phone_active")
-      .on(table.phoneNumber)
-      .where(sql`deleted_at is null and phone_number is not null`),
-    uqLocalIdActive: uniqueIndex("uq_farmers_local_id_active")
-      .on(table.cityOfficeId, table.localIdNumber)
+    uqCityLocalId: unique("farmers_city_id_local_id_number_key").on(table.city_id, table.local_id_number),
+    genderCheck: check("farmers_gender_check", sql`gender in ('M','F')`),
+    literacyCheck: check("farmers_literacy_check", sql`literacy_level in ('NONE','BASIC','FULL')`),
+    idxFarmersCityKebele: index("idx_farmers_city_kebele")
+      .on(table.city_id, table.kebele_id)
       .where(sql`deleted_at is null`),
-    idxOfficeVerified: index("idx_farmers_office_verified")
-      .on(table.cityOfficeId, table.isVerified)
-      .where(sql`deleted_at is null`),
-    idxDa: index("idx_farmers_da")
-      .on(table.assignedDaUserId)
-      .where(sql`deleted_at is null`),
-    idxKebele: index("idx_farmers_kebele").on(table.kebeleId),
-    idxNameFts: index("idx_farmers_name_fts")
-      .using("gin", sql`to_tsvector('simple', full_name)`),
+    idxFarmersAgent: index("idx_farmers_agent").on(table.agent_id),
   })
 );
+
+export const devices = pgTable("devices", {
+  device_id: uuid("device_id").primaryKey().defaultRandom(),
+  user_id: uuid("user_id")
+    .notNull()
+    .references(() => users.id),
+  push_token: text("push_token"),
+  is_shared_device: boolean("is_shared_device").notNull().default(false),
+  last_sync_at: timestamp("last_sync_at", { withTimezone: true }),
+  last_sync_cursor: bigint("last_sync_cursor", { mode: "number" }).notNull().default(0),
+});
 
 export const plots = pgTable(
   "plots",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    cityOfficeId: uuid("city_office_id")
+    plot_id: uuid("plot_id").primaryKey().defaultRandom(),
+    farmer_id: uuid("farmer_id")
       .notNull()
-      .references(() => cityOffices.id),
-    farmerId: uuid("farmer_id")
+      .references(() => farmers.farmer_id),
+    city_id: uuid("city_id")
       .notNull()
-      .references(() => farmers.id, { onDelete: "cascade" }),
-    name: varchar("name", { length: 60 }).notNull(),
-    areaValue: numeric("area_value", { precision: 10, scale: 3 }).notNull(),
-    areaUnit: areaUnit("area_unit").notNull(),
-    hectaresPerUnitApplied: numeric("hectares_per_unit_applied", { precision: 10, scale: 6 }).notNull(),
-    areaHectares: numeric("area_hectares", { precision: 10, scale: 4 }).generatedAlwaysAs(
-      sql`round(area_value * hectares_per_unit_applied, 4)`
-    ),
-    centroidLatitude: numeric("centroid_latitude", { precision: 9, scale: 6 }).notNull(),
-    centroidLongitude: numeric("centroid_longitude", { precision: 9, scale: 6 }).notNull(),
-    centroidGeom: geographyPoint("centroid_geom").generatedAlwaysAs(
-      sql`st_setsrid(st_makepoint(centroid_longitude, centroid_latitude), 4326)::geography`
-    ),
-    gpsAccuracyMeters: numeric("gps_accuracy_meters", { precision: 6, scale: 1 }).notNull(),
-    weatherGridLatitude: numeric("weather_grid_latitude", { precision: 5, scale: 1 }).generatedAlwaysAs(
-      sql`round(centroid_latitude, 1)`
-    ),
-    weatherGridLongitude: numeric("weather_grid_longitude", { precision: 5, scale: 1 }).generatedAlwaysAs(
-      sql`round(centroid_longitude, 1)`
-    ),
-    elevationMeters: integer("elevation_meters").notNull(),
-    agroZoneDerived: agroZone("agro_zone_derived").notNull(),
-    agroZone: agroZone("agro_zone").notNull(),
-    agroZoneOverrideReason: varchar("agro_zone_override_reason", { length: 255 }),
-    kebeleId: uuid("kebele_id").references(() => kebeles.id),
-    soilClass: soilClass("soil_class"),
-    drainage: drainageClass("drainage"),
-    plannedCropId: uuid("planned_crop_id"),
-    plannedSeasonYear: smallint("planned_season_year"),
-    status: plotStatus("status").notNull().default("active"),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+      .references(() => cities.city_id),
+    kebele_id: uuid("kebele_id")
+      .notNull()
+      .references(() => kebeles.kebele_id),
+    plot_name: varchar("plot_name", { length: 100 }).notNull(),
+    landmark: varchar("landmark", { length: 200 }),
+    area_value: numeric("area_value", { precision: 10, scale: 3 }).notNull(),
+    area_unit: landUnit("area_unit").notNull(),
+    area_hectares: numeric("area_hectares", { precision: 10, scale: 4 }).notNull(),
+    location: geographyPoint("location"),
+    boundary: geographyPolygon("boundary"),
+    gps_captured_at: timestamp("gps_captured_at", { withTimezone: true }),
+    altitude_m: integer("altitude_m"),
+    zone: agroZone("zone"),
+    soil: soilType("soil").notNull(),
+    drainage: varchar("drainage", { length: 10 }),
+    rotation_plan: jsonb("rotation_plan"),
+    created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
+    deleted_at: timestamp("deleted_at", { withTimezone: true }),
+    sync_version: bigint("sync_version", { mode: "number" }).notNull().default(0),
   },
   (table) => ({
-    areaCheck: check("plots_area_check", sql`area_value > 0 and area_value <= 1000`),
-    conversionFactorCheck: check("plots_conversion_check", sql`hectares_per_unit_applied > 0`),
-    coordsCheck: check(
-      "plots_coords_check",
-      sql`centroid_latitude between -90 and 90 and centroid_longitude between -180 and 180`
-    ),
-    elevationCheck: check("plots_elevation_check", sql`elevation_meters between 0 and 4500`),
-    agroZoneCheck: check(
-      "plots_agro_zone_check",
-      sql`agro_zone = agro_zone_derived or agro_zone_override_reason is not null`
-    ),
-    plannedCropCheck: check(
-      "plots_planned_crop_check",
-      sql`(planned_crop_id is null) = (planned_season_year is null)`
-    ),
-    plannedYearCheck: check(
-      "plots_planned_year_check",
-      sql`planned_season_year is null or planned_season_year between 2000 and 2100`
-    ),
-    uqNameActive: uniqueIndex("uq_plots_name_active")
-      .on(table.farmerId, sql`lower(name)`)
-      .where(sql`deleted_at is null`),
-    idxFarmer: index("idx_plots_farmer")
-      .on(table.farmerId)
-      .where(sql`deleted_at is null`),
-    idxOfficeKebele: index("idx_plots_office_kebele")
-      .on(table.cityOfficeId, table.kebeleId)
-      .where(sql`deleted_at is null`),
-    idxCentroid: index("idx_plots_centroid")
-      .using("gist", table.centroidGeom),
-    idxWeatherGrid: index("idx_plots_weather_grid")
-      .on(table.weatherGridLatitude, table.weatherGridLongitude),
-    idxSoilZone: index("idx_plots_soil_zone")
-      .on(table.cityOfficeId, table.soilClass, table.agroZone)
-      .where(sql`deleted_at is null`),
-    idxPlannedCrop: index("idx_plots_planned_crop")
-      .on(table.cityOfficeId, table.plannedCropId)
-      .where(sql`deleted_at is null and planned_crop_id is not null`),
+    areaValueCheck: check("plots_area_value_check", sql`area_value > 0`),
+    drainageCheck: check("plots_drainage_check", sql`drainage in ('POOR','MODERATE','GOOD','EXCESSIVE')`),
+    idxPlotsBoundary: index("idx_plots_boundary").using("gist", table.boundary),
+    idxPlotsFarmer: index("idx_plots_farmer").on(table.farmer_id).where(sql`deleted_at is null`),
+    idxPlotsKebele: index("idx_plots_kebele").on(table.kebele_id),
+    idxPlotsLocation: index("idx_plots_location").using("gist", table.location),
   })
 );
 
-export const plotCropHistory = pgTable(
-  "plot_crop_history",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    cityOfficeId: uuid("city_office_id")
-      .notNull()
-      .references(() => cityOffices.id),
-    farmerId: uuid("farmer_id")
-      .notNull()
-      .references(() => farmers.id, { onDelete: "cascade" }),
-    plotId: uuid("plot_id")
-      .notNull()
-      .references(() => plots.id, { onDelete: "cascade" }),
-    seasonYear: smallint("season_year").notNull(),
-    cropId: uuid("crop_id"),
-    fallow: boolean("fallow").notNull().default(false),
-    createdByUserId: uuid("created_by_user_id").references(() => users.id),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-    deletedAt: timestamp("deleted_at", { withTimezone: true }),
-  },
-  (table) => ({
-    uqSeason: uniqueIndex("uq_plot_crop_history_season").on(table.plotId, table.seasonYear),
-    seasonCheck: check("plot_crop_history_season_check", sql`season_year between 2000 and 2100`),
-    fallowCheck: check(
-      "plot_crop_history_fallow_check",
-      sql`fallow = (crop_id is null)`
-    ),
-  })
-);
+export const fieldAgentsRelations = relations(fieldAgents, ({ one, many }) => ({
+  user: one(users, {
+    fields: [fieldAgents.user_id],
+    references: [users.id],
+  }),
+  city: one(cities, {
+    fields: [fieldAgents.city_id],
+    references: [cities.city_id],
+  }),
+  farmers: many(farmers),
+}));
 
 export const farmersRelations = relations(farmers, ({ one, many }) => ({
-  cityOffice: one(cityOffices, {
-    fields: [farmers.cityOfficeId],
-    references: [cityOffices.id],
+  user: one(users, {
+    fields: [farmers.user_id],
+    references: [users.id],
+  }),
+  city: one(cities, {
+    fields: [farmers.city_id],
+    references: [cities.city_id],
   }),
   kebele: one(kebeles, {
-    fields: [farmers.kebeleId],
-    references: [kebeles.id],
+    fields: [farmers.kebele_id],
+    references: [kebeles.kebele_id],
   }),
-  user: one(users, {
-    fields: [farmers.userId],
-    references: [users.id],
-  }),
-  assignedDa: one(users, {
-    fields: [farmers.assignedDaUserId],
-    references: [users.id],
+  agent: one(fieldAgents, {
+    fields: [farmers.agent_id],
+    references: [fieldAgents.agent_id],
   }),
   plots: many(plots),
-  plotCropHistory: many(plotCropHistory),
 }));
 
-export const plotsRelations = relations(plots, ({ one, many }) => ({
-  cityOffice: one(cityOffices, {
-    fields: [plots.cityOfficeId],
-    references: [cityOffices.id],
+export const devicesRelations = relations(devices, ({ one }) => ({
+  user: one(users, {
+    fields: [devices.user_id],
+    references: [users.id],
   }),
+}));
+
+export const plotsRelations = relations(plots, ({ one }) => ({
   farmer: one(farmers, {
-    fields: [plots.farmerId],
-    references: [farmers.id],
+    fields: [plots.farmer_id],
+    references: [farmers.farmer_id],
+  }),
+  city: one(cities, {
+    fields: [plots.city_id],
+    references: [cities.city_id],
   }),
   kebele: one(kebeles, {
-    fields: [plots.kebeleId],
-    references: [kebeles.id],
-  }),
-  plotCropHistory: many(plotCropHistory),
-}));
-
-export const plotCropHistoryRelations = relations(plotCropHistory, ({ one }) => ({
-  cityOffice: one(cityOffices, {
-    fields: [plotCropHistory.cityOfficeId],
-    references: [cityOffices.id],
-  }),
-  farmer: one(farmers, {
-    fields: [plotCropHistory.farmerId],
-    references: [farmers.id],
-  }),
-  plot: one(plots, {
-    fields: [plotCropHistory.plotId],
-    references: [plots.id],
+    fields: [plots.kebele_id],
+    references: [kebeles.kebele_id],
   }),
 }));

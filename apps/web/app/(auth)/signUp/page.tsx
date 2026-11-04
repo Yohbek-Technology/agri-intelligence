@@ -100,7 +100,7 @@ function SignUpContent() {
             success={!!(formData.password && !liveErrors.password && !fieldErrors.password)}
             disabled={isLoading}
           />
-          <PasswordStrength password={formData.password} />
+          <PasswordStrength password={formData.password || ''} />
         </div>
 
         <Select

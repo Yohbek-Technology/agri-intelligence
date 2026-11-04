@@ -1,6 +1,6 @@
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
-import { phoneNumber, openAPI, username, bearer } from 'better-auth/plugins'
+import { phoneNumber, openAPI, bearer } from 'better-auth/plugins'
 import { db } from '@/config/db.js'
 import * as schema from '@/db/index.js'
 import { sendSms, onPhoneVerified, normalizeEthiopianPhone } from '@/services/sms.js'
@@ -55,13 +55,6 @@ export const auth = betterAuth({
     openAPI(),
     bearer(),
 
-    username({
-      displayUsername: false,
-      minUsernameLength: 3,
-      maxUsernameLength: 30,
-    }),
-
-
     phoneNumber({
       otpLength: 6,
       expiresIn: 600,
@@ -84,7 +77,7 @@ export const auth = betterAuth({
         ET_E164_REGEX.test(normalizeEthiopianPhone(phone)),
       signUpOnVerification: {
         getTempEmail: (phone) =>
-          `${normalizeEthiopianPhone(phone).replace('+', '')}@phone.agri.invalid`,
+          `${normalizeEthiopianPhone(phone).replace(/[^0-9]/g, '')}@phone.agri.invalid`,
         getTempName: (phone) => normalizeEthiopianPhone(phone),
       },
       callbackOnVerification: async ({ user }, ctx?: any) => {
@@ -92,9 +85,7 @@ export const auth = betterAuth({
         // a new signup attempt must be rejected before we overwrite anything.
         const existingAcc = await ctx.context.internalAdapter.findCredentialAccount(user.id)
         if (existingAcc) {
-          // Undo the phoneNumberVerified update better-auth just made,
-          // then throw so the verify endpoint returns an error to the client.
-          await ctx.context.internalAdapter.updateUser(user.id, { phone_number_verified: false })
+          await ctx.context.internalAdapter.updateUser(user.id, { is_phone_verified: false })
           throw new Error('PHONE_ALREADY_REGISTERED: This phone number is already registered.')
         }
         if (ctx?.body?.password) {
@@ -112,8 +103,8 @@ export const auth = betterAuth({
         if (ctx?.body?.name) {
           await ctx.context.internalAdapter.updateUser(user.id, { name: ctx.body.name })
         }
-        if (ctx?.body?.preferredLanguage) {
-          await ctx.context.internalAdapter.updateUser(user.id, { preferredLanguage: ctx.body.preferredLanguage })
+        if (ctx?.body?.language || ctx?.body?.preferredLanguage) {
+          await ctx.context.internalAdapter.updateUser(user.id, { language: ctx.body.language || ctx.body.preferredLanguage })
         }
         await onPhoneVerified(user.id)
       },
@@ -122,8 +113,8 @@ export const auth = betterAuth({
 
   user: {
     fields: {
+      name: 'full_name',
       image: 'image_url',
-      banExpires: 'ban_expires_at',
     },
     additionalFields: {
       phoneNumber: {
@@ -136,52 +127,47 @@ export const auth = betterAuth({
         type: 'boolean',
         required: true,
         defaultValue: false,
-        fieldName: 'phone_number_verified',
+        fieldName: 'is_phone_verified',
       },
       role: {
         type: 'string',
         required: true,
-        defaultValue: 'farmer',
+        defaultValue: 'FARMER',
         fieldName: 'role',
       },
-      banned: {
-        type: 'boolean',
+      status: {
+        type: 'string',
         required: true,
-        defaultValue: false,
-        fieldName: 'banned',
+        defaultValue: 'PENDING',
+        fieldName: 'status',
       },
-      banReason: {
+      cityId: {
         type: 'string',
         required: false,
-        fieldName: 'ban_reason',
+        fieldName: 'city_id',
       },
-      cityOfficeId: {
-        type: 'string',
-        required: false,
-        fieldName: 'city_office_id',
-      },
-      preferredLanguage: {
+      language: {
         type: 'string',
         required: true,
         defaultValue: 'am',
-        fieldName: 'preferred_language',
+        fieldName: 'language',
       },
-      assignedKebeleIds: {
-        type: 'string',
+      autoTts: {
+        type: 'boolean',
         required: true,
-        defaultValue: '{}',
-        fieldName: 'assigned_kebele_ids',
+        defaultValue: true,
+        fieldName: 'auto_tts',
       },
-      deletedAt: {
+      voiceNavEnabled: {
+        type: 'boolean',
+        required: true,
+        defaultValue: true,
+        fieldName: 'voice_nav_enabled',
+      },
+      lastLoginAt: {
         type: 'date',
         required: false,
-        fieldName: 'deleted_at',
-      },
-      username: {
-        type: 'string',
-        required: false,
-        unique: true,
-        fieldName: 'username',
+        fieldName: 'last_login_at',
       },
     },
   },

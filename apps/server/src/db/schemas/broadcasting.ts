@@ -1,72 +1,45 @@
-import { pgTable, uuid, varchar, timestamp, boolean, jsonb, check, index, unique, smallint, numeric } from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar, timestamp, boolean, text, integer, numeric, check, index } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm/_relations";
 import { sql } from "drizzle-orm";
-import { cityOffices } from "./tenancy.js";
+import { cities, geographyPoint } from "./tenancy.js";
 import { farmers } from "./farmers.js";
 import { users } from "./auth-schema.js";
-import { pestCatalog } from "./catalog.js";
+import { crops, pestsDiseases } from "./catalog.js";
 import {
-  announcementType,
-  announcementStatus,
-  agroZone,
-  deliveryChannel,
+  severityLevel,
+  languageCode,
+  channelType,
   deliveryStatus,
 } from "./enums.js";
 
 export const announcements = pgTable(
   "announcements",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    cityOfficeId: uuid("city_office_id")
+    announcement_id: uuid("announcement_id").primaryKey().defaultRandom(),
+    city_id: uuid("city_id")
       .notNull()
-      .references(() => cityOffices.id, { onDelete: "cascade" }),
-    createdByUserId: uuid("created_by_user_id").notNull().references(() => users.id),
-    announcementType: announcementType("announcement_type").notNull(),
-    status: announcementStatus("status").notNull().default("draft"),
-    targetsEntireCity: boolean("targets_entire_city").notNull().default(true),
-    targetKebeleIds: uuid("target_kebele_ids").array().notNull().default(sql`'{}'::uuid[]`),
-    targetCropIds: uuid("target_crop_ids").array().notNull().default(sql`'{}'::uuid[]`),
-    targetAgroZones: agroZone("target_agro_zones").array().notNull().default(sql`'{}'::agro_zone[]`),
-    pestId: uuid("pest_id").references(() => pestCatalog.id),
-    templateCode: varchar("template_code", { length: 60 }),
-    templateVariables: jsonb("template_variables"),
-    translations: jsonb("translations").notNull().default({}),
-    requiresAcknowledgement: boolean("requires_acknowledgement").notNull().default(false),
-    smsFallbackAfterMinutes: smallint("sms_fallback_after_minutes"),
-    expiresAt: timestamp("expires_at", { withTimezone: true }),
-    publishedAt: timestamp("published_at", { withTimezone: true }),
-    recalledAt: timestamp("recalled_at", { withTimezone: true }),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+      .references(() => cities.city_id),
+    created_by: uuid("created_by").references(() => users.id),
+    type: varchar("type", { length: 20 }).notNull(),
+    pest_id: uuid("pest_id").references(() => pestsDiseases.pest_id),
+    severity: severityLevel("severity").notNull().default("LOW"),
+    language: languageCode("language").notNull().default("am"),
+    title: varchar("title", { length: 200 }).notNull(),
+    body: text("body").notNull(),
+    sms_text: varchar("sms_text", { length: 480 }),
+    audio_url: text("audio_url"),
+    audio_public_id: varchar("audio_public_id", { length: 255 }),
+    audio_duration_sec: integer("audio_duration_sec"),
+    channels: channelType("channels").array().notNull(),
+    target_kebele_ids: uuid("target_kebele_ids").array(),
+    published_at: timestamp("published_at", { withTimezone: true }),
+    expires_at: timestamp("expires_at", { withTimezone: true }),
+    created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => ({
-    targetCheck: check(
-      "announcements_target_check",
-      sql`
-        targets_entire_city 
-        or cardinality(target_kebele_ids) + cardinality(target_crop_ids) + cardinality(target_agro_zones) > 0
-      `
-    ),
-    publishedCheck: check(
-      "announcements_published_check",
-      sql`status <> 'published' or published_at is not null`
-    ),
-    translationsTypeCheck: check(
-      "announcements_translations_type_check",
-      sql`jsonb_typeof(translations) = 'object'`
-    ),
-    translationsKeysCheck: check(
-      "announcements_translations_keys_check",
-      sql`(translations - 'am' - 'om' - 'ti' - 'en') = '{}'::jsonb`
-    ),
-    translationsDraftCheck: check(
-      "announcements_translations_draft_check",
-      sql`status = 'draft' or translations <> '{}'::jsonb`
-    ),
-    idxOffice: index("idx_announcements_office").on(
-      table.cityOfficeId,
-      table.status,
-      table.publishedAt
+    typeCheck: check(
+      "announcements_type_check",
+      sql`type in ('SEASONAL_ADVICE','INPUT_AVAILABILITY','EMERGENCY','QUARANTINE','WEATHER_ALERT','WEEKLY_WEATHER')`
     ),
   })
 );
@@ -74,69 +47,106 @@ export const announcements = pgTable(
 export const announcementDeliveries = pgTable(
   "announcement_deliveries",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    announcementId: uuid("announcement_id")
+    delivery_id: uuid("delivery_id").primaryKey().defaultRandom(),
+    announcement_id: uuid("announcement_id")
       .notNull()
-      .references(() => announcements.id, { onDelete: "cascade" }),
-    cityOfficeId: uuid("city_office_id")
+      .references(() => announcements.announcement_id),
+    farmer_id: uuid("farmer_id")
       .notNull()
-      .references(() => cityOffices.id),
-    farmerId: uuid("farmer_id")
-      .notNull()
-      .references(() => farmers.id),
-    channel: deliveryChannel("channel").notNull(),
-    status: deliveryStatus("status").notNull().default("queued"),
-    providerMessageId: varchar("provider_message_id", { length: 120 }),
-    smsSegmentCount: smallint("sms_segment_count"),
-    costEtb: numeric("cost_etb", { precision: 8, scale: 4 }),
-    failureReason: varchar("failure_reason", { length: 255 }),
-    queuedAt: timestamp("queued_at", { withTimezone: true }).notNull().defaultNow(),
-    sentAt: timestamp("sent_at", { withTimezone: true }),
-    deliveredAt: timestamp("delivered_at", { withTimezone: true }),
-    readAt: timestamp("read_at", { withTimezone: true }),
-    acknowledgedAt: timestamp("acknowledged_at", { withTimezone: true }),
+      .references(() => farmers.farmer_id),
+    channel: channelType("channel").notNull(),
+    status: deliveryStatus("status").notNull().default("QUEUED"),
+    error_message: text("error_message"),
+    sent_at: timestamp("sent_at", { withTimezone: true }),
   },
   (table) => ({
-    uqChannelFarmer: unique("announcement_deliveries_announcement_farmer_channel_key").on(
-      table.announcementId,
-      table.farmerId,
-      table.channel
+    idxDeliveries: index("idx_deliveries").on(table.announcement_id, table.status),
+  })
+);
+
+export const outbreakClusterAlerts = pgTable(
+  "outbreak_cluster_alerts",
+  {
+    cluster_id: uuid("cluster_id").primaryKey().defaultRandom(),
+    city_id: uuid("city_id")
+      .notNull()
+      .references(() => cities.city_id),
+    pest_id: uuid("pest_id")
+      .notNull()
+      .references(() => pestsDiseases.pest_id),
+    center_point: geographyPoint("center_point").notNull(),
+    radius_m: integer("radius_m").notNull(),
+    case_count: integer("case_count").notNull(),
+    severity: severityLevel("severity").notNull(),
+    is_active: boolean("is_active").notNull().default(true),
+    created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    idxOutbreakActive: index("idx_outbreak_active").on(table.city_id, table.is_active),
+  })
+);
+
+export const knowledgeArticles = pgTable(
+  "knowledge_articles",
+  {
+    article_id: uuid("article_id").primaryKey().defaultRandom(),
+    crop_id: uuid("crop_id").references(() => crops.crop_id),
+    topic: varchar("topic", { length: 20 }).notNull(),
+    language: languageCode("language").notNull(),
+    title: varchar("title", { length: 200 }).notNull(),
+    content: text("content").notNull(),
+    target_moisture_pct: numeric("target_moisture_pct", { precision: 4, scale: 1 }),
+    audio_url: text("audio_url"),
+  },
+  (table) => ({
+    topicCheck: check(
+      "knowledge_articles_topic_check",
+      sql`topic in ('MOISTURE_TEST','HERMETIC_BAG','STORAGE_PESTS','GENERAL')`
     ),
-    idxAnnouncement: index("idx_deliveries_announcement").on(
-      table.announcementId,
-      table.channel,
-      table.status
-    ),
-    idxFarmer: index("idx_deliveries_farmer").on(table.farmerId, table.queuedAt),
-    idxUnread: index("idx_deliveries_unread")
-      .on(table.farmerId, table.queuedAt)
-      .where(sql`channel = 'app' and read_at is null`),
   })
 );
 
 export const announcementsRelations = relations(announcements, ({ one, many }) => ({
-  cityOffice: one(cityOffices, {
-    fields: [announcements.cityOfficeId],
-    references: [cityOffices.id],
+  city: one(cities, {
+    fields: [announcements.city_id],
+    references: [cities.city_id],
   }),
   createdByUser: one(users, {
-    fields: [announcements.createdByUserId],
+    fields: [announcements.created_by],
     references: [users.id],
+  }),
+  pest: one(pestsDiseases, {
+    fields: [announcements.pest_id],
+    references: [pestsDiseases.pest_id],
   }),
   deliveries: many(announcementDeliveries),
 }));
 
 export const announcementDeliveriesRelations = relations(announcementDeliveries, ({ one }) => ({
   announcement: one(announcements, {
-    fields: [announcementDeliveries.announcementId],
-    references: [announcements.id],
-  }),
-  cityOffice: one(cityOffices, {
-    fields: [announcementDeliveries.cityOfficeId],
-    references: [cityOffices.id],
+    fields: [announcementDeliveries.announcement_id],
+    references: [announcements.announcement_id],
   }),
   farmer: one(farmers, {
-    fields: [announcementDeliveries.farmerId],
-    references: [farmers.id],
+    fields: [announcementDeliveries.farmer_id],
+    references: [farmers.farmer_id],
+  }),
+}));
+
+export const outbreakClusterAlertsRelations = relations(outbreakClusterAlerts, ({ one }) => ({
+  city: one(cities, {
+    fields: [outbreakClusterAlerts.city_id],
+    references: [cities.city_id],
+  }),
+  pest: one(pestsDiseases, {
+    fields: [outbreakClusterAlerts.pest_id],
+    references: [pestsDiseases.pest_id],
+  }),
+}));
+
+export const knowledgeArticlesRelations = relations(knowledgeArticles, ({ one }) => ({
+  crop: one(crops, {
+    fields: [knowledgeArticles.crop_id],
+    references: [crops.crop_id],
   }),
 }));

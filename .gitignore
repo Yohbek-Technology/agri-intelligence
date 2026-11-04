@@ -38,5 +38,6 @@ yarn-error.log*
 *.pem
 
 
+MOBILE_API_CONTRACT.md
 Agricultural_Intelligence_System_SRS_v1_3.md
 Database_Schema_Entities_API_Surface_Agri_v1.md

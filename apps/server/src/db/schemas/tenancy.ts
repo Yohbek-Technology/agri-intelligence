@@ -1,14 +1,6 @@
-import { sql } from "drizzle-orm";
-import { pgTable, uuid, varchar, timestamp, boolean, jsonb, numeric, integer, check, uniqueIndex, index } from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar, timestamp, boolean, unique } from "drizzle-orm/pg-core";
 import { customType } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm/_relations";
-import { appLanguage } from "./enums.js";
-
-export const geographyMultiPolygon = customType<{ data: string; driverData: string }>({
-  dataType() {
-    return "geography(MultiPolygon, 4326)";
-  },
-});
 
 export const geographyPoint = customType<{ data: string; driverData: string }>({
   dataType() {
@@ -16,61 +8,53 @@ export const geographyPoint = customType<{ data: string; driverData: string }>({
   },
 });
 
-export const cityOffices = pgTable(
-  "city_offices",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    name: varchar("name", { length: 120 }).notNull().unique(),
-    jurisdiction: geographyMultiPolygon("jurisdiction"),
-    defaultLanguage: appLanguage("default_language").notNull().default("am"),
-    parameters: jsonb("parameters").notNull().default({}),
-    isActive: boolean("is_active").notNull().default(true),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+export const geographyPolygon = customType<{ data: string; driverData: string }>({
+  dataType() {
+    return "geography(Polygon, 4326)";
   },
-  (table) => ({
-    parametersCheck: check(
-      "city_offices_parameters_check",
-      sql`jsonb_typeof(parameters) = 'object'`
-    ),
-  })
-);
+});
+
+export const geographyMultiPolygon = customType<{ data: string; driverData: string }>({
+  dataType() {
+    return "geography(MultiPolygon, 4326)";
+  },
+});
+
+export const cities = pgTable("cities", {
+  city_id: uuid("city_id").primaryKey().defaultRandom(),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  region: varchar("region", { length: 100 }).notNull(),
+  center_point: geographyPoint("center_point"),
+  sms_sender_id: varchar("sms_sender_id", { length: 20 }),
+  is_active: boolean("is_active").notNull().default(true),
+  created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
 
 export const kebeles = pgTable(
   "kebeles",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    cityOfficeId: uuid("city_office_id")
+    kebele_id: uuid("kebele_id").primaryKey().defaultRandom(),
+    city_id: uuid("city_id")
       .notNull()
-      .references(() => cityOffices.id, { onDelete: "cascade" }),
-    name: varchar("name", { length: 120 }).notNull(),
+      .references(() => cities.city_id),
+    name: varchar("name", { length: 100 }).notNull(),
     boundary: geographyMultiPolygon("boundary"),
-    centroidLatitude: numeric("centroid_latitude", { precision: 9, scale: 6 }),
-    centroidLongitude: numeric("centroid_longitude", { precision: 9, scale: 6 }),
-    radiusMeters: integer("radius_meters"),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    center_point: geographyPoint("center_point"),
   },
   (table) => ({
-    territoryCheck: check(
-      "kebeles_territory_check",
-      sql`boundary is not null or (centroid_latitude is not null and centroid_longitude is not null and radius_meters > 0)`
-    ),
-    uqKebelesNameActive: uniqueIndex("uq_kebeles_name_active")
-      .on(table.cityOfficeId, sql`lower(name)`)
-      .where(sql`deleted_at is null`),
-    idxKebelesOffice: index("idx_kebeles_office").on(table.cityOfficeId),
+    uqCityName: unique("kebeles_city_id_name_key").on(table.city_id, table.name),
   })
 );
 
-export const cityOfficesRelations = relations(cityOffices, ({ many }) => ({
+export const citiesRelations = relations(cities, ({ many }) => ({
   kebeles: many(kebeles),
 }));
 
 export const kebelesRelations = relations(kebeles, ({ one }) => ({
-  cityOffice: one(cityOffices, {
-    fields: [kebeles.cityOfficeId],
-    references: [cityOffices.id],
+  city: one(cities, {
+    fields: [kebeles.city_id],
+    references: [cities.city_id],
   }),
 }));
+
+

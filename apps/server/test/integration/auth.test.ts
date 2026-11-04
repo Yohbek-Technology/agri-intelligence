@@ -47,7 +47,7 @@ app.use('*', cors({ origin: '*', credentials: true }))
 app.on(['POST', 'GET'], '/api/auth/*', (c) => auth.handler(c.req.raw))
 app.get('/api/v1/offices/me', sessionGuard, requireAdminOrOfficer, (c) => {
   const user = c.get('user')
-  return c.json({ data: { cityOfficeId: user.cityOfficeId, role: user.role } })
+  return c.json({ data: { cityOfficeId: (user as any).cityId || (user as any).cityOfficeId, role: user.role } })
 })
 
 const BASE         = 'http://localhost'
@@ -145,7 +145,7 @@ describe('Farmer Phone OTP Lifecycle', () => {
     expect(res.status).toBe(200)
     const body = (await res.json()) as { token?: string; user?: { role?: string } }
     expect(body).toHaveProperty('token')
-    expect(body.user?.role).toBe('farmer')
+    expect(body.user?.role?.toUpperCase()).toBe('FARMER')
     expect(res.headers.get('set-cookie')).not.toBeNull()
   }, TEST_TIMEOUT)
 })

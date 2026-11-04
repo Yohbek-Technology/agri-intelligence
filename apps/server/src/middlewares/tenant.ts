@@ -3,14 +3,15 @@ import type { Context } from 'hono'
 import type { AuthVariables } from './session.js'
 
 export const tenantGuard = createMiddleware<{ Variables: AuthVariables }>(async (c, next) => {
-  const user = c.get('user')
+  const user = c.get('user') as any
 
-  if (user.role === 'system_admin') {
+  if (user.role === 'SUPER_ADMIN' || user.role === 'super_admin') {
     await next()
     return
   }
 
-  if (!user.cityOfficeId) {
+  const userCityId = user.cityId || user.cityOfficeId
+  if (!userCityId) {
     return c.json(
       {
         error: {
@@ -26,9 +27,10 @@ export const tenantGuard = createMiddleware<{ Variables: AuthVariables }>(async 
   await next()
 })
 
-export function assertTenantMatch(c: Context, resourceOfficeId: string): boolean {
-  const user = c.get('user')
+export function assertTenantMatch(c: Context, resourceCityId: string): boolean {
+  const user = c.get('user') as any
   if (!user) return false
-  if (user.role === 'system_admin') return true
-  return user.cityOfficeId === resourceOfficeId
+  if (user.role === 'SUPER_ADMIN' || user.role === 'super_admin') return true
+  const userCityId = user.cityId || user.cityOfficeId
+  return userCityId === resourceCityId
 }

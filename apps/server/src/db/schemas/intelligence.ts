@@ -1,246 +1,230 @@
-import { pgTable, uuid, varchar, timestamp, date, jsonb, check, index, unique, numeric, integer, text } from "drizzle-orm/pg-core";
+import { pgTable, pgView, uuid, varchar, timestamp, date, jsonb, check, index, unique, numeric, integer, smallint, text, boolean, bigint } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm/_relations";
 import { sql } from "drizzle-orm";
-import { cityOffices, kebeles, geographyPoint } from "./tenancy.js";
+import { cities, kebeles, geographyPoint } from "./tenancy.js";
 import { farmers, plots } from "./farmers.js";
 import { cropCycles } from "./crop-cycles.js";
 import { users } from "./auth-schema.js";
-import { pestCatalog } from "./catalog.js";
-import {
-  yieldAnalysisStatus,
-  appLanguage,
-  weatherAlertType,
-  jobStatus,
-  diagnosisSeverity,
-  diagnosisReviewStatus,
-} from "./enums.js";
+import { crops, pestsDiseases } from "./catalog.js";
+import { agroZone, soilType, seasonType, severityLevel } from "./enums.js";
 
-export const yieldGapAnalyses = pgTable(
-  "yield_gap_analyses",
+export const pestDiagnoses = pgTable(
+  "pest_diagnoses",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    cityOfficeId: uuid("city_office_id")
+    diagnosis_id: uuid("diagnosis_id").primaryKey().defaultRandom(),
+    farmer_id: uuid("farmer_id")
       .notNull()
-      .references(() => cityOffices.id),
-    farmerId: uuid("farmer_id")
-      .notNull()
-      .references(() => farmers.id, { onDelete: "cascade" }),
-    cycleId: uuid("cycle_id")
-      .notNull()
-      .references(() => cropCycles.id, { onDelete: "cascade" }),
-    engineVersion: varchar("engine_version", { length: 20 }).notNull(),
-    status: yieldAnalysisStatus("status").notNull(),
-    cohortDefinition: jsonb("cohort_definition").notNull(),
-    cohortSize: integer("cohort_size").notNull(),
-    plotYieldQtPerHa: numeric("plot_yield_qt_per_ha", { precision: 8, scale: 2 }),
-    cohortMedianQtPerHa: numeric("cohort_median_qt_per_ha", { precision: 8, scale: 2 }),
-    cohortTopQuartileQtPerHa: numeric("cohort_top_quartile_qt_per_ha", { precision: 8, scale: 2 }),
-    gapPercentVsTopQuartile: numeric("gap_percent_vs_top_quartile", { precision: 6, scale: 2 }),
-    factorResults: jsonb("factor_results").notNull().default([]),
-    rainOnsetDate: date("rain_onset_date"),
-    topCauses: jsonb("top_causes").notNull().default([]),
-    recommendations: jsonb("recommendations").notNull().default([]),
-    narrationLang: appLanguage("narration_lang"),
-    narrationText: text("narration_text").notNull().default(""),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+      .references(() => farmers.farmer_id),
+    plot_id: uuid("plot_id").references(() => plots.plot_id),
+    cycle_id: uuid("cycle_id").references(() => cropCycles.cycle_id),
+    kebele_id: uuid("kebele_id").references(() => kebeles.kebele_id),
+    location: geographyPoint("location"),
+    image_urls: text("image_urls").array().notNull(),
+    image_public_ids: text("image_public_ids").array(),
+    ai_context: jsonb("ai_context"),
+    ai_result: jsonb("ai_result"),
+    pest_id: uuid("pest_id").references(() => pestsDiseases.pest_id),
+    confidence: numeric("confidence", { precision: 4, scale: 3 }),
+    severity: severityLevel("severity"),
+    explanation_text: text("explanation_text"),
+    explanation_audio_url: text("explanation_audio_url"),
+    explanation_audio_public_id: varchar("explanation_audio_public_id", { length: 255 }),
+    recommended_pesticide_ids: uuid("recommended_pesticide_ids").array(),
+    needs_expert_review: boolean("needs_expert_review").notNull().default(false),
+    review_outcome: varchar("review_outcome", { length: 10 }),
+    reviewed_by: uuid("reviewed_by").references(() => users.id),
+    created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
+    deleted_at: timestamp("deleted_at", { withTimezone: true }),
+    sync_version: bigint("sync_version", { mode: "number" }).notNull().default(0),
   },
   (table) => ({
-    uqCycleEngine: unique("yield_gap_analyses_cycle_engine_key").on(
-      table.cycleId,
-      table.engineVersion
-    ),
-    cohortSizeCheck: check(
-      "yield_gap_analyses_cohort_check",
-      sql`status <> 'completed' or cohort_size >= 5`
-    ),
-    factorResultsCheck: check(
-      "yield_gap_analyses_factor_check",
-      sql`jsonb_typeof(factor_results) = 'array'`
-    ),
-    idxOffice: index("idx_yield_gap_office").on(table.cityOfficeId, table.createdAt),
+    confidenceCheck: check("pest_diagnoses_confidence_check", sql`confidence between 0 and 1`),
+    reviewOutcomeCheck: check("pest_diagnoses_review_outcome_check", sql`review_outcome in ('CONFIRMED','CORRECTED','REJECTED')`),
+    idxDiagKebeleTime: index("idx_diag_kebele_time").on(table.kebele_id, table.created_at.desc()),
+    idxDiagLocation: index("idx_diag_location").using("gist", table.location),
   })
 );
+
+export const cropRotationRules = pgTable(
+  "crop_rotation_rules",
+  {
+    rule_id: uuid("rule_id").primaryKey().defaultRandom(),
+    previous_crop_id: uuid("previous_crop_id")
+      .notNull()
+      .references(() => crops.crop_id),
+    next_crop_id: uuid("next_crop_id")
+      .notNull()
+      .references(() => crops.crop_id),
+    zone: agroZone("zone"),
+    soil: soilType("soil"),
+    score: smallint("score").notNull(),
+    rationale: text("rationale"),
+  },
+  (table) => ({
+    scoreCheck: check("crop_rotation_rules_score_check", sql`score between 0 and 100`),
+  })
+);
+
+export const yieldBenchmarks = pgTable(
+  "yield_benchmarks",
+  {
+    benchmark_id: uuid("benchmark_id").primaryKey().defaultRandom(),
+    city_id: uuid("city_id")
+      .notNull()
+      .references(() => cities.city_id),
+    crop_id: uuid("crop_id")
+      .notNull()
+      .references(() => crops.crop_id),
+    soil: soilType("soil").notNull(),
+    season_year: smallint("season_year").notNull(),
+    season: seasonType("season").notNull(),
+    sample_size: integer("sample_size").notNull(),
+    median_yield_qt_ha: numeric("median_yield_qt_ha", { precision: 8, scale: 2 }),
+    top_yield_qt_ha: numeric("top_yield_qt_ha", { precision: 8, scale: 2 }),
+    avg_urea_kg_ha: numeric("avg_urea_kg_ha", { precision: 8, scale: 2 }),
+    avg_nps_kg_ha: numeric("avg_nps_kg_ha", { precision: 8, scale: 2 }),
+    avg_planting_doy: smallint("avg_planting_doy"),
+    avg_first_weeding_dap: smallint("avg_first_weeding_dap"),
+    computed_at: timestamp("computed_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    uqBenchmark: unique("yield_benchmarks_city_crop_soil_year_season_key").on(
+      table.city_id,
+      table.crop_id,
+      table.soil,
+      table.season_year,
+      table.season
+    ),
+  })
+);
+
+export const yieldGapAnalyses = pgTable("yield_gap_analyses", {
+  analysis_id: uuid("analysis_id").primaryKey().defaultRandom(),
+  cycle_id: uuid("cycle_id")
+    .notNull()
+    .references(() => cropCycles.cycle_id),
+  benchmark_id: uuid("benchmark_id").references(() => yieldBenchmarks.benchmark_id),
+  own_yield_qt_ha: numeric("own_yield_qt_ha", { precision: 8, scale: 2 }),
+  target_yield_qt_ha: numeric("target_yield_qt_ha", { precision: 8, scale: 2 }),
+  gap_pct: numeric("gap_pct", { precision: 5, scale: 1 }),
+  factors: jsonb("factors"),
+  recommendations: jsonb("recommendations"),
+  summary_text: text("summary_text"),
+  summary_audio_url: text("summary_audio_url"),
+  generated_at: timestamp("generated_at", { withTimezone: true }).notNull().defaultNow(),
+});
 
 export const weatherForecasts = pgTable(
   "weather_forecasts",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    gridLatitude: numeric("grid_latitude", { precision: 5, scale: 1 }).notNull(),
-    gridLongitude: numeric("grid_longitude", { precision: 5, scale: 1 }).notNull(),
-    fetchedAt: timestamp("fetched_at", { withTimezone: true }).notNull(),
-    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-    currentObservation: jsonb("current_observation").notNull(),
-    dailyForecasts: jsonb("daily_forecasts").notNull(),
+    forecast_id: uuid("forecast_id").primaryKey().defaultRandom(),
+    kebele_id: uuid("kebele_id").references(() => kebeles.kebele_id),
+    plot_id: uuid("plot_id").references(() => plots.plot_id),
+    location: geographyPoint("location").notNull(),
+    forecast_date: date("forecast_date").notNull(),
+    temp_min_c: numeric("temp_min_c", { precision: 4, scale: 1 }),
+    temp_max_c: numeric("temp_max_c", { precision: 4, scale: 1 }),
+    rain_probability_pct: smallint("rain_probability_pct"),
+    rain_mm: numeric("rain_mm", { precision: 6, scale: 1 }),
+    humidity_pct: smallint("humidity_pct"),
+    wind_kmh: numeric("wind_kmh", { precision: 5, scale: 1 }),
+    est_soil_moisture: varchar("est_soil_moisture", { length: 12 }),
+    plowing_ok: boolean("plowing_ok"),
+    spraying_ok: boolean("spraying_ok"),
+    spray_washoff_risk: boolean("spray_washoff_risk"),
+    harvest_dry_ok: boolean("harvest_dry_ok"),
+    advice_text: text("advice_text"),
+    fetched_at: timestamp("fetched_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => ({
-    uqGrid: unique("weather_forecasts_grid_key").on(table.gridLatitude, table.gridLongitude),
+    rainProbCheck: check("weather_forecasts_rain_prob_check", sql`rain_probability_pct between 0 and 100`),
+    soilMoistureCheck: check("weather_forecasts_soil_moisture_check", sql`est_soil_moisture in ('DRY','OPTIMAL','WET','WATERLOGGED')`),
+    idxWeatherDate: index("idx_weather_date").on(table.forecast_date, table.kebele_id),
   })
 );
 
-export const weatherAlerts = pgTable(
-  "weather_alerts",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    gridLatitude: numeric("grid_latitude", { precision: 5, scale: 1 }).notNull(),
-    gridLongitude: numeric("grid_longitude", { precision: 5, scale: 1 }).notNull(),
-    alertType: weatherAlertType("alert_type").notNull(),
-    startsOn: date("starts_on").notNull(),
-    endsOn: date("ends_on").notNull(),
-    details: jsonb("details").notNull(),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  },
-  (table) => ({
-    uqAlert: unique("weather_alerts_grid_type_starts_key").on(
-      table.gridLatitude,
-      table.gridLongitude,
-      table.alertType,
-      table.startsOn
-    ),
-    endsOnCheck: check("weather_alerts_ends_check", sql`ends_on >= starts_on`),
-    idxGrid: index("idx_weather_alerts_grid").on(table.gridLatitude, table.gridLongitude, table.startsOn),
-  })
-);
+export const vCycleYields = pgView("v_cycle_yields", {
+  cycle_id: uuid("cycle_id"),
+  city_id: uuid("city_id"),
+  kebele_id: uuid("kebele_id"),
+  plot_id: uuid("plot_id"),
+  farmer_id: uuid("farmer_id"),
+  season_year: smallint("season_year"),
+  season: seasonType("season"),
+  crop_id: uuid("crop_id"),
+  variety_id: uuid("variety_id"),
+  soil: soilType("soil"),
+  zone: agroZone("zone"),
+  area_hectares: numeric("area_hectares"),
+  harvest_kg: numeric("harvest_kg"),
+  yield_qt_ha: numeric("yield_qt_ha"),
+}).as(sql`
+  SELECT cc.cycle_id, p.city_id, p.kebele_id, p.plot_id, p.farmer_id,
+         cc.season_year, cc.season, cc.crop_id, cc.variety_id, p.soil, p.zone,
+         p.area_hectares, cc.harvest_kg, cc.yield_qt_ha
+  FROM crop_cycles cc JOIN plots p ON p.plot_id = cc.plot_id
+  WHERE cc.deleted_at IS NULL AND cc.harvest_kg IS NOT NULL
+`);
 
-export const diagnosisCases = pgTable(
-  "diagnosis_cases",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    cityOfficeId: uuid("city_office_id")
-      .notNull()
-      .references(() => cityOffices.id),
-    farmerId: uuid("farmer_id")
-      .notNull()
-      .references(() => farmers.id, { onDelete: "cascade" }),
-    plotId: uuid("plot_id")
-      .notNull()
-      .references(() => plots.id, { onDelete: "cascade" }),
-    cycleId: uuid("cycle_id").references(() => cropCycles.id),
-    requestedByUserId: uuid("requested_by_user_id").references(() => users.id),
-    photoMediaIds: uuid("photo_media_ids").array().notNull().default(sql`'{}'::uuid[]`),
-    jobStatus: jobStatus("job_status").notNull().default("queued"),
-    contextSnapshot: jsonb("context_snapshot"),
-    rawResult: jsonb("raw_result"),
-    pestId: uuid("pest_id").references(() => pestCatalog.id),
-    diagnosisLabel: varchar("diagnosis_label", { length: 150 }),
-    confidence: numeric("confidence", { precision: 3, scale: 2 }),
-    severity: diagnosisSeverity("severity"),
-    filteredRecommendations: jsonb("filtered_recommendations"),
-    removedChemicals: jsonb("removed_chemicals").notNull().default([]),
-    reviewStatus: diagnosisReviewStatus("review_status").notNull().default("none"),
-    reviewedByUserId: uuid("reviewed_by_user_id").references(() => users.id),
-    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
-    failureReason: varchar("failure_reason", { length: 255 }),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-  },
-  (table) => ({
-    confidenceCheck: check(
-      "diagnosis_cases_confidence_check",
-      sql`confidence is null or (confidence >= 0 and confidence <= 1)`
-    ),
-    photoCountCheck: check(
-      "diagnosis_cases_photo_count_check",
-      sql`cardinality(photo_media_ids) between 1 and 4`
-    ),
-    idxPlot: index("idx_diagnosis_plot").on(table.plotId, table.createdAt),
-    idxQueue: index("idx_diagnosis_queue")
-      .on(table.jobStatus)
-      .where(sql`job_status in ('queued', 'processing')`),
-    idxReview: index("idx_diagnosis_review")
-      .on(table.reviewStatus)
-      .where(sql`review_status = 'pending_da_review'`),
-  })
-);
+export const vOutbreakHeatmap = pgView("v_outbreak_heatmap", {
+  city_id: uuid("city_id"),
+  kebele_id: uuid("kebele_id"),
+  pest_id: uuid("pest_id"),
+  report_count: bigint("report_count", { mode: "number" }),
+  last_report_at: timestamp("last_report_at", { withTimezone: true }),
+}).as(sql`
+  SELECT k.city_id, pd.kebele_id, pd.pest_id, COUNT(*) AS report_count, MAX(pd.created_at) AS last_report_at
+  FROM pest_diagnoses pd JOIN kebeles k ON k.kebele_id = pd.kebele_id
+  WHERE pd.pest_id IS NOT NULL AND pd.deleted_at IS NULL AND pd.created_at > now() - INTERVAL '30 days'
+  GROUP BY k.city_id, pd.kebele_id, pd.pest_id
+`);
 
-export const outbreakClusters = pgTable(
-  "outbreak_clusters",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    cityOfficeId: uuid("city_office_id")
-      .notNull()
-      .references(() => cityOffices.id),
-    pestId: uuid("pest_id")
-      .notNull()
-      .references(() => pestCatalog.id),
-    kebeleId: uuid("kebele_id").references(() => kebeles.id),
-    centroid: geographyPoint("centroid").notNull(),
-    radiusMeters: integer("radius_meters").notNull(),
-    caseCount: integer("case_count").notNull(),
-    contributingCaseIds: uuid("contributing_case_ids").array().notNull().default(sql`'{}'::uuid[]`),
-    windowStart: date("window_start").notNull(),
-    windowEnd: date("window_end").notNull(),
-    status: varchar("status", { length: 10 }).notNull().default("open"),
-    alertSentAt: timestamp("alert_sent_at", { withTimezone: true }),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-  },
-  (table) => ({
-    caseCountCheck: check("outbreak_clusters_case_count_check", sql`case_count >= 1`),
-    windowCheck: check("outbreak_clusters_window_check", sql`window_end >= window_start`),
-    statusCheck: check("outbreak_clusters_status_check", sql`status in ('open', 'closed')`),
-    idxOffice: index("idx_outbreak_office").on(table.cityOfficeId, table.status, table.windowEnd),
-    idxCaseIds: index("idx_outbreak_case_ids").using("gin", table.contributingCaseIds),
-  })
-);
-
-export const yieldGapAnalysesRelations = relations(yieldGapAnalyses, ({ one }) => ({
-  cityOffice: one(cityOffices, {
-    fields: [yieldGapAnalyses.cityOfficeId],
-    references: [cityOffices.id],
-  }),
+export const pestDiagnosesRelations = relations(pestDiagnoses, ({ one }) => ({
   farmer: one(farmers, {
-    fields: [yieldGapAnalyses.farmerId],
-    references: [farmers.id],
-  }),
-  cycle: one(cropCycles, {
-    fields: [yieldGapAnalyses.cycleId],
-    references: [cropCycles.id],
-  }),
-}));
-
-export const diagnosisCasesRelations = relations(diagnosisCases, ({ one }) => ({
-  cityOffice: one(cityOffices, {
-    fields: [diagnosisCases.cityOfficeId],
-    references: [cityOffices.id],
-  }),
-  farmer: one(farmers, {
-    fields: [diagnosisCases.farmerId],
-    references: [farmers.id],
+    fields: [pestDiagnoses.farmer_id],
+    references: [farmers.farmer_id],
   }),
   plot: one(plots, {
-    fields: [diagnosisCases.plotId],
-    references: [plots.id],
+    fields: [pestDiagnoses.plot_id],
+    references: [plots.plot_id],
   }),
   cycle: one(cropCycles, {
-    fields: [diagnosisCases.cycleId],
-    references: [cropCycles.id],
+    fields: [pestDiagnoses.cycle_id],
+    references: [cropCycles.cycle_id],
   }),
-  pest: one(pestCatalog, {
-    fields: [diagnosisCases.pestId],
-    references: [pestCatalog.id],
+  kebele: one(kebeles, {
+    fields: [pestDiagnoses.kebele_id],
+    references: [kebeles.kebele_id],
   }),
-  requestedByUser: one(users, {
-    fields: [diagnosisCases.requestedByUserId],
-    references: [users.id],
+  pest: one(pestsDiseases, {
+    fields: [pestDiagnoses.pest_id],
+    references: [pestsDiseases.pest_id],
   }),
-  reviewedByUser: one(users, {
-    fields: [diagnosisCases.reviewedByUserId],
+  reviewer: one(users, {
+    fields: [pestDiagnoses.reviewed_by],
     references: [users.id],
   }),
 }));
 
-export const outbreakClustersRelations = relations(outbreakClusters, ({ one }) => ({
-  cityOffice: one(cityOffices, {
-    fields: [outbreakClusters.cityOfficeId],
-    references: [cityOffices.id],
+export const yieldBenchmarksRelations = relations(yieldBenchmarks, ({ one }) => ({
+  city: one(cities, {
+    fields: [yieldBenchmarks.city_id],
+    references: [cities.city_id],
   }),
-  pest: one(pestCatalog, {
-    fields: [outbreakClusters.pestId],
-    references: [pestCatalog.id],
+  crop: one(crops, {
+    fields: [yieldBenchmarks.crop_id],
+    references: [crops.crop_id],
   }),
-  kebele: one(kebeles, {
-    fields: [outbreakClusters.kebeleId],
-    references: [kebeles.id],
+}));
+
+export const yieldGapAnalysesRelations = relations(yieldGapAnalyses, ({ one }) => ({
+  cycle: one(cropCycles, {
+    fields: [yieldGapAnalyses.cycle_id],
+    references: [cropCycles.cycle_id],
+  }),
+  benchmark: one(yieldBenchmarks, {
+    fields: [yieldGapAnalyses.benchmark_id],
+    references: [yieldBenchmarks.benchmark_id],
   }),
 }));

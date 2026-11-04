@@ -11,7 +11,7 @@ import {
   LayoutDashboard, Users, MapPin, BarChart2,
   Megaphone, TriangleAlert, ShoppingBasket,
   Warehouse, Settings2, ArrowLeftRight,
-  UserCog, ScrollText, BookOpen,
+  UserCog, ScrollText, BookOpen, UserCheck,
 } from 'lucide-react'
 
 // All nav keys are typed so useTranslations never needs `as any`
@@ -45,6 +45,7 @@ const NAV: NavSection[] = [
       { id: 'farmers', labelKey: 'off_nav_farmers', href: '/officer/farmers', icon: <Users size={18} /> },
       { id: 'land',    labelKey: 'off_nav_land',    href: '/officer/land',    icon: <MapPin size={18} /> },
       { id: 'kebeles', labelKey: 'off_nav_kebeles', href: '/officer/kebeles', icon: <MapPin size={18} /> },
+      { id: 'staff',   labelKey: 'off_nav_staff',   href: '/officer/staff',   icon: <UserCheck size={18} /> },
     ],
   },
   {
@@ -70,7 +71,6 @@ const NAV: NavSection[] = [
     items: [
       { id: 'broadcast',  labelKey: 'off_nav_broadcast',  href: '/officer/broadcast',  icon: <Megaphone size={18} /> },
       { id: 'grievances', labelKey: 'nav_grievances',     href: '/officer/grievances', icon: <TriangleAlert size={18} /> },
-      { id: 'market',     labelKey: 'off_nav_market',     href: '/officer/market',     icon: <BarChart2 size={18} /> },
     ],
   },
   {
@@ -201,7 +201,7 @@ export function OfficerSidebar({ onClose }: Props) {
       <div className="flex items-center justify-between px-3 h-14 shrink-0">
         {!collapsed && (
           <span className="text-xs font-mono text-on-shell-faint tracking-wider select-none truncate">
-            AGRI.INTEL / OFFICER
+            AGRI.INTEL / CITY ADMIN
           </span>
         )}
         <button

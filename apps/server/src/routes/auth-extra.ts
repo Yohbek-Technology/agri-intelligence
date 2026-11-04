@@ -6,11 +6,6 @@ import { normalizeEthiopianPhone } from '@/services/sms.js'
 
 const authExtraRouter = new Hono()
 
-/**
- * GET /api/v1/auth/check-phone?phone=+251...
- * Returns { exists: boolean }
- * Used on the sign-up page to block duplicate phone registrations before OTP is sent.
- */
 authExtraRouter.get('/check-phone', async (c) => {
   const raw = c.req.query('phone')?.trim()
   if (!raw) return c.json({ exists: false })

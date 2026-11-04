@@ -1,5 +1,5 @@
 import 'dotenv/config'
-import { describe, it, expect, afterAll } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { createServer } from 'http'
 import { io as SocketClient } from 'socket.io-client'
 import { initSocket, getIO } from '../../src/config/socket.js'
@@ -29,7 +29,9 @@ async function connectClient(): Promise<ReturnType<typeof SocketClient>> {
   })
 }
 
-await startServer()
+beforeAll(async () => {
+  await startServer()
+})
 
 afterAll(() => {
   getIO().close()

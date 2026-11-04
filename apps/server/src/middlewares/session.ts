@@ -33,7 +33,8 @@ export const sessionGuard = createMiddleware<{ Variables: AuthVariables }>(async
     )
   }
 
-  if (result.user.banned) {
+  const user = result.user as any
+  if (user.status === 'SUSPENDED' || user.banned) {
     return c.json(
       {
         error: {
@@ -46,7 +47,20 @@ export const sessionGuard = createMiddleware<{ Variables: AuthVariables }>(async
     )
   }
 
-  if (result.user.deletedAt) {
+  if (user.status === 'REJECTED') {
+    return c.json(
+      {
+        error: {
+          code: 'forbidden',
+          message: 'This registration has been rejected.',
+          request_id: crypto.randomUUID(),
+        },
+      },
+      403
+    )
+  }
+
+  if (user.deletedAt) {
     return c.json(
       {
         error: {
