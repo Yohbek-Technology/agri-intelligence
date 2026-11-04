@@ -43,11 +43,24 @@ describe('extractPublicId', () => {
 
 describe('uploadFile — real Cloudinary', () => {
   it('uploads a remote URL and returns valid metadata', async () => {
-    const result = await uploadFile(
-      'https://res.cloudinary.com/demo/image/upload/sample.jpg',
-      'test/unit',
-      'image'
-    )
+    let result
+    try {
+      result = await uploadFile(
+        'https://res.cloudinary.com/demo/image/upload/sample.jpg',
+        'test/unit',
+        'image'
+      )
+    } catch (err: any) {
+      if (err?.name === 'TimeoutError' || err?.message?.includes('Timeout')) {
+        result = await uploadFile(
+          'https://res.cloudinary.com/demo/image/upload/sample.jpg',
+          'test/unit',
+          'image'
+        )
+      } else {
+        throw err
+      }
+    }
 
     expect(result.secure_url).toMatch(/^https:\/\/res\.cloudinary\.com/)
     expect(result.public_id).toBeTruthy()
@@ -55,7 +68,7 @@ describe('uploadFile — real Cloudinary', () => {
     expect(result.format).toBe('jpg')
 
     await deleteFile(result.public_id)
-  })
+  }, 30000)
 
   it('uploads a Buffer and returns valid metadata', async () => {
     const pngBuffer = Buffer.from(
@@ -69,7 +82,7 @@ describe('uploadFile — real Cloudinary', () => {
     expect(result.public_id).toBeTruthy()
 
     await deleteFile(result.public_id)
-  })
+  }, 30000)
 })
 
 describe('getSignedUrl — real Cloudinary', () => {
@@ -85,7 +98,7 @@ describe('getSignedUrl — real Cloudinary', () => {
     expect(signed).toContain('s--')
 
     await deleteFile(result.public_id)
-  })
+  }, 30000)
 })
 
 describe('deleteFile — real Cloudinary', () => {
@@ -97,7 +110,7 @@ describe('deleteFile — real Cloudinary', () => {
     )
 
     await expect(deleteFile(result.public_id)).resolves.toBeUndefined()
-  })
+  }, 30000)
 })
 
 describe('deleteFileByUrl — real Cloudinary', () => {
@@ -109,5 +122,5 @@ describe('deleteFileByUrl — real Cloudinary', () => {
     )
 
     await expect(deleteFileByUrl(result.secure_url)).resolves.toBeUndefined()
-  })
+  }, 30000)
 })

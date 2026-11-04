@@ -21,7 +21,7 @@
   "include": [
     "src/**/*",
     "test/**/*",
-    "temp/ai.test.ts"
+    "temp-test/ai.test.ts"
   ],
   "exclude": [
     "node_modules"

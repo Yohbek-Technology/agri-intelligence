@@ -28,29 +28,45 @@ export function extractPublicId(secureUrl: string): string {
 export async function uploadFile(
   source: Buffer | string,
   folder: string,
-  resourceType: 'image' | 'video' | 'raw' | 'auto' = 'auto'
+  resourceType: 'image' | 'video' | 'raw' | 'auto' = 'auto',
+  maxRetries = 1
 ): Promise<UploadApiResponse> {
-  return new Promise((resolve, reject) => {
-    if (Buffer.isBuffer(source)) {
-      const stream = cloudinary.uploader.upload_stream(
-        { folder, resource_type: resourceType },
-        (error, result) => {
-          if (error || !result) return reject(error)
-          resolve(result)
-        }
-      )
-      stream.end(source)
-    } else {
-      cloudinary.uploader.upload(
-        source,
-        { folder, resource_type: resourceType },
-        (error, result) => {
-          if (error || !result) return reject(error)
-          resolve(result)
-        }
-      )
+  const attemptUpload = () =>
+    new Promise<UploadApiResponse>((resolve, reject) => {
+      if (Buffer.isBuffer(source)) {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder, resource_type: resourceType, timeout: 60000 },
+          (error, result) => {
+            if (error || !result) return reject(error)
+            resolve(result)
+          }
+        )
+        stream.end(source)
+      } else {
+        cloudinary.uploader.upload(
+          source,
+          { folder, resource_type: resourceType, timeout: 60000 },
+          (error, result) => {
+            if (error || !result) return reject(error)
+            resolve(result)
+          }
+        )
+      }
+    })
+
+  try {
+    return await attemptUpload()
+  } catch (error: any) {
+    const isTimeout =
+      error?.name === 'TimeoutError' ||
+      error?.message === 'Request Timeout' ||
+      error?.http_code === 499
+
+    if (maxRetries > 0 && isTimeout) {
+      return uploadFile(source, folder, resourceType, maxRetries - 1)
     }
-  })
+    throw error
+  }
 }
 
 // Generate a signed delivery URL for time-limited secure access (media_files signed delivery)

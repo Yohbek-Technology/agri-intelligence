@@ -86,15 +86,20 @@ describe('Storage integration — deleteFileByUrl', () => {
 
 describe('Storage integration — concurrent uploads', () => {
   it('handles 3 simultaneous uploads and cleans up all of them', async () => {
+    const pngBuffer = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwADhQGAWjR9awAAAABJRU5ErkJggg==',
+      'base64'
+    )
+
     const results = await Promise.all([
-      uploadFile('https://res.cloudinary.com/demo/image/upload/sample.jpg', 'integration/concurrent', 'image'),
-      uploadFile('https://res.cloudinary.com/demo/image/upload/sample.jpg', 'integration/concurrent', 'image'),
-      uploadFile('https://res.cloudinary.com/demo/image/upload/sample.jpg', 'integration/concurrent', 'image'),
+      uploadFile(pngBuffer, 'integration/concurrent', 'image'),
+      uploadFile(pngBuffer, 'integration/concurrent', 'image'),
+      uploadFile(pngBuffer, 'integration/concurrent', 'image'),
     ])
 
     const publicIds = results.map((r) => r.public_id)
     expect(new Set(publicIds).size).toBe(3)
 
     await Promise.all(publicIds.map(deleteFile))
-  })
+  }, 60000)
 })
