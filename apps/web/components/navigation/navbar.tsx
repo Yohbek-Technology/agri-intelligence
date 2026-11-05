@@ -68,11 +68,12 @@ export function Navbar({ isAuthenticated, dashboardPath, role }: NavbarProps) {
 
   return (
     <header className="sticky top-0 inset-x-0 z-50 bg-white/98 backdrop-blur-md border-b border-[#e7e1d5] shadow-xs">
-      {/* ── Main Navigation Bar (Clean Agriko Crisp White, Badge Removed) ── */}
-      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-6">
-        {/* Brand Logo */}
-        <div className="shrink-0">
-          <BrandLogo size="md" showSubtitle={false} className="py-0" />
+      {/* ── Main Navigation Bar (Clean Agriko Crisp White, Fully Mobile Responsive) ── */}
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-2 sm:gap-6">
+        {/* Brand Logo - Responsive sizing */}
+        <div className="shrink-0 flex items-center">
+          <BrandLogo size="sm" showSubtitle={false} className="py-0 sm:hidden" />
+          <BrandLogo size="md" showSubtitle={false} className="py-0 hidden sm:block" />
         </div>
 
         {/* Desktop Links with Active State & Focus */}
@@ -189,13 +190,13 @@ export function Navbar({ isAuthenticated, dashboardPath, role }: NavbarProps) {
           </a>
         </div>
 
-        {/* Right Action Controls (Search icon removed, Locale switcher kept) */}
-        <div className="flex items-center gap-3">
+        {/* Right Action Controls: Perfectly fits all mobile screen sizes */}
+        <div className="flex items-center gap-2 sm:gap-3">
           <LocaleSwitcher />
 
-          {/* Main Action Button (Agriko Harvest Yellow CTA) */}
+          {/* Main Action Button - Hidden on mobile screens to prevent overflow, visible on md+ */}
           {isAuthenticated ? (
-            <Link href={dashboardPath}>
+            <Link href={dashboardPath} className="hidden md:flex">
               <button
                 type="button"
                 className="bg-[#e7b028] hover:bg-[#d69f1a] text-[#1a2f19] font-bold text-xs sm:text-sm px-5 sm:px-6 py-2.5 sm:py-3 rounded-full shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-2 cursor-pointer"
@@ -205,7 +206,7 @@ export function Navbar({ isAuthenticated, dashboardPath, role }: NavbarProps) {
               </button>
             </Link>
           ) : (
-            <Link href="/signIn">
+            <Link href="/signIn" className="hidden md:flex">
               <button
                 type="button"
                 className="bg-[#e7b028] hover:bg-[#d69f1a] text-[#1a2f19] font-bold text-xs sm:text-sm px-5 sm:px-6 py-2.5 sm:py-3 rounded-full shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-2 cursor-pointer"
@@ -216,11 +217,11 @@ export function Navbar({ isAuthenticated, dashboardPath, role }: NavbarProps) {
             </Link>
           )}
 
-          {/* Mobile Hamburger */}
+          {/* Mobile Hamburger Toggle Button */}
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 rounded-lg text-[#1b2f1e] hover:bg-[#f3eee5] transition-colors"
+            className="lg:hidden p-2 rounded-xl text-[#1b2f1e] hover:bg-[#f3eee5] active:bg-[#e7dfcf] transition-colors"
             aria-label="Toggle Menu"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -228,84 +229,136 @@ export function Navbar({ isAuthenticated, dashboardPath, role }: NavbarProps) {
         </div>
       </nav>
 
-      {/* Mobile Drawer Menu */}
+      {/* Mobile Drawer Menu - Clean Full-Width Slide Down */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden bg-white border-b border-[#e5dfd5] px-6 py-5 shadow-xl space-y-4 text-sm font-semibold text-[#1b2f1e]"
+            transition={{ duration: 0.2 }}
+            className="lg:hidden bg-white/98 backdrop-blur-xl border-b border-[#e5dfd5] px-6 py-6 shadow-2xl space-y-4 text-sm font-semibold text-[#1b2f1e]"
           >
-            <a
-              href="#"
-              onClick={(e) => handleNavClick(e, 'home')}
-              className={`block py-1 ${activeSection === 'home' ? 'text-[#14532d] font-bold' : 'text-[#3b4b3e]'}`}
-            >
-              {t('home')}
-            </a>
-            <a
-              href="#about"
-              onClick={(e) => handleNavClick(e, 'about')}
-              className={`block py-1 ${activeSection === 'about' ? 'text-[#14532d] font-bold' : 'text-[#3b4b3e]'}`}
-            >
-              {t('aboutUs')}
-            </a>
-            <a
-              href="#services"
-              onClick={(e) => handleNavClick(e, 'services')}
-              className={`block py-1 ${activeSection === 'services' ? 'text-[#14532d] font-bold' : 'text-[#3b4b3e]'}`}
-            >
-              {t('services')}
-            </a>
-            <a
-              href="#empirical-trial"
-              onClick={(e) => handleNavClick(e, 'empirical-trial')}
-              className={`block py-1 ${activeSection === 'empirical-trial' ? 'text-[#14532d] font-bold' : 'text-[#3b4b3e]'}`}
-            >
-              {t('fieldTrial')}
-            </a>
-            <div className="pt-2 border-t border-[#f0ebe0] space-y-2">
-              <span className="text-xs uppercase text-[#697a6c] tracking-wider block">
+            {/* Navigation Links */}
+            <div className="space-y-1">
+              <a
+                href="#"
+                onClick={(e) => handleNavClick(e, 'home')}
+                className={`flex items-center justify-between py-2.5 px-3 rounded-xl transition-colors ${
+                  activeSection === 'home'
+                    ? 'bg-[#14532d]/10 text-[#14532d] font-extrabold'
+                    : 'text-[#3b4b3e] hover:bg-[#f7f3ea]'
+                }`}
+              >
+                <span>{t('home')}</span>
+              </a>
+              <a
+                href="#about"
+                onClick={(e) => handleNavClick(e, 'about')}
+                className={`flex items-center justify-between py-2.5 px-3 rounded-xl transition-colors ${
+                  activeSection === 'about'
+                    ? 'bg-[#14532d]/10 text-[#14532d] font-extrabold'
+                    : 'text-[#3b4b3e] hover:bg-[#f7f3ea]'
+                }`}
+              >
+                <span>{t('aboutUs')}</span>
+              </a>
+              <a
+                href="#services"
+                onClick={(e) => handleNavClick(e, 'services')}
+                className={`flex items-center justify-between py-2.5 px-3 rounded-xl transition-colors ${
+                  activeSection === 'services'
+                    ? 'bg-[#14532d]/10 text-[#14532d] font-extrabold'
+                    : 'text-[#3b4b3e] hover:bg-[#f7f3ea]'
+                }`}
+              >
+                <span>{t('services')}</span>
+              </a>
+              <a
+                href="#empirical-trial"
+                onClick={(e) => handleNavClick(e, 'empirical-trial')}
+                className={`flex items-center justify-between py-2.5 px-3 rounded-xl transition-colors ${
+                  activeSection === 'empirical-trial'
+                    ? 'bg-[#14532d]/10 text-[#14532d] font-extrabold'
+                    : 'text-[#3b4b3e] hover:bg-[#f7f3ea]'
+                }`}
+              >
+                <span>{t('fieldTrial')}</span>
+              </a>
+              <a
+                href="#contact"
+                onClick={(e) => handleNavClick(e, 'contact')}
+                className={`flex items-center justify-between py-2.5 px-3 rounded-xl transition-colors ${
+                  activeSection === 'contact'
+                    ? 'bg-[#14532d]/10 text-[#14532d] font-extrabold'
+                    : 'text-[#3b4b3e] hover:bg-[#f7f3ea]'
+                }`}
+              >
+                <span>{t('contact')}</span>
+              </a>
+            </div>
+
+            {/* Portals Section */}
+            <div className="pt-3 border-t border-[#f0ebe0] space-y-1">
+              <span className="text-[11px] uppercase text-[#697a6c] tracking-wider font-extrabold px-3 block">
                 {t('portals')}
               </span>
               <Link
                 href="/farmer"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block pl-2 text-xs py-1"
+                className="flex items-center gap-2 px-3 py-2 text-xs rounded-lg hover:bg-[#f7f3ea] text-[#1b2f1e]"
               >
-                🌾 {t('farmerPortal')}
+                <span>🌾</span>
+                <span>{t('farmerPortal')}</span>
               </Link>
               <Link
                 href="/da"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block pl-2 text-xs py-1"
+                className="flex items-center gap-2 px-3 py-2 text-xs rounded-lg hover:bg-[#f7f3ea] text-[#1b2f1e]"
               >
-                📋 {t('daPortal')}
+                <span>📋</span>
+                <span>{t('daPortal')}</span>
               </Link>
               <Link
                 href="/officer"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block pl-2 text-xs py-1"
+                className="flex items-center gap-2 px-3 py-2 text-xs rounded-lg hover:bg-[#f7f3ea] text-[#1b2f1e]"
               >
-                📊 {t('officerPortal')}
+                <span>📊</span>
+                <span>{t('officerPortal')}</span>
               </Link>
             </div>
-            <div className="pt-4 border-t border-[#f0ebe0] flex flex-col gap-2">
-              <Link
-                href="/signIn"
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full text-center py-2.5 rounded-full border border-[#14532d] text-[#14532d] font-bold"
-              >
-                {t('signIn')}
-              </Link>
-              <Link
-                href="/signUp"
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full text-center py-2.5 rounded-full bg-[#e7b028] text-[#1b2f1e] font-bold"
-              >
-                {t('signUp')}
-              </Link>
+
+            {/* Prominent CTA on Mobile */}
+            <div className="pt-3 border-t border-[#f0ebe0]">
+              {isAuthenticated ? (
+                <Link
+                  href={dashboardPath}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full text-center py-3 px-4 rounded-full bg-[#e7b028] hover:bg-[#d69f1a] text-[#1a2f19] font-extrabold text-sm flex items-center justify-center gap-2 shadow-md"
+                >
+                  <span>{t('workspace')} ({role || t('operator')})</span>
+                  <ArrowUpRight className="w-4 h-4" />
+                </Link>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <Link
+                    href="/signIn"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full text-center py-3 px-4 rounded-full bg-[#e7b028] hover:bg-[#d69f1a] text-[#1a2f19] font-extrabold text-sm flex items-center justify-center gap-2 shadow-md"
+                  >
+                    <span>{t('accessPortal')}</span>
+                    <ArrowUpRight className="w-4 h-4" />
+                  </Link>
+                  <Link
+                    href="/signUp"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full text-center py-2.5 rounded-full border border-[#14532d] text-[#14532d] font-bold text-xs"
+                  >
+                    {t('signUp')}
+                  </Link>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
