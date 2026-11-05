@@ -66,19 +66,27 @@ export const auth = betterAuth({
       otpLength: 6,
       expiresIn: 600,
       allowedAttempts: 5,
-      sendOTP: ({ phoneNumber: phone, code }) => {
+      sendOTP: async ({ phoneNumber: phone, code }) => {
         const normalized = normalizeEthiopianPhone(phone)
-        void sendSms(
-          normalized,
-          `[AgriIntelligence] Your verification code is: ${code}. Valid for 10 minutes. Do not share this code.`
-        )
+        try {
+          await sendSms(
+            normalized,
+            `[AgriIntelligence] Your verification code is: ${code}. Valid for 10 minutes. Do not share this code.`
+          )
+        } catch (err: any) {
+          console.error(`[auth:sms] Failed to send OTP to ${normalized}:`, err?.message || err)
+        }
       },
-      sendPasswordResetOTP: ({ phoneNumber: phone, code }) => {
+      sendPasswordResetOTP: async ({ phoneNumber: phone, code }) => {
         const normalized = normalizeEthiopianPhone(phone)
-        void sendSms(
-          normalized,
-          `[AgriIntelligence] Your password reset code is: ${code}. Valid for 10 minutes. Do not share this code.`
-        )
+        try {
+          await sendSms(
+            normalized,
+            `[AgriIntelligence] Your password reset code is: ${code}. Valid for 10 minutes. Do not share this code.`
+          )
+        } catch (err: any) {
+          console.error(`[auth:sms] Failed to send reset OTP to ${normalized}:`, err?.message || err)
+        }
       },
       phoneNumberValidator: (phone) =>
         ET_E164_REGEX.test(normalizeEthiopianPhone(phone)),

@@ -1,3 +1,5 @@
+import 'dotenv/config'
+
 // Force IPv4 DNS resolution first — Neon serverless only accepts IPv4.
 // This MUST run before any import that creates a pg Pool.
 import dns from 'node:dns'
