@@ -4,14 +4,15 @@ export interface ServiceResult<T = unknown> {
   error?: string
 }
 
-const BASE_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000'
-
 export async function apiFetch<T>(
   path: string,
   init?: RequestInit,
 ): Promise<ServiceResult<T>> {
   try {
-    const res = await fetch(`${BASE_URL}${path}`, {
+    const baseUrl = typeof window !== 'undefined'
+      ? ''
+      : (process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000')
+    const res = await fetch(`${baseUrl}${path}`, {
       ...init,
       credentials: 'include',
       headers: { 'Content-Type': 'application/json', ...init?.headers },
