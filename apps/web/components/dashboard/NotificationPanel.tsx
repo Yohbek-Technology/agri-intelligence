@@ -49,34 +49,66 @@ export function NotificationPanel({ open, onClose, anchorRef }: Props) {
   const t = useTranslations('Dashboard')
   const panelRef = useRef<HTMLDivElement>(null)
   const unread = MOCK_NOTIFICATIONS.filter((n) => !n.read).length
+  const [, setTick] = React.useState(0)
 
   useEffect(() => {
-    function handleOutside(e: MouseEvent) {
+    function handleOutside(e: MouseEvent | TouchEvent) {
       if (
         panelRef.current && !panelRef.current.contains(e.target as Node) &&
         anchorRef.current && !anchorRef.current.contains(e.target as Node)
-      ) onClose()
+      ) {
+        onClose()
+      }
     }
-    if (open) document.addEventListener('mousedown', handleOutside)
-    return () => document.removeEventListener('mousedown', handleOutside)
+    if (open) {
+      document.addEventListener('mousedown', handleOutside)
+      document.addEventListener('touchstart', handleOutside, { passive: true })
+      const handleResize = () => setTick((t) => t + 1)
+      window.addEventListener('resize', handleResize)
+      window.addEventListener('scroll', handleResize, true)
+      return () => {
+        document.removeEventListener('mousedown', handleOutside)
+        document.removeEventListener('touchstart', handleOutside)
+        window.removeEventListener('resize', handleResize)
+        window.removeEventListener('scroll', handleResize, true)
+      }
+    }
   }, [open, onClose, anchorRef])
 
-  const PANEL_WIDTH = 380
-  const MARGIN = 8
-
   const getStyle = (): React.CSSProperties => {
-    if (!anchorRef.current) return {}
-    const rect = anchorRef.current.getBoundingClientRect()
+    if (typeof window === 'undefined') return {}
     const vw = window.innerWidth
-    let left = rect.right - PANEL_WIDTH
-    if (left < MARGIN) left = MARGIN
-    if (left + PANEL_WIDTH > vw - MARGIN) left = vw - PANEL_WIDTH - MARGIN
+    const isMobile = vw < 640
+    const margin = isMobile ? 8 : 12
+    const panelWidth = Math.min(380, vw - margin * 2)
+
+    let top = 60
+    if (anchorRef.current) {
+      const rect = anchorRef.current.getBoundingClientRect()
+      top = rect.bottom + 8
+    }
+
+    let left: number
+    if (isMobile) {
+      // On mobile screens, center or clamp horizontally with safe margins
+      // so the popup is completely on-screen and never clipped at either edge
+      left = Math.max(margin, Math.min(Math.floor((vw - panelWidth) / 2), vw - panelWidth - margin))
+    } else if (anchorRef.current) {
+      const rect = anchorRef.current.getBoundingClientRect()
+      left = rect.right - panelWidth
+      if (left + panelWidth > vw - margin) left = vw - panelWidth - margin
+      if (left < margin) left = margin
+    } else {
+      left = Math.max(margin, vw - panelWidth - margin)
+    }
+
     return {
       position: 'fixed',
-      top: rect.bottom + 8,
+      top,
       left,
-      width: Math.min(PANEL_WIDTH, vw - MARGIN * 2),
-      maxHeight: 'calc(100vh - 80px)',
+      width: panelWidth,
+      maxWidth: `calc(100vw - ${margin * 2}px)`,
+      maxHeight: `calc(100vh - ${top + 16}px)`,
     }
   }
 
