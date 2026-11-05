@@ -39,7 +39,7 @@ export default function HomePage() {
         role={role}
       />
 
-      <main className="flex-1">
+      <main className="flex-1 pt-16 sm:pt-20">
         {/* =========================================================================
             SECTION 1: HERO SECTION (Agriko Big Green Tractor Photo & Hero Text)
             - Responsive padding & text scaling for all mobile screen sizes

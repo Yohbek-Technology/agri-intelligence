@@ -1,17 +1,22 @@
-import { createRequire } from 'module'
-import type { ATSmsClient } from '@repo/shared'
+import 'dotenv/config'
 
-const require = createRequire(import.meta.url)
+export function getAfroMessageConfig() {
+  const token = (process.env.AFROMESSAGE_TOKEN || '').trim()
+  const sender = (process.env.AFROMESSAGE_SENDER || '').trim()
+  const identifierId = (process.env.AFROMESSAGE_IDENTIFIER_ID || '').trim()
+  const apiUrl = (process.env.AFROMESSAGE_API_URL || 'https://api.afromessage.com/api/send').trim()
 
-const useProduction = process.env.NODE_ENV === 'production' && Boolean(process.env.AT_USERNAME?.trim())
+  return {
+    token,
+    sender,
+    identifierId,
+    apiUrl,
+    isConfigured: Boolean(token),
+  }
+}
 
-const username = useProduction ? (process.env.AT_USERNAME || 'sandbox') : 'sandbox'
-const apiKey   = (useProduction ? process.env.AT_API_KEY : process.env.AT_SANDBOX_API_KEY) || 'dummy_key_for_testing'
-
-const AT = require('africastalking')({ apiKey, username })
-
-export const smsClient  = AT.SMS as ATSmsClient
-export const senderId   = process.env.AT_SENDER_ID ?? ''
-export const AT_SUCCESS = 101
-
-console.log(`[sms] Africa's Talking initialised — ${useProduction ? 'production' : 'sandbox'} (username: ${username})`)
+// Startup status check
+const initial = getAfroMessageConfig()
+console.log(
+  `[sms] AfroMessage initialised — ${initial.isConfigured ? 'token configured' : 'no token set (mock mode for local dev/testing)'}`
+)

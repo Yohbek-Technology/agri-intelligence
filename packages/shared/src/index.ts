@@ -41,6 +41,7 @@ export type {
 } from './types/ai.js'
 
 export type {
+  AfroMessageResponse,
   ATRecipient,
   ATSendResponse,
   ATSendOptions,
