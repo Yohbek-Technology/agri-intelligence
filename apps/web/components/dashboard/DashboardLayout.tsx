@@ -17,7 +17,7 @@ export function DashboardLayout({ children, sidebar }: Props) {
   const toggleMobile = useCallback(() => setMobileOpen((p) => !p), [])
 
   return (
-    <div className="flex flex-col h-screen h-[100dvh] overflow-hidden bg-shell">
+    <div className="fixed inset-0 flex flex-col overflow-hidden bg-shell">
       <DashboardTopbar user={user} onSignOut={signOut} onMenuToggle={toggleMobile} />
 
       {/* flex-1 so this row fills the remaining height */}
