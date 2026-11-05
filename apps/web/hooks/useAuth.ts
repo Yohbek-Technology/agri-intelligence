@@ -70,6 +70,7 @@ export function useAuthSession() {
 
 export function useSignInForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { refetch } = useAuth()
 
   const [formData, setFormData] = useState<UsernameSignIn>({
@@ -171,10 +172,14 @@ export function useSignInForm() {
       await refetch()
 
       const user = (result.data as { user?: AuthUser } | undefined)?.user
-      const targetPath = getDashboardPath(user?.role)
+      const redirectParam = searchParams.get('redirect')
+      const targetPath =
+        redirectParam && redirectParam.startsWith('/') && !redirectParam.startsWith('//')
+          ? redirectParam
+          : getDashboardPath(user?.role)
       router.push(targetPath)
     },
-    [formData, lockoutSecondsRemaining, failedAttempts, refetch, router]
+    [formData, lockoutSecondsRemaining, failedAttempts, refetch, router, searchParams]
   )
 
   const isLockedOut = lockoutSecondsRemaining > 0
