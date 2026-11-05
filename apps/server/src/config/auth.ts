@@ -199,7 +199,7 @@ export const auth = betterAuth({
     defaultCookieAttributes: {
       httpOnly: true,
       secure: IS_PRODUCTION,
-      sameSite: 'lax',
+      sameSite: IS_PRODUCTION ? 'none' : 'lax',
     },
     ipAddress: {
       ipAddressHeaders: ['x-forwarded-for', 'x-real-ip'],

@@ -12,9 +12,10 @@ export function middleware(request: NextRequest) {
   }
 
   const sessionToken =
-    request.cookies.get('better-auth.session_token')?.value ||
+    request.cookies.get('__Secure-agri.session_token')?.value ||
+    request.cookies.get('agri.session_token')?.value ||
     request.cookies.get('__Secure-better-auth.session_token')?.value ||
-    request.cookies.get('agri.session_token')?.value
+    request.cookies.get('better-auth.session_token')?.value
 
   if (!sessionToken) {
     const signInUrl = new URL('/signIn', request.url)
@@ -29,3 +30,4 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: ['/farmer/:path*', '/da/:path*', '/officer/:path*'],
 }
+
