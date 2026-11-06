@@ -6,7 +6,7 @@ const alias = { '@': resolve(__dirname, './src') }
 export default defineConfig({
   test: {
     environment: 'node',
-    setupFiles: ['dotenv/config'],
+    setupFiles: [resolve(__dirname, './test/setup.ts')],
     testTimeout: 120000,
     hookTimeout: 60000,
     projects: [

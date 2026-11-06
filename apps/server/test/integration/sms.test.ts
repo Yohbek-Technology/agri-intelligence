@@ -2,7 +2,7 @@ import 'dotenv/config'
 import { describe, it, expect, beforeAll } from 'vitest'
 import { sendSms, sendBulkSms, onPhoneVerified } from '../../src/services/sms.js'
 
-const hasAfroMessage = Boolean(process.env.AFROMESSAGE_TOKEN?.trim())
+const hasAfroMessage = Boolean(process.env.AFROMESSAGE_TOKEN?.trim() && process.env.TEST_LIVE_SMS === 'true')
 
 describe('sendSms — input validation', () => {
   it('throws on invalid Ethiopian phone number', async () => {

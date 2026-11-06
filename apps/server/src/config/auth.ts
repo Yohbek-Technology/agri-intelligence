@@ -35,6 +35,8 @@ export const auth = betterAuth({
   trustedOrigins: [
     process.env.CORS_ORIGIN ?? 'http://localhost:3000',
     process.env.BETTER_AUTH_URL ?? 'http://localhost:5000',
+    ...(process.env.TRUSTED_ORIGINS ? process.env.TRUSTED_ORIGINS.split(',').map((s) => s.trim()) : []),
+    'https://*.onrender.com',
   ],
 
   session: {
@@ -210,14 +212,14 @@ export const auth = betterAuth({
       sameSite: IS_PRODUCTION ? 'none' : 'lax',
     },
     ipAddress: {
-      ipAddressHeaders: ['x-forwarded-for', 'x-real-ip'],
-      trustedProxies: ['127.0.0.1', '::1'],
+      ipAddressHeaders: ['x-forwarded-for', 'x-real-ip', 'cf-connecting-ip'],
+      trustedProxies: ['127.0.0.1', '::1', '10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16'],
     },
   },
 
   rateLimit: {
     enabled: true,
-    window: 3600,
+    window: 60,
     max: 100,
   },
 })

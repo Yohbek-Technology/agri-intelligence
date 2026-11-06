@@ -40,6 +40,19 @@ jobs:
       - name: Run Server Unit Tests
         run: pnpm --filter server test:unit
 
+      - name: Migrate Test Database
+        env:
+          DATABASE_URL: ${{ secrets.TEST_DATABASE_URL || 'postgresql://neondb_owner:npg_13WZBhjPAxXw@ep-curly-cell-awlmsyah-pooler.c-12.us-east-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require' }}
+          NODE_OPTIONS: '--dns-result-order=ipv4first'
+        run: pnpm --filter server db:migrate
+
+      - name: Run Server Integration Tests
+        env:
+          DATABASE_URL: ${{ secrets.TEST_DATABASE_URL || 'postgresql://neondb_owner:npg_13WZBhjPAxXw@ep-curly-cell-awlmsyah-pooler.c-12.us-east-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require' }}
+          BETTER_AUTH_SECRET: 'ci-testing-secret-at-least-32-chars-long-123456789'
+          NODE_OPTIONS: '--dns-result-order=ipv4first'
+        run: pnpm --filter server test:integration
+
   migrate:
     name: Database Migration (Neon)
     runs-on: ubuntu-latest
@@ -65,6 +78,7 @@ jobs:
       - name: Run Drizzle Migrations
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NODE_OPTIONS: '--dns-result-order=ipv4first'
         run: pnpm --filter server db:migrate
 
   build-and-push:
