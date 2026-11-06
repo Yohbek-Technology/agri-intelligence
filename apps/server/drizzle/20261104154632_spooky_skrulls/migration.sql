@@ -1,3 +1,4 @@
+CREATE EXTENSION IF NOT EXISTS postgis;--> statement-breakpoint
 CREATE TYPE "activity_type" AS ENUM('PLOWING', 'WEEDING', 'SPRAYING', 'IRRIGATION');--> statement-breakpoint
 CREATE TYPE "agro_zone" AS ENUM('DEGA', 'WEYNA_DEGA', 'KOLLA');--> statement-breakpoint
 CREATE TYPE "approval_status" AS ENUM('PENDING', 'APPROVED', 'REJECTED', 'SUSPENDED');--> statement-breakpoint

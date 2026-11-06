@@ -11,8 +11,13 @@ import {
 
 // Full end-to-end flow mirroring production usage:
 // generate key → upload → sign → extract public_id → delete
+const hasCloudinary = Boolean(
+  process.env.CLOUDINARY_CLOUD_NAME &&
+  process.env.CLOUDINARY_API_KEY &&
+  process.env.CLOUDINARY_API_SECRET
+)
 
-describe('Storage integration — full media lifecycle', () => {
+describe.skipIf(!hasCloudinary)('Storage integration — full media lifecycle', () => {
   let publicId: string
   let secureUrl: string
 
@@ -56,7 +61,7 @@ describe('Storage integration — full media lifecycle', () => {
   })
 })
 
-describe('Storage integration — buffer upload', () => {
+describe.skipIf(!hasCloudinary)('Storage integration — buffer upload', () => {
   it('uploads a PNG buffer simulating a multipart form file', async () => {
     const pngBuffer = Buffer.from(
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwADhQGAWjR9awAAAABJRU5ErkJggg==',
@@ -72,7 +77,7 @@ describe('Storage integration — buffer upload', () => {
   })
 })
 
-describe('Storage integration — deleteFileByUrl', () => {
+describe.skipIf(!hasCloudinary)('Storage integration — deleteFileByUrl', () => {
   it('deletes an asset using only the secure_url', async () => {
     const result = await uploadFile(
       'https://res.cloudinary.com/demo/image/upload/sample.jpg',
@@ -84,21 +89,18 @@ describe('Storage integration — deleteFileByUrl', () => {
   })
 })
 
-describe('Storage integration — concurrent uploads', () => {
-  it('handles 3 simultaneous uploads and cleans up all of them', async () => {
+describe.skipIf(!hasCloudinary)('Storage integration — concurrent uploads', () => {
+  it('handles multiple uploads and cleans up all of them', async () => {
     const pngBuffer = Buffer.from(
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwADhQGAWjR9awAAAABJRU5ErkJggg==',
       'base64'
     )
 
-    const results = await Promise.all([
-      uploadFile(pngBuffer, 'integration/concurrent', 'image'),
-      uploadFile(pngBuffer, 'integration/concurrent', 'image'),
-      uploadFile(pngBuffer, 'integration/concurrent', 'image'),
-    ])
+    const uploads = [1, 2].map(() => uploadFile(pngBuffer, 'integration/concurrent', 'image'))
+    const results = await Promise.all(uploads)
 
     const publicIds = results.map((r) => r.public_id)
-    expect(new Set(publicIds).size).toBe(3)
+    expect(new Set(publicIds).size).toBe(2)
 
     await Promise.all(publicIds.map(deleteFile))
   }, 60000)

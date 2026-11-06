@@ -10,7 +10,7 @@
     "test:integration": "vitest run --project integration",
     "test:all": "vitest run",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
+    "db:migrate": "NODE_OPTIONS='--dns-result-order=ipv4first' drizzle-kit migrate",
     "db:seed": "NODE_OPTIONS='--dns-result-order=ipv4first' tsx src/db/seed.ts",
     "open-auth-docs": "open-cli http://localhost:5000/api/auth/reference"
   },

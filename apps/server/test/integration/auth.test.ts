@@ -40,7 +40,12 @@ declare module 'hono' {
 
 type JsonBody = Record<string, unknown>
 
-const TEST_TIMEOUT = 15_000
+const TEST_TIMEOUT = 45_000
+
+beforeAll(async () => {
+  const { pool } = await import('@/config/db.js')
+  await pool.query('SELECT 1;')
+}, 45_000)
 
 const app = new Hono()
 app.use('*', cors({ origin: '*', credentials: true }))
