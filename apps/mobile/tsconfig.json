@@ -3,6 +3,10 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "moduleResolution": "bundler",
+    "customConditions": [
+      "react-native"
+    ],
+    "skipLibCheck": true,
     "strict": true,
     "paths": {
       "@/*": [
@@ -10,13 +14,33 @@
       ],
       "@/assets/*": [
         "./assets/*"
+      ],
+      "@repo/domain": [
+        "../../packages/domain/src/index.ts"
+      ],
+      "@repo/domain/*": [
+        "../../packages/domain/src/*"
+      ],
+      "react-native": [
+        "./node_modules/react-native/types/index.d.ts"
+      ],
+      "react-native/*": [
+        "./node_modules/react-native/*"
+      ],
+      "expo-splash-screen": [
+        "./node_modules/expo-splash-screen/build/index.d.ts"
+      ],
+      "expo-splash-screen/*": [
+        "./node_modules/expo-splash-screen/*"
       ]
     }
   },
   "include": [
     "**/*.ts",
-    "**/*.tsx",
-    ".expo/types/**/*.ts",
-    "expo-env.d.ts"
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "__tests__",
+    "vitest.config.ts"
   ]
 }
