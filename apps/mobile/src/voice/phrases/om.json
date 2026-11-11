@@ -1,0 +1,13 @@
+{
+  "NAVIGATE_HOME": ["fuula duraa", "gara manaa", "dhaabadha", "manatti"],
+  "NAVIGATE_FARMS": ["lafa koo", "maasii koo", "qotisa koo", "lafa"],
+  "NAVIGATE_DIAGNOSE": ["ilaali", "dhibee", "baala qori", "hoosiisa"],
+  "NAVIGATE_WEATHER": ["haala qilleensaa", "bokkaa", "oduu bokkaa"],
+  "NAVIGATE_VOICE_BOX": ["saanduqa sagalee", "komii", "sagalee waraabi"],
+  "SCROLL_DOWN": ["gara gadii", "itti fufi", "dabali"],
+  "SCROLL_UP": ["gara olii", "duubatti deebi'i"],
+  "CONFIRM_YES": ["eeyyee", "tole", "mirkaneessi", "haata'u"],
+  "CONFIRM_NO": ["lakki", "dhiisi", "hawaqu"],
+  "READ_ALOUD": ["naa dubbisi", "dhageessisi", "naa ibsi"]
+}
+

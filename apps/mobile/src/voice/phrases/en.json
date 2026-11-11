@@ -1,0 +1,13 @@
+{
+  "NAVIGATE_HOME": ["home", "go home", "main screen", "dashboard"],
+  "NAVIGATE_FARMS": ["my farms", "farms", "plots", "land"],
+  "NAVIGATE_DIAGNOSE": ["diagnose", "scan leaf", "pest check", "disease"],
+  "NAVIGATE_WEATHER": ["weather", "forecast", "rain", "temperature"],
+  "NAVIGATE_VOICE_BOX": ["voice box", "complaint", "grievance", "record question"],
+  "SCROLL_DOWN": ["scroll down", "next", "down", "more"],
+  "SCROLL_UP": ["scroll up", "back", "up", "previous"],
+  "CONFIRM_YES": ["yes", "confirm", "agree", "proceed", "save"],
+  "CONFIRM_NO": ["no", "cancel", "stop", "back", "reject"],
+  "READ_ALOUD": ["read", "read aloud", "listen", "speak", "explain"]
+}
+
