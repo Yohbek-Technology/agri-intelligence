@@ -18,8 +18,8 @@ export default function IndexRoute() {
     return <Redirect href="/(auth)/language" />;
   }
 
-  if (user?.status === 'PENDING') {
-    return <Redirect href="/(auth)/pending" />;
+  if (user?.status === 'SUSPENDED') {
+    return <Redirect href="/(auth)/login" />;
   }
 
   if (user?.role === 'DA') {

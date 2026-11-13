@@ -5,7 +5,7 @@ import { CropCycle } from '../../src/database/models/CropCycle';
 import { OpQueueItem } from '../../src/database/models/OpQueueItem';
 
 describe('WatermelonDB Models and Schema validation', () => {
-  it('instantiates Farmer model with pending approval status', () => {
+  it('instantiates Farmer model with approved status', () => {
     const farmer = new Farmer({
       id: 'f-101',
       cityId: 'adama',
@@ -15,7 +15,7 @@ describe('WatermelonDB Models and Schema validation', () => {
     });
 
     expect(farmer.id).toBe('f-101');
-    expect(farmer.status).toBe('PENDING');
+    expect(farmer.status).toBe('APPROVED');
     expect(farmer.localIdNumber).toBe('KB-2024-001');
     expect(Farmer.table).toBe('farmers');
   });

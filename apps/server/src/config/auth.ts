@@ -161,7 +161,7 @@ export const auth = betterAuth({
       status: {
         type: 'string',
         required: true,
-        defaultValue: 'PENDING',
+        defaultValue: 'APPROVED',
         fieldName: 'status',
       },
       cityId: {

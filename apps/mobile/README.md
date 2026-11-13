@@ -28,7 +28,7 @@ apps/mobile/
     ├── app/                               Expo Router file-based route tree
     │   ├── _layout.tsx                    Root Layout (Theme, AuthProvider, I18nProvider)
     │   ├── index.tsx                      Role / Onboarding dispatcher
-    │   ├── (auth)/                        M-01 to M-04 (Language, Phone/OTP, Registration, Pending)
+    │   ├── (auth)/                        M-01 to M-03 (Language, Phone/OTP, Registration)
     │   ├── (farmer)/                      M-05, M-06, M-18, M-22, M-24 (5 bottom tabs)
     │   ├── (da)/                          M-30 to M-34 (4 bottom tabs + farmers/ stack)
     │   ├── plots/                         M-07, M-08, M-21 (Registration, Detail, Rotation)

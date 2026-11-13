@@ -36,7 +36,7 @@ export const farmers = pgTable(
     phone_number: varchar("phone_number", { length: 20 }),
     gender: char("gender", { length: 1 }),
     literacy_level: varchar("literacy_level", { length: 10 }),
-    status: approvalStatus("status").notNull().default("PENDING"),
+    status: approvalStatus("status").notNull().default("APPROVED"),
     created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
     deleted_at: timestamp("deleted_at", { withTimezone: true }),

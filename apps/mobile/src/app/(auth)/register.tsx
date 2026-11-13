@@ -34,11 +34,12 @@ export default function FarmerRegistrationScreen() {
         kebele_id: kebele || undefined,
         gender,
         literacy_level: literacyLevel,
+        status: 'APPROVED',
       });
-      router.replace('/(auth)/pending');
+      router.replace('/(farmer)');
     } catch (err: any) {
-      // In offline mode, queued in sync_queue
-      router.replace('/(auth)/pending');
+      // In offline mode, queued in sync_queue and active locally
+      router.replace('/(farmer)');
     } finally {
       setLoading(false);
     }

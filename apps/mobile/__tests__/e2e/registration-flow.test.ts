@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { parseVoiceTranscript } from '../../src/voice/parser';
 
-describe('E2E Flow 1: Farmer Onboarding & Registration (M-01 to M-04)', () => {
-  it('walks through language selection to pending registration', () => {
+describe('E2E Flow 1: Farmer Onboarding & Registration (M-01 to M-03, direct to Home)', () => {
+  it('walks through language selection to active approved registration', () => {
     // 1. Language selected
     const selectedLang = 'am';
     expect(['am', 'om', 'ti', 'en']).toContain(selectedLang);
@@ -16,14 +16,14 @@ describe('E2E Flow 1: Farmer Onboarding & Registration (M-01 to M-04)', () => {
     const spokenConfirm = parseVoiceTranscript('አዎ እሺ', selectedLang);
     expect(spokenConfirm.intent).toBe('CONFIRM_YES');
 
-    // 4. Pending registration initial state
+    // 4. Approved registration initial state (direct active access, no waiting screen)
     const farmerRecord = {
       id: 'farmer-new',
       local_id: 'KB-2024-500',
-      status: 'PENDING',
+      status: 'APPROVED',
       kebele: 'Boku Shenen',
     };
-    expect(farmerRecord.status).toBe('PENDING');
+    expect(farmerRecord.status).toBe('APPROVED');
   });
 });
 

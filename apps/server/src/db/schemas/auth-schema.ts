@@ -16,7 +16,7 @@ export const users = pgTable(
     emailVerified: boolean('email_verified').default(false).notNull(),
     image_url: text('image_url'),
     is_phone_verified: boolean('is_phone_verified').default(false).notNull(),
-    status: approvalStatus('status').default('PENDING').notNull(),
+    status: approvalStatus('status').default('APPROVED').notNull(),
     language: languageCode('language').default('am').notNull(),
     auto_tts: boolean('auto_tts').default(true).notNull(),
     voice_nav_enabled: boolean('voice_nav_enabled').default(true).notNull(),

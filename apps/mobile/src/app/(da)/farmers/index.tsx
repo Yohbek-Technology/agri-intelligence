@@ -39,7 +39,7 @@ export default function DaFarmerRosterScreen() {
       phone: '+251 92 987 6543',
       has_phone: true,
       plots_count: 3,
-      status: 'PENDING',
+      status: 'APPROVED',
       kebele: 'Boku Shenen',
     },
   ]);

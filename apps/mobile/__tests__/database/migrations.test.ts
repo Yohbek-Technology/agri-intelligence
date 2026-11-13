@@ -3,8 +3,8 @@ import { migrations } from '../../src/database/migrations';
 import { schema } from '../../src/database/schema';
 
 describe('WatermelonDB Schema & Versioned Migrations', () => {
-  it('defines schema version 1 with all 11 domain tables', () => {
-    expect(schema.version).toBe(1);
+  it('defines schema version 2 with all 11 domain tables', () => {
+    expect(schema.version).toBe(2);
     expect(schema.tables.length).toBe(11);
 
     const tableNames = schema.tables.map((t) => t.name);
@@ -21,9 +21,10 @@ describe('WatermelonDB Schema & Versioned Migrations', () => {
     expect(tableNames).toContain('op_queue_items');
   });
 
-  it('provides version 1 migration steps', () => {
-    expect(migrations.migrations.length).toBeGreaterThan(0);
+  it('provides version 1 and version 2 migration steps', () => {
+    expect(migrations.migrations.length).toBeGreaterThanOrEqual(2);
     expect(migrations.migrations[0].toVersion).toBe(1);
+    expect(migrations.migrations[1].toVersion).toBe(2);
   });
 });
 

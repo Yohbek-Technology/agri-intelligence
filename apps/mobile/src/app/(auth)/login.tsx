@@ -51,9 +51,11 @@ export default function PhoneOtpLoginScreen() {
       const res = await verifyOtpAndSignUp({ phoneNumber: fullPhone, code: otpCode });
       if (res.success && res.data) {
         const authData = res.data as { user?: { status?: string; role?: string } };
-        if (authData.user?.status === 'PENDING') {
-          router.replace('/(auth)/pending' as any);
-        } else if (authData.user?.role === 'DA' || authData.user?.role === 'da') {
+        if (authData.user?.status === 'SUSPENDED') {
+          setError('Your account has been suspended by the agricultural office. Please contact support.');
+          return;
+        }
+        if (authData.user?.role === 'DA' || authData.user?.role === 'da') {
           router.replace('/(da)/farmers' as any);
         } else {
           router.replace('/(farmer)' as any);

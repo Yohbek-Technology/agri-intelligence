@@ -11,7 +11,7 @@ export class Farmer extends BaseModel {
   phoneNumber?: string | null;
   gender?: 'M' | 'F';
   literacyLevel?: 'NONE' | 'BASIC' | 'FULL';
-  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED' = 'PENDING';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED' = 'APPROVED';
 
   constructor(attributes?: Partial<Farmer>) {
     super();
